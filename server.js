@@ -5,7 +5,7 @@ var bodyParser = require('body-parser');
 
 const db = require('./app/config/db.config.js');
 
-let routes = require('./app/routes/routes.js');
+let router = require('./app/routers/router.js');
 
 const cors = require('cors')
 const corsOptions = {
@@ -15,7 +15,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.use(bodyParser.json());
-app.use('/', routes);
+app.use('/', router);
 
 // Create a Server
 const server = app.listen(8080, function () {
