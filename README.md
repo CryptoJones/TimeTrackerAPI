@@ -9,3 +9,9 @@ Database file is at db/TimeTracker.sql
 Endpoints Completed
  * GET /v1/customer/#
  * GET /v1/customer/bycompany/#
+
+
+**QuickStart**
+
+pg_restore db/TimeTracker.sql
+node server.js
