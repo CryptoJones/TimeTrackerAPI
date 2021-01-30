@@ -1,9 +1,11 @@
 TimeTrackerAPI
 
-OpenSource re-write of Atbash Services' TimeTrackerAPI.
+OpenSource re-write of Atbash Services' TimeTrackerAPI on NodeJS / PostgreSQL
 
-example at [node.timetracker.com](node.timetrackerapi.com)
+Working example at [https://node.timetracker.com](https://node.timetrackerapi.com)
+
+Database file is at db/TimeTracker.sql
 
 Endpoints Completed
- * /v1/company/#
- * /v1/company/bycustomer/#
+ * GET /v1/customer/#
+ * GET /v1/customer/bycompany/#
