@@ -13,7 +13,13 @@ Endpoints Completed
 
 **QuickStart**
 
-`sudo apt-get install postgresql -y`
+#`sudo apt-get install postgresql -y`
+
+#`sudo su - postgres`
+
+#`psql`
+
+postgres=# `CREATE USER timetracker SUPERUSER;`
 
 `pg_restore -f db/TimeTracker.sql`
 
