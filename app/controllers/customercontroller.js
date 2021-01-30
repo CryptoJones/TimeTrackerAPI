@@ -23,13 +23,15 @@ exports.getCustomerById = (req, res) => {
     }
 
     exports.getAllByCompanyId = (req, res) => {
-        // find all Customer information from company id
-        let custCompId = req.params.id;
-        Customer.findByPk(custCompId)
-            .then(customer => {
+        // find all Customer information from company id    
+        Customer.findAll({
+            where: {
+                custCompId : req.params.id
+            }
+        }).then(customerInfo => {
                 res.status(200).json({
-                    message: " Successfully Got Customers with company id = " + custCompId,
-                    customers: customer
+                    message: "Success",
+                    customers: customerInfo
                 });
             })
             . catch(error => {
