@@ -13,6 +13,6 @@ Endpoints Completed
 
 **QuickStart**
 
-pg_restore db/TimeTracker.sql
+`pg_restore db/TimeTracker.sql`
 
-node server.js
+`node server.js`
