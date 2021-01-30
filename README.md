@@ -13,6 +13,7 @@ Endpoints Completed
 
 **QuickStart**
 
+`sudo apt-get install postgresql -y`
 `pg_restore -f db/TimeTracker.sql`
 
 `node server.js`
