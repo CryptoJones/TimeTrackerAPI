@@ -7,7 +7,7 @@ exports.getCustomerById = (req, res) => {
     Customer.findByPk(customerId)
         .then(customer => {
             res.status(200).json({
-                message: " Successfully Get a Customer with id = " + customerId,
+                message: "Successfully retrieved the customer with CustomerId " + customerId,
                 customers: customer
             });
         })
@@ -30,7 +30,7 @@ exports.getCustomerById = (req, res) => {
             }
         }).then(customerInfo => {
                 res.status(200).json({
-                    message: "Success",
+                    message: "Successfully retrieved customers with CompanyId " + req.params.id,
                     customers: customerInfo
                 });
             })
