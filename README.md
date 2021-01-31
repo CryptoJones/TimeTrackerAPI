@@ -2,7 +2,7 @@
 
 OpenSource re-write of Atbash Services' TimeTrackerAPI on NodeJS / PostgreSQL
 
-Working example at [https://node.timetrackerapi.com:8080](https://node.timetrackerapi.com:8080)
+Working example at [https://node.timetrackerapi.com](https://node.timetrackerapi.com)
 
 Database file is at db/TimeTracker.sql
 
@@ -40,4 +40,4 @@ postgres@localhost:~$ `exit`
 
 ubuntu@localhost:~$ `cd TimeTrackerAPI`
 
-ubuntu@localhost:~/TimeTrackerAPI$ `node server.js`
+ubuntu@localhost:~/TimeTrackerAPI$ `sudo node server.js`
