@@ -1,4 +1,4 @@
-TimeTrackerAPI
+# TimeTrackerAPI
 
 OpenSource re-write of Atbash Services' TimeTrackerAPI on NodeJS / PostgreSQL
 
@@ -10,9 +10,9 @@ Endpoints Completed
  * GET /v1/customer/#
  * GET /v1/customer/bycompany/#
 
-##
+#
 
-**QuickStart**
+# QuickStart
 
 #`git clone https://github.com/CryptoJones/TimeTrackerAPI.git`
 
@@ -35,7 +35,5 @@ postgres=#`ALTER USER timetracker WITH PASSWORD 'Password1';`
 postgres=#`\q`
 
 #`psql -f db/TimeTracker.sql -d timetracker`
-
-#
 
 #`node server.js`
