@@ -14,9 +14,9 @@ Endpoints Completed
 
 # QuickStart
 
-#`git clone https://github.com/CryptoJones/TimeTrackerAPI.git`
+"#"`git clone https://github.com/CryptoJones/TimeTrackerAPI.git`
 
-#`cd TimeTrackerAPI`
+# `cd TimeTrackerAPI`
 
 #`sudo apt-get install npm postgresql postgresql-client-common -y`
 
