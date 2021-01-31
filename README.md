@@ -20,7 +20,7 @@ ubuntu@localhost:~$ `sudo apt-get update`
 
 ubuntu@localhost:~$ `sudo apt-get install npm postgresql postgresql-client-common -y`
 
-ubuntu@localhost:~$ `npm install --save express cors body-parser pg pg-hstore sequelize`
+ubuntu@localhost:~$ `sudo npm install --save express cors body-parser pg pg-hstore sequelize`
 
 ubuntu@localhost:~$ `sudo su - postgres`
 
