@@ -18,7 +18,7 @@ Endpoints Completed
 
 #`cd TimeTrackerAPI`
 
-#`sudo apt-get install postgresql postgresql-client-common -y`
+#`sudo apt-get install npm postgresql postgresql-client-common -y`
 
 #`npm install --save express cors body-parser pg pg-hstore sequelize`
 
