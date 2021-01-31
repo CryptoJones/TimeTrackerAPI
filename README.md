@@ -4,15 +4,13 @@ OpenSource re-write of Atbash Services' TimeTrackerAPI on NodeJS / PostgreSQL
 
 Working example at [http://node.timetrackerapi.com](http://node.timetrackerapi.com)
 
-Database file is at db/TimeTracker.sql
-
 Endpoints Completed
  * GET /v1/customer/#
  * GET /v1/customer/bycompany/#
 
 #
 
-# QuickStart
+# QuickStart (Ubuntu 20.04 LTS)
 
 ubuntu@localhost:~$ `git clone https://github.com/CryptoJones/TimeTrackerAPI.git`
 
@@ -20,7 +18,7 @@ ubuntu@localhost:~$ `sudo apt-get update`
 
 ubuntu@localhost:~$ `sudo apt-get install npm postgresql postgresql-client-common -y`
 
-ubuntu@localhost:~$ `npm install --save express cors body-parser pg pg-hstore sequelize`
+ubuntu@localhost:~$ `sudo npm install --save express cors body-parser pg pg-hstore sequelize`
 
 ubuntu@localhost:~$ `sudo su - postgres`
 
