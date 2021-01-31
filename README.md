@@ -12,7 +12,7 @@ Endpoints Completed
 
 #
 
-# QuickStart
+# QuickStart (Ubuntu 20.04 LTS)
 
 ubuntu@localhost:~$ `git clone https://github.com/CryptoJones/TimeTrackerAPI.git`
 
