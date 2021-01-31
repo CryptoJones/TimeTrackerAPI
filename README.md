@@ -14,7 +14,7 @@ Endpoints Completed
 
 # QuickStart
 
-"#"`git clone https://github.com/CryptoJones/TimeTrackerAPI.git`
+#~$ `git clone https://github.com/CryptoJones/TimeTrackerAPI.git`
 
 # `cd TimeTrackerAPI`
 
