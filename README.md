@@ -37,7 +37,5 @@ postgres=# `\q`
 postgres@localhost:~$ `psql -f /home/ubuntu/TimeTrackerAPI/db/TimeTracker.sql -d timetracker`
 
 postgres@localhost:~$ `exit`
-l
-
 
 ubuntu@localhost:~/TimeTrackerAPI$ `node server.js`
