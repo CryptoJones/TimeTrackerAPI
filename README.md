@@ -16,6 +16,8 @@ Endpoints Completed
 
 ubuntu@localhost:~$ `git clone https://github.com/CryptoJones/TimeTrackerAPI.git`
 
+ubuntu@localhost:~$ `sudo apt-get update`
+
 ubuntu@localhost:~$ `sudo apt-get install npm postgresql postgresql-client-common -y`
 
 ubuntu@localhost:~$ `npm install --save express cors body-parser pg pg-hstore sequelize`
