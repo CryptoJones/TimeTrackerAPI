@@ -1,7 +1,7 @@
 const env = {
-  database: 'TimeTracker',
-  username: 'akclark',
-  password: 'fsociety',
+  database: 'timetracker',
+  username: 'timetracker',
+  password: 'Password1',
   host: 'localhost',
   dialect: 'postgres',
   define:{
