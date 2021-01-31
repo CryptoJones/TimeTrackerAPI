@@ -14,17 +14,17 @@ Endpoints Completed
 
 # QuickStart
 
-#~$ `git clone https://github.com/CryptoJones/TimeTrackerAPI.git`
+ubuntu@localhost#~$ `git clone https://github.com/CryptoJones/TimeTrackerAPI.git`
 
-#~$ `cd TimeTrackerAPI`
+ubuntu@localhost#~$ `cd TimeTrackerAPI`
 
-#~/TimeTrackerAPI$ `sudo apt-get install npm postgresql postgresql-client-common -y`
+ubuntu@localhost#~/TimeTrackerAPI$ `sudo apt-get install npm postgresql postgresql-client-common -y`
 
-#~/TimeTrackerAPI$ `npm install --save express cors body-parser pg pg-hstore sequelize`
+ubuntu@localhost#~/TimeTrackerAPI$ `npm install --save express cors body-parser pg pg-hstore sequelize`
 
-#~/TimeTrackerAPI$ `sudo su - postgres`
+ubuntu@localhost#~/TimeTrackerAPI$ `sudo su - postgres`
 
-#~/TimeTrackerAPI$ `psql`
+postgres@localhost#~$ `psql`
 
 postgres=#`CREATE USER timetracker SUPERUSER;`
 
@@ -33,6 +33,8 @@ postgres=#`CREATE DATABASE TimeTracker WITH OWNER timetracker;`
 postgres=#`ALTER USER timetracker WITH PASSWORD 'Password1';`
 
 postgres=#`\q`
+
+postgres@localhost#~$ `exit`
 
 #~/TimeTrackerAPI$ `psql -f db/TimeTracker.sql -d timetracker`
 
