@@ -16,13 +16,11 @@ Endpoints Completed
 
 ubuntu@localhost:~$ `git clone https://github.com/CryptoJones/TimeTrackerAPI.git`
 
-ubuntu@localhost:~$ `cd TimeTrackerAPI`
+ubuntu@localhost:~$ `sudo apt-get install npm postgresql postgresql-client-common -y`
 
-ubuntu@localhost:~/TimeTrackerAPI$ `sudo apt-get install npm postgresql postgresql-client-common -y`
+ubuntu@localhost:~$ `npm install --save express cors body-parser pg pg-hstore sequelize`
 
-ubuntu@localhost:~/TimeTrackerAPI$ `npm install --save express cors body-parser pg pg-hstore sequelize`
-
-ubuntu@localhost:~/TimeTrackerAPI$ `sudo su - postgres`
+ubuntu@localhost:~$ `sudo su - postgres`
 
 postgres@localhost:~$ `psql`
 
@@ -37,5 +35,7 @@ postgres=# `\q`
 postgres@localhost:~$ `psql -f /home/ubuntu/TimeTrackerAPI/db/TimeTracker.sql -d timetracker`
 
 postgres@localhost:~$ `exit`
+
+ubuntu@localhost:~$ `cd TimeTrackerAPI`
 
 ubuntu@localhost:~/TimeTrackerAPI$ `node server.js`
