@@ -34,8 +34,10 @@ postgres=# `ALTER USER timetracker WITH PASSWORD 'Password1';`
 
 postgres=# `\q`
 
-postgres@localhost:~$ `exit`
+postgres@localhost:~$ `psql -f /home/ubuntu/TimeTrackerAPI/db/TimeTracker.sql -d timetracker`
 
-ubuntu@localhost:~/TimeTrackerAPI$ `psql -f db/TimeTracker.sql -d timetracker`
+postgres@localhost:~$ `exit`
+l
+
 
 ubuntu@localhost:~/TimeTrackerAPI$ `node server.js`
