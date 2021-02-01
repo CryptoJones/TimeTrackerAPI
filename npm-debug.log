@@ -1,0 +1,3191 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/bin/node', '/usr/bin/npm', 'install', 'pg-native' ]
+2 info using npm@3.5.2
+3 info using node@v8.10.0
+4 silly loadCurrentTree Starting
+5 silly install loadCurrentTree
+6 silly install readLocalPackageData
+7 silly fetchPackageMetaData pg-native
+8 silly fetchNamedPackageData pg-native
+9 silly mapToRegistry name pg-native
+10 silly mapToRegistry using default registry
+11 silly mapToRegistry registry https://registry.npmjs.org/
+12 silly mapToRegistry uri https://registry.npmjs.org/pg-native
+13 verbose request uri https://registry.npmjs.org/pg-native
+14 verbose request no auth needed
+15 info attempt registry request try #1 at 7:58:46 PM
+16 verbose request id 0ba73bbd2ba06cbe
+17 http request GET https://registry.npmjs.org/pg-native
+18 http 200 https://registry.npmjs.org/pg-native
+19 verbose headers { date: 'Sun, 31 Jan 2021 19:58:46 GMT',
+19 verbose headers   'content-type': 'application/json; charset=UTF-8',
+19 verbose headers   'transfer-encoding': 'chunked',
+19 verbose headers   connection: 'keep-alive',
+19 verbose headers   'set-cookie':
+19 verbose headers    [ '__cfduid=d1518bba2ca48945c905a647a823f5a751612123126; expires=Tue, 02-Mar-21 19:58:46 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+19 verbose headers   'cf-ray': '61a602655cc2f77c-DEN',
+19 verbose headers   'cache-control': 'public, max-age=300',
+19 verbose headers   etag: 'W/"38e05bcdde596190baf9d086669eb337"',
+19 verbose headers   'last-modified': 'Sun, 27 May 2018 12:09:41 GMT',
+19 verbose headers   vary: 'accept-encoding, accept',
+19 verbose headers   'cf-cache-status': 'HIT',
+19 verbose headers   'cf-request-id': '07fb9fd3560000f77c72168000000001',
+19 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+19 verbose headers   server: 'cloudflare',
+19 verbose headers   'content-encoding': 'gzip' }
+20 silly get cb [ 200,
+20 silly get   { date: 'Sun, 31 Jan 2021 19:58:46 GMT',
+20 silly get     'content-type': 'application/json; charset=UTF-8',
+20 silly get     'transfer-encoding': 'chunked',
+20 silly get     connection: 'keep-alive',
+20 silly get     'set-cookie':
+20 silly get      [ '__cfduid=d1518bba2ca48945c905a647a823f5a751612123126; expires=Tue, 02-Mar-21 19:58:46 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+20 silly get     'cf-ray': '61a602655cc2f77c-DEN',
+20 silly get     'cache-control': 'public, max-age=300',
+20 silly get     etag: 'W/"38e05bcdde596190baf9d086669eb337"',
+20 silly get     'last-modified': 'Sun, 27 May 2018 12:09:41 GMT',
+20 silly get     vary: 'accept-encoding, accept',
+20 silly get     'cf-cache-status': 'HIT',
+20 silly get     'cf-request-id': '07fb9fd3560000f77c72168000000001',
+20 silly get     'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+20 silly get     server: 'cloudflare',
+20 silly get     'content-encoding': 'gzip' } ]
+21 verbose get saving pg-native to /home/akclark/.npm/registry.npmjs.org/pg-native/.cache.json
+22 silly install normalizeTree
+23 silly loadCurrentTree Finishing
+24 silly loadIdealTree Starting
+25 silly install loadIdealTree
+26 silly cloneCurrentTree Starting
+27 silly install cloneCurrentTreeToIdealTree
+28 silly cloneCurrentTree Finishing
+29 silly loadShrinkwrap Starting
+30 silly install loadShrinkwrap
+31 silly loadShrinkwrap Finishing
+32 silly loadAllDepsIntoIdealTree Starting
+33 silly install loadAllDepsIntoIdealTree
+34 silly resolveWithNewModule pg-native@3.0.0 checking installable status
+35 silly cache add args [ 'pg-native', null ]
+36 verbose cache add spec pg-native
+37 silly cache add parsed spec Result {
+37 silly cache add   raw: 'pg-native',
+37 silly cache add   scope: null,
+37 silly cache add   name: 'pg-native',
+37 silly cache add   rawSpec: '',
+37 silly cache add   spec: 'latest',
+37 silly cache add   type: 'tag' }
+38 silly addNamed pg-native@latest
+39 verbose addNamed "latest" is being treated as a dist-tag for pg-native
+40 info addNameTag [ 'pg-native', 'latest' ]
+41 silly mapToRegistry name pg-native
+42 silly mapToRegistry using default registry
+43 silly mapToRegistry registry https://registry.npmjs.org/
+44 silly mapToRegistry uri https://registry.npmjs.org/pg-native
+45 verbose addNameTag registry:https://registry.npmjs.org/pg-native not in flight; fetching
+46 verbose get https://registry.npmjs.org/pg-native not expired, no request
+47 silly addNameTag next cb for pg-native with tag latest
+48 silly addNamed pg-native@3.0.0
+49 verbose addNamed "3.0.0" is a plain semver version for pg-native
+50 silly mapToRegistry name pg-native
+51 silly mapToRegistry using default registry
+52 silly mapToRegistry registry https://registry.npmjs.org/
+53 silly mapToRegistry uri https://registry.npmjs.org/pg-native
+54 verbose addRemoteTarball https://registry.npmjs.org/pg-native/-/pg-native-3.0.0.tgz not in flight; adding
+55 verbose addRemoteTarball [ 'https://registry.npmjs.org/pg-native/-/pg-native-3.0.0.tgz',
+55 verbose addRemoteTarball   '20c64e651e20b28f5c060b3823522d1c8c4429c3' ]
+56 info retry fetch attempt 1 at 7:58:46 PM
+57 info attempt registry request try #1 at 7:58:46 PM
+58 http fetch GET https://registry.npmjs.org/pg-native/-/pg-native-3.0.0.tgz
+59 http fetch 200 https://registry.npmjs.org/pg-native/-/pg-native-3.0.0.tgz
+60 silly fetchAndShaCheck shasum 20c64e651e20b28f5c060b3823522d1c8c4429c3
+61 verbose addTmpTarball /tmp/npm-7219-c0b1e979/registry.npmjs.org/pg-native/-/pg-native-3.0.0.tgz not in flight; adding
+62 verbose addTmpTarball already have metadata; skipping unpack for pg-native@3.0.0
+63 silly cache afterAdd pg-native@3.0.0
+64 verbose afterAdd /home/akclark/.npm/pg-native/3.0.0/package/package.json not in flight; writing
+65 verbose afterAdd /home/akclark/.npm/pg-native/3.0.0/package/package.json written
+66 silly fetchNamedPackageData libpq
+67 silly mapToRegistry name libpq
+68 silly mapToRegistry using default registry
+69 silly mapToRegistry registry https://registry.npmjs.org/
+70 silly mapToRegistry uri https://registry.npmjs.org/libpq
+71 silly fetchNamedPackageData pg-types
+72 silly mapToRegistry name pg-types
+73 silly mapToRegistry using default registry
+74 silly mapToRegistry registry https://registry.npmjs.org/
+75 silly mapToRegistry uri https://registry.npmjs.org/pg-types
+76 silly fetchNamedPackageData readable-stream
+77 silly mapToRegistry name readable-stream
+78 silly mapToRegistry using default registry
+79 silly mapToRegistry registry https://registry.npmjs.org/
+80 silly mapToRegistry uri https://registry.npmjs.org/readable-stream
+81 verbose request uri https://registry.npmjs.org/libpq
+82 verbose request no auth needed
+83 info attempt registry request try #1 at 7:58:47 PM
+84 http request GET https://registry.npmjs.org/libpq
+85 verbose request uri https://registry.npmjs.org/pg-types
+86 verbose request no auth needed
+87 info attempt registry request try #1 at 7:58:47 PM
+88 http request GET https://registry.npmjs.org/pg-types
+89 verbose request uri https://registry.npmjs.org/readable-stream
+90 verbose request no auth needed
+91 info attempt registry request try #1 at 7:58:47 PM
+92 http request GET https://registry.npmjs.org/readable-stream
+93 http 200 https://registry.npmjs.org/readable-stream
+94 verbose headers { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+94 verbose headers   'content-type': 'application/json',
+94 verbose headers   'transfer-encoding': 'chunked',
+94 verbose headers   connection: 'keep-alive',
+94 verbose headers   'set-cookie':
+94 verbose headers    [ '__cfduid=de2bbee7e396e14aa09e0f7a711b335f11612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+94 verbose headers   'cf-ray': '61a602680edf2717-DEN',
+94 verbose headers   age: '498',
+94 verbose headers   'cache-control': 'public, max-age=300',
+94 verbose headers   etag: 'W/"cd4a066a34bf22a921492b57a292e033"',
+94 verbose headers   'last-modified': 'Thu, 13 Feb 2020 19:42:09 GMT',
+94 verbose headers   vary: 'accept-encoding, accept',
+94 verbose headers   'cf-cache-status': 'HIT',
+94 verbose headers   'cf-request-id': '07fb9fd5040000271793b33000000001',
+94 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+94 verbose headers   server: 'cloudflare',
+94 verbose headers   'content-encoding': 'gzip' }
+95 silly get cb [ 200,
+95 silly get   { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+95 silly get     'content-type': 'application/json',
+95 silly get     'transfer-encoding': 'chunked',
+95 silly get     connection: 'keep-alive',
+95 silly get     'set-cookie':
+95 silly get      [ '__cfduid=de2bbee7e396e14aa09e0f7a711b335f11612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+95 silly get     'cf-ray': '61a602680edf2717-DEN',
+95 silly get     age: '498',
+95 silly get     'cache-control': 'public, max-age=300',
+95 silly get     etag: 'W/"cd4a066a34bf22a921492b57a292e033"',
+95 silly get     'last-modified': 'Thu, 13 Feb 2020 19:42:09 GMT',
+95 silly get     vary: 'accept-encoding, accept',
+95 silly get     'cf-cache-status': 'HIT',
+95 silly get     'cf-request-id': '07fb9fd5040000271793b33000000001',
+95 silly get     'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+95 silly get     server: 'cloudflare',
+95 silly get     'content-encoding': 'gzip' } ]
+96 verbose get saving readable-stream to /home/akclark/.npm/registry.npmjs.org/readable-stream/.cache.json
+97 silly resolveWithNewModule readable-stream@1.0.31 checking installable status
+98 silly cache add args [ 'readable-stream@1.0.31', null ]
+99 verbose cache add spec readable-stream@1.0.31
+100 silly cache add parsed spec Result {
+100 silly cache add   raw: 'readable-stream@1.0.31',
+100 silly cache add   scope: null,
+100 silly cache add   name: 'readable-stream',
+100 silly cache add   rawSpec: '1.0.31',
+100 silly cache add   spec: '1.0.31',
+100 silly cache add   type: 'version' }
+101 silly addNamed readable-stream@1.0.31
+102 verbose addNamed "1.0.31" is a plain semver version for readable-stream
+103 silly mapToRegistry name readable-stream
+104 silly mapToRegistry using default registry
+105 silly mapToRegistry registry https://registry.npmjs.org/
+106 silly mapToRegistry uri https://registry.npmjs.org/readable-stream
+107 verbose addNameVersion registry:https://registry.npmjs.org/readable-stream not in flight; fetching
+108 verbose get https://registry.npmjs.org/readable-stream not expired, no request
+109 silly mapToRegistry name readable-stream
+110 silly mapToRegistry using default registry
+111 silly mapToRegistry registry https://registry.npmjs.org/
+112 silly mapToRegistry uri https://registry.npmjs.org/readable-stream
+113 verbose addRemoteTarball https://registry.npmjs.org/readable-stream/-/readable-stream-1.0.31.tgz not in flight; adding
+114 verbose addRemoteTarball [ 'https://registry.npmjs.org/readable-stream/-/readable-stream-1.0.31.tgz',
+114 verbose addRemoteTarball   '8f2502e0bc9e3b0da1b94520aabb4e2603ecafae' ]
+115 info retry fetch attempt 1 at 7:58:47 PM
+116 info attempt registry request try #1 at 7:58:47 PM
+117 http fetch GET https://registry.npmjs.org/readable-stream/-/readable-stream-1.0.31.tgz
+118 http 200 https://registry.npmjs.org/libpq
+119 verbose headers { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+119 verbose headers   'content-type': 'application/json',
+119 verbose headers   'transfer-encoding': 'chunked',
+119 verbose headers   connection: 'keep-alive',
+119 verbose headers   'set-cookie':
+119 verbose headers    [ '__cfduid=d1b45d95cc5a3a1a5eb0d7c93ba24bcab1612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+119 verbose headers   'cf-ray': '61a60267dfa5f77c-DEN',
+119 verbose headers   'cache-control': 'public, max-age=300',
+119 verbose headers   etag: 'W/"9c2274829739f0eb8c85433d423efbf1"',
+119 verbose headers   'last-modified': 'Tue, 25 Jun 2019 14:04:00 GMT',
+119 verbose headers   vary: 'accept-encoding, accept',
+119 verbose headers   'cf-cache-status': 'HIT',
+119 verbose headers   'cf-request-id': '07fb9fd4e30000f77c83345000000001',
+119 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+119 verbose headers   server: 'cloudflare',
+119 verbose headers   'content-encoding': 'gzip' }
+120 silly get cb [ 200,
+120 silly get   { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+120 silly get     'content-type': 'application/json',
+120 silly get     'transfer-encoding': 'chunked',
+120 silly get     connection: 'keep-alive',
+120 silly get     'set-cookie':
+120 silly get      [ '__cfduid=d1b45d95cc5a3a1a5eb0d7c93ba24bcab1612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+120 silly get     'cf-ray': '61a60267dfa5f77c-DEN',
+120 silly get     'cache-control': 'public, max-age=300',
+120 silly get     etag: 'W/"9c2274829739f0eb8c85433d423efbf1"',
+120 silly get     'last-modified': 'Tue, 25 Jun 2019 14:04:00 GMT',
+120 silly get     vary: 'accept-encoding, accept',
+120 silly get     'cf-cache-status': 'HIT',
+120 silly get     'cf-request-id': '07fb9fd4e30000f77c83345000000001',
+120 silly get     'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+120 silly get     server: 'cloudflare',
+120 silly get     'content-encoding': 'gzip' } ]
+121 verbose get saving libpq to /home/akclark/.npm/registry.npmjs.org/libpq/.cache.json
+122 silly resolveWithNewModule libpq@1.8.9 checking installable status
+123 silly cache add args [ 'libpq@^1.7.0', null ]
+124 verbose cache add spec libpq@^1.7.0
+125 silly cache add parsed spec Result {
+125 silly cache add   raw: 'libpq@^1.7.0',
+125 silly cache add   scope: null,
+125 silly cache add   name: 'libpq',
+125 silly cache add   rawSpec: '^1.7.0',
+125 silly cache add   spec: '>=1.7.0 <2.0.0',
+125 silly cache add   type: 'range' }
+126 silly addNamed libpq@>=1.7.0 <2.0.0
+127 verbose addNamed ">=1.7.0 <2.0.0" is a valid semver range for libpq
+128 silly addNameRange { name: 'libpq', range: '>=1.7.0 <2.0.0', hasData: false }
+129 silly mapToRegistry name libpq
+130 silly mapToRegistry using default registry
+131 silly mapToRegistry registry https://registry.npmjs.org/
+132 silly mapToRegistry uri https://registry.npmjs.org/libpq
+133 verbose addNameRange registry:https://registry.npmjs.org/libpq not in flight; fetching
+134 verbose get https://registry.npmjs.org/libpq not expired, no request
+135 silly addNameRange number 2 { name: 'libpq', range: '>=1.7.0 <2.0.0', hasData: true }
+136 silly addNameRange versions [ 'libpq',
+136 silly addNameRange   [ '0.2.0',
+136 silly addNameRange     '0.2.1',
+136 silly addNameRange     '0.2.2',
+136 silly addNameRange     '0.2.3',
+136 silly addNameRange     '0.2.4',
+136 silly addNameRange     '0.2.5',
+136 silly addNameRange     '0.3.0',
+136 silly addNameRange     '0.4.0',
+136 silly addNameRange     '0.4.1',
+136 silly addNameRange     '0.5.0',
+136 silly addNameRange     '0.5.1',
+136 silly addNameRange     '0.5.2',
+136 silly addNameRange     '0.5.3',
+136 silly addNameRange     '1.0.0',
+136 silly addNameRange     '1.0.1',
+136 silly addNameRange     '1.1.0',
+136 silly addNameRange     '1.2.0',
+136 silly addNameRange     '1.2.1',
+136 silly addNameRange     '1.3.0',
+136 silly addNameRange     '1.3.1',
+136 silly addNameRange     '1.4.0',
+136 silly addNameRange     '1.4.1',
+136 silly addNameRange     '1.4.2',
+136 silly addNameRange     '1.5.1',
+136 silly addNameRange     '1.6.0',
+136 silly addNameRange     '1.6.1',
+136 silly addNameRange     '1.6.2',
+136 silly addNameRange     '1.6.3',
+136 silly addNameRange     '1.6.4',
+136 silly addNameRange     '1.7.0',
+136 silly addNameRange     '1.8.0',
+136 silly addNameRange     '1.8.1',
+136 silly addNameRange     '1.8.2',
+136 silly addNameRange     '1.8.3',
+136 silly addNameRange     '1.8.4',
+136 silly addNameRange     '1.8.5',
+136 silly addNameRange     '1.8.6',
+136 silly addNameRange     '1.8.7',
+136 silly addNameRange     '1.8.8',
+136 silly addNameRange     '1.8.9' ] ]
+137 silly addNamed libpq@1.8.9
+138 verbose addNamed "1.8.9" is a plain semver version for libpq
+139 silly mapToRegistry name libpq
+140 silly mapToRegistry using default registry
+141 silly mapToRegistry registry https://registry.npmjs.org/
+142 silly mapToRegistry uri https://registry.npmjs.org/libpq
+143 verbose addRemoteTarball https://registry.npmjs.org/libpq/-/libpq-1.8.9.tgz not in flight; adding
+144 verbose addRemoteTarball [ 'https://registry.npmjs.org/libpq/-/libpq-1.8.9.tgz',
+144 verbose addRemoteTarball   '6e0c6eecb176f6656ad092d67cc0131980cba897' ]
+145 info retry fetch attempt 1 at 7:58:47 PM
+146 info attempt registry request try #1 at 7:58:47 PM
+147 http fetch GET https://registry.npmjs.org/libpq/-/libpq-1.8.9.tgz
+148 http 200 https://registry.npmjs.org/pg-types
+149 verbose headers { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+149 verbose headers   'content-type': 'application/json',
+149 verbose headers   'transfer-encoding': 'chunked',
+149 verbose headers   connection: 'keep-alive',
+149 verbose headers   'set-cookie':
+149 verbose headers    [ '__cfduid=dc9cfe4c0d7ded4c00c7e102ebd6652e81612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+149 verbose headers   'cf-ray': '61a602680c82c7a5-DEN',
+149 verbose headers   'cache-control': 'public, max-age=300',
+149 verbose headers   etag: 'W/"cb19f7dce4b9edb5a63a7110930495d8"',
+149 verbose headers   'last-modified': 'Tue, 04 Aug 2020 23:08:00 GMT',
+149 verbose headers   vary: 'accept-encoding, accept',
+149 verbose headers   'cf-cache-status': 'HIT',
+149 verbose headers   'cf-request-id': '07fb9fd5000000c7a575a08000000001',
+149 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+149 verbose headers   server: 'cloudflare',
+149 verbose headers   'content-encoding': 'gzip' }
+150 silly get cb [ 200,
+150 silly get   { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+150 silly get     'content-type': 'application/json',
+150 silly get     'transfer-encoding': 'chunked',
+150 silly get     connection: 'keep-alive',
+150 silly get     'set-cookie':
+150 silly get      [ '__cfduid=dc9cfe4c0d7ded4c00c7e102ebd6652e81612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+150 silly get     'cf-ray': '61a602680c82c7a5-DEN',
+150 silly get     'cache-control': 'public, max-age=300',
+150 silly get     etag: 'W/"cb19f7dce4b9edb5a63a7110930495d8"',
+150 silly get     'last-modified': 'Tue, 04 Aug 2020 23:08:00 GMT',
+150 silly get     vary: 'accept-encoding, accept',
+150 silly get     'cf-cache-status': 'HIT',
+150 silly get     'cf-request-id': '07fb9fd5000000c7a575a08000000001',
+150 silly get     'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+150 silly get     server: 'cloudflare',
+150 silly get     'content-encoding': 'gzip' } ]
+151 verbose get saving pg-types to /home/akclark/.npm/registry.npmjs.org/pg-types/.cache.json
+152 silly resolveWithNewModule pg-types@1.13.0 checking installable status
+153 silly cache add args [ 'pg-types@^1.12.1', null ]
+154 verbose cache add spec pg-types@^1.12.1
+155 silly cache add parsed spec Result {
+155 silly cache add   raw: 'pg-types@^1.12.1',
+155 silly cache add   scope: null,
+155 silly cache add   name: 'pg-types',
+155 silly cache add   rawSpec: '^1.12.1',
+155 silly cache add   spec: '>=1.12.1 <2.0.0',
+155 silly cache add   type: 'range' }
+156 silly addNamed pg-types@>=1.12.1 <2.0.0
+157 verbose addNamed ">=1.12.1 <2.0.0" is a valid semver range for pg-types
+158 silly addNameRange { name: 'pg-types', range: '>=1.12.1 <2.0.0', hasData: false }
+159 silly mapToRegistry name pg-types
+160 silly mapToRegistry using default registry
+161 silly mapToRegistry registry https://registry.npmjs.org/
+162 silly mapToRegistry uri https://registry.npmjs.org/pg-types
+163 verbose addNameRange registry:https://registry.npmjs.org/pg-types not in flight; fetching
+164 verbose get https://registry.npmjs.org/pg-types not expired, no request
+165 silly addNameRange number 2 { name: 'pg-types', range: '>=1.12.1 <2.0.0', hasData: true }
+166 silly addNameRange versions [ 'pg-types',
+166 silly addNameRange   [ '1.0.0',
+166 silly addNameRange     '1.1.0',
+166 silly addNameRange     '1.2.0',
+166 silly addNameRange     '1.3.0',
+166 silly addNameRange     '1.4.0',
+166 silly addNameRange     '1.5.0',
+166 silly addNameRange     '1.6.0',
+166 silly addNameRange     '1.7.0',
+166 silly addNameRange     '1.8.0',
+166 silly addNameRange     '1.9.0',
+166 silly addNameRange     '1.10.0',
+166 silly addNameRange     '1.11.0',
+166 silly addNameRange     '1.12.0',
+166 silly addNameRange     '1.12.1',
+166 silly addNameRange     '1.13.0',
+166 silly addNameRange     '2.0.0',
+166 silly addNameRange     '2.0.1',
+166 silly addNameRange     '2.1.0',
+166 silly addNameRange     '2.2.0',
+166 silly addNameRange     '3.0.0',
+166 silly addNameRange     '3.0.1' ] ]
+167 silly addNamed pg-types@1.13.0
+168 verbose addNamed "1.13.0" is a plain semver version for pg-types
+169 http fetch 200 https://registry.npmjs.org/readable-stream/-/readable-stream-1.0.31.tgz
+170 silly mapToRegistry name pg-types
+171 silly mapToRegistry using default registry
+172 silly mapToRegistry registry https://registry.npmjs.org/
+173 silly mapToRegistry uri https://registry.npmjs.org/pg-types
+174 verbose addRemoteTarball https://registry.npmjs.org/pg-types/-/pg-types-1.13.0.tgz not in flight; adding
+175 verbose addRemoteTarball [ 'https://registry.npmjs.org/pg-types/-/pg-types-1.13.0.tgz',
+175 verbose addRemoteTarball   '75f490b8a8abf75f1386ef5ec4455ecf6b345c63' ]
+176 info retry fetch attempt 1 at 7:58:47 PM
+177 info attempt registry request try #1 at 7:58:47 PM
+178 http fetch GET https://registry.npmjs.org/pg-types/-/pg-types-1.13.0.tgz
+179 silly fetchAndShaCheck shasum 8f2502e0bc9e3b0da1b94520aabb4e2603ecafae
+180 verbose addTmpTarball /tmp/npm-7219-c0b1e979/registry.npmjs.org/readable-stream/-/readable-stream-1.0.31.tgz not in flight; adding
+181 verbose addTmpTarball already have metadata; skipping unpack for readable-stream@1.0.31
+182 http fetch 200 https://registry.npmjs.org/libpq/-/libpq-1.8.9.tgz
+183 silly fetchAndShaCheck shasum 6e0c6eecb176f6656ad092d67cc0131980cba897
+184 verbose addTmpTarball /tmp/npm-7219-c0b1e979/registry.npmjs.org/libpq/-/libpq-1.8.9.tgz not in flight; adding
+185 verbose addTmpTarball already have metadata; skipping unpack for libpq@1.8.9
+186 silly cache afterAdd readable-stream@1.0.31
+187 verbose afterAdd /home/akclark/.npm/readable-stream/1.0.31/package/package.json not in flight; writing
+188 verbose afterAdd /home/akclark/.npm/readable-stream/1.0.31/package/package.json written
+189 silly cache afterAdd libpq@1.8.9
+190 verbose afterAdd /home/akclark/.npm/libpq/1.8.9/package/package.json not in flight; writing
+191 verbose afterAdd /home/akclark/.npm/libpq/1.8.9/package/package.json written
+192 http fetch 200 https://registry.npmjs.org/pg-types/-/pg-types-1.13.0.tgz
+193 silly fetchAndShaCheck shasum 75f490b8a8abf75f1386ef5ec4455ecf6b345c63
+194 verbose addTmpTarball /tmp/npm-7219-c0b1e979/registry.npmjs.org/pg-types/-/pg-types-1.13.0.tgz not in flight; adding
+195 verbose addTmpTarball already have metadata; skipping unpack for pg-types@1.13.0
+196 silly cache afterAdd pg-types@1.13.0
+197 verbose afterAdd /home/akclark/.npm/pg-types/1.13.0/package/package.json not in flight; writing
+198 verbose afterAdd /home/akclark/.npm/pg-types/1.13.0/package/package.json written
+199 silly fetchNamedPackageData bindings
+200 silly mapToRegistry name bindings
+201 silly mapToRegistry using default registry
+202 silly mapToRegistry registry https://registry.npmjs.org/
+203 silly mapToRegistry uri https://registry.npmjs.org/bindings
+204 silly fetchNamedPackageData nan
+205 silly mapToRegistry name nan
+206 silly mapToRegistry using default registry
+207 silly mapToRegistry registry https://registry.npmjs.org/
+208 silly mapToRegistry uri https://registry.npmjs.org/nan
+209 verbose request uri https://registry.npmjs.org/bindings
+210 verbose request no auth needed
+211 info attempt registry request try #1 at 7:58:47 PM
+212 http request GET https://registry.npmjs.org/bindings
+213 verbose request uri https://registry.npmjs.org/nan
+214 verbose request no auth needed
+215 info attempt registry request try #1 at 7:58:47 PM
+216 http request GET https://registry.npmjs.org/nan
+217 http 200 https://registry.npmjs.org/nan
+218 verbose headers { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+218 verbose headers   'content-type': 'application/json',
+218 verbose headers   'transfer-encoding': 'chunked',
+218 verbose headers   connection: 'keep-alive',
+218 verbose headers   'set-cookie':
+218 verbose headers    [ '__cfduid=d1b45d95cc5a3a1a5eb0d7c93ba24bcab1612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+218 verbose headers   'cf-ray': '61a602691951f77c-DEN',
+218 verbose headers   age: '487',
+218 verbose headers   'cache-control': 'public, max-age=300',
+218 verbose headers   etag: 'W/"ac38f6c9400be015a896aa94515b9385"',
+218 verbose headers   'last-modified': 'Tue, 13 Oct 2020 12:49:58 GMT',
+218 verbose headers   vary: 'accept-encoding, accept',
+218 verbose headers   'cf-cache-status': 'HIT',
+218 verbose headers   'cf-request-id': '07fb9fd5b00000f77cd3326000000001',
+218 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+218 verbose headers   server: 'cloudflare',
+218 verbose headers   'content-encoding': 'gzip' }
+219 silly get cb [ 200,
+219 silly get   { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+219 silly get     'content-type': 'application/json',
+219 silly get     'transfer-encoding': 'chunked',
+219 silly get     connection: 'keep-alive',
+219 silly get     'set-cookie':
+219 silly get      [ '__cfduid=d1b45d95cc5a3a1a5eb0d7c93ba24bcab1612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+219 silly get     'cf-ray': '61a602691951f77c-DEN',
+219 silly get     age: '487',
+219 silly get     'cache-control': 'public, max-age=300',
+219 silly get     etag: 'W/"ac38f6c9400be015a896aa94515b9385"',
+219 silly get     'last-modified': 'Tue, 13 Oct 2020 12:49:58 GMT',
+219 silly get     vary: 'accept-encoding, accept',
+219 silly get     'cf-cache-status': 'HIT',
+219 silly get     'cf-request-id': '07fb9fd5b00000f77cd3326000000001',
+219 silly get     'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+219 silly get     server: 'cloudflare',
+219 silly get     'content-encoding': 'gzip' } ]
+220 verbose get saving nan to /home/akclark/.npm/registry.npmjs.org/nan/.cache.json
+221 silly resolveWithNewModule nan@2.14.2 checking installable status
+222 silly cache add args [ 'nan@^2.14.0', null ]
+223 verbose cache add spec nan@^2.14.0
+224 silly cache add parsed spec Result {
+224 silly cache add   raw: 'nan@^2.14.0',
+224 silly cache add   scope: null,
+224 silly cache add   name: 'nan',
+224 silly cache add   rawSpec: '^2.14.0',
+224 silly cache add   spec: '>=2.14.0 <3.0.0',
+224 silly cache add   type: 'range' }
+225 silly addNamed nan@>=2.14.0 <3.0.0
+226 verbose addNamed ">=2.14.0 <3.0.0" is a valid semver range for nan
+227 silly addNameRange { name: 'nan', range: '>=2.14.0 <3.0.0', hasData: false }
+228 silly mapToRegistry name nan
+229 silly mapToRegistry using default registry
+230 silly mapToRegistry registry https://registry.npmjs.org/
+231 silly mapToRegistry uri https://registry.npmjs.org/nan
+232 verbose addNameRange registry:https://registry.npmjs.org/nan not in flight; fetching
+233 verbose get https://registry.npmjs.org/nan not expired, no request
+234 silly addNameRange number 2 { name: 'nan', range: '>=2.14.0 <3.0.0', hasData: true }
+235 silly addNameRange versions [ 'nan',
+235 silly addNameRange   [ '0.3.0-wip',
+235 silly addNameRange     '0.3.0-wip2',
+235 silly addNameRange     '0.3.0',
+235 silly addNameRange     '0.3.1',
+235 silly addNameRange     '0.3.2',
+235 silly addNameRange     '0.4.0',
+235 silly addNameRange     '0.4.1',
+235 silly addNameRange     '0.4.2',
+235 silly addNameRange     '0.4.3',
+235 silly addNameRange     '0.4.4',
+235 silly addNameRange     '0.5.0',
+235 silly addNameRange     '0.5.1',
+235 silly addNameRange     '0.5.2',
+235 silly addNameRange     '0.6.0',
+235 silly addNameRange     '0.7.0',
+235 silly addNameRange     '0.7.1',
+235 silly addNameRange     '0.8.0',
+235 silly addNameRange     '1.0.0',
+235 silly addNameRange     '1.1.0',
+235 silly addNameRange     '1.1.1',
+235 silly addNameRange     '1.1.2',
+235 silly addNameRange     '1.2.0',
+235 silly addNameRange     '1.3.0',
+235 silly addNameRange     '1.4.0',
+235 silly addNameRange     '1.4.1',
+235 silly addNameRange     '1.5.0',
+235 silly addNameRange     '1.4.2',
+235 silly addNameRange     '1.4.3',
+235 silly addNameRange     '1.5.1',
+235 silly addNameRange     '1.5.2',
+235 silly addNameRange     '1.6.0',
+235 silly addNameRange     '1.5.3',
+235 silly addNameRange     '1.6.1',
+235 silly addNameRange     '1.6.2',
+235 silly addNameRange     '1.7.0',
+235 silly addNameRange     '1.8.0',
+235 silly addNameRange     '1.8.1',
+235 silly addNameRange     '1.8.2',
+235 silly addNameRange     '1.8.3',
+235 silly addNameRange     '1.8.4',
+235 silly addNameRange     '1.9.0',
+235 silly addNameRange     '2.0.0',
+235 silly addNameRange     '2.0.1',
+235 silly addNameRange     '2.0.2',
+235 silly addNameRange     '2.0.3',
+235 silly addNameRange     '2.0.4',
+235 silly addNameRange     '2.0.5',
+235 silly addNameRange     '2.0.6',
+235 silly addNameRange     '2.0.7',
+235 silly addNameRange     '2.0.8',
+235 silly addNameRange     '2.0.9',
+235 silly addNameRange     '2.1.0',
+235 silly addNameRange     '2.2.0',
+235 silly addNameRange     '2.2.1',
+235 silly addNameRange     '2.3.0',
+235 silly addNameRange     '2.3.1',
+235 silly addNameRange     '2.3.2',
+235 silly addNameRange     '2.3.3',
+235 silly addNameRange     '2.3.4',
+235 silly addNameRange     '2.3.5',
+235 silly addNameRange     '2.4.0',
+235 silly addNameRange     '2.5.0',
+235 silly addNameRange     '2.5.1',
+235 silly addNameRange     '2.6.0',
+235 silly addNameRange     '2.6.1',
+235 silly addNameRange     '2.6.2',
+235 silly addNameRange     '2.7.0',
+235 silly addNameRange     '2.8.0',
+235 silly addNameRange     '2.9.1',
+235 silly addNameRange     '2.9.2',
+235 silly addNameRange     '2.10.0',
+235 silly addNameRange     '2.11.0',
+235 silly addNameRange     '2.11.1',
+235 silly addNameRange     '2.12.0',
+235 silly addNameRange     '2.12.1',
+235 silly addNameRange     '2.13.0',
+235 silly addNameRange     '2.13.1',
+235 silly addNameRange     '2.13.2',
+235 silly addNameRange     '2.14.0',
+235 silly addNameRange     '2.14.1',
+235 silly addNameRange     '2.14.2' ] ]
+236 silly addNamed nan@2.14.2
+237 verbose addNamed "2.14.2" is a plain semver version for nan
+238 silly mapToRegistry name nan
+239 silly mapToRegistry using default registry
+240 silly mapToRegistry registry https://registry.npmjs.org/
+241 silly mapToRegistry uri https://registry.npmjs.org/nan
+242 verbose addRemoteTarball https://registry.npmjs.org/nan/-/nan-2.14.2.tgz not in flight; adding
+243 verbose addRemoteTarball [ 'https://registry.npmjs.org/nan/-/nan-2.14.2.tgz',
+243 verbose addRemoteTarball   'f5376400695168f4cc694ac9393d0c9585eeea19' ]
+244 info retry fetch attempt 1 at 7:58:47 PM
+245 info attempt registry request try #1 at 7:58:47 PM
+246 http fetch GET https://registry.npmjs.org/nan/-/nan-2.14.2.tgz
+247 http 200 https://registry.npmjs.org/bindings
+248 verbose headers { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+248 verbose headers   'content-type': 'application/json',
+248 verbose headers   'transfer-encoding': 'chunked',
+248 verbose headers   connection: 'keep-alive',
+248 verbose headers   'set-cookie':
+248 verbose headers    [ '__cfduid=de2bbee7e396e14aa09e0f7a711b335f11612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+248 verbose headers   'cf-ray': '61a6026918742717-DEN',
+248 verbose headers   'cache-control': 'public, max-age=300',
+248 verbose headers   etag: 'W/"8dfe34716157e36596b3ba5e5fcfb617"',
+248 verbose headers   'last-modified': 'Wed, 27 Feb 2019 22:54:48 GMT',
+248 verbose headers   vary: 'accept-encoding, accept',
+248 verbose headers   'cf-cache-status': 'HIT',
+248 verbose headers   'cf-request-id': '07fb9fd5b000002717822a4000000001',
+248 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+248 verbose headers   server: 'cloudflare',
+248 verbose headers   'content-encoding': 'gzip' }
+249 silly get cb [ 200,
+249 silly get   { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+249 silly get     'content-type': 'application/json',
+249 silly get     'transfer-encoding': 'chunked',
+249 silly get     connection: 'keep-alive',
+249 silly get     'set-cookie':
+249 silly get      [ '__cfduid=de2bbee7e396e14aa09e0f7a711b335f11612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+249 silly get     'cf-ray': '61a6026918742717-DEN',
+249 silly get     'cache-control': 'public, max-age=300',
+249 silly get     etag: 'W/"8dfe34716157e36596b3ba5e5fcfb617"',
+249 silly get     'last-modified': 'Wed, 27 Feb 2019 22:54:48 GMT',
+249 silly get     vary: 'accept-encoding, accept',
+249 silly get     'cf-cache-status': 'HIT',
+249 silly get     'cf-request-id': '07fb9fd5b000002717822a4000000001',
+249 silly get     'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+249 silly get     server: 'cloudflare',
+249 silly get     'content-encoding': 'gzip' } ]
+250 verbose get saving bindings to /home/akclark/.npm/registry.npmjs.org/bindings/.cache.json
+251 silly resolveWithNewModule bindings@1.5.0 checking installable status
+252 silly cache add args [ 'bindings@1.5.0', null ]
+253 verbose cache add spec bindings@1.5.0
+254 silly cache add parsed spec Result {
+254 silly cache add   raw: 'bindings@1.5.0',
+254 silly cache add   scope: null,
+254 silly cache add   name: 'bindings',
+254 silly cache add   rawSpec: '1.5.0',
+254 silly cache add   spec: '1.5.0',
+254 silly cache add   type: 'version' }
+255 silly addNamed bindings@1.5.0
+256 verbose addNamed "1.5.0" is a plain semver version for bindings
+257 silly mapToRegistry name bindings
+258 silly mapToRegistry using default registry
+259 silly mapToRegistry registry https://registry.npmjs.org/
+260 silly mapToRegistry uri https://registry.npmjs.org/bindings
+261 verbose addNameVersion registry:https://registry.npmjs.org/bindings not in flight; fetching
+262 verbose get https://registry.npmjs.org/bindings not expired, no request
+263 silly mapToRegistry name bindings
+264 silly mapToRegistry using default registry
+265 silly mapToRegistry registry https://registry.npmjs.org/
+266 silly mapToRegistry uri https://registry.npmjs.org/bindings
+267 verbose addRemoteTarball https://registry.npmjs.org/bindings/-/bindings-1.5.0.tgz not in flight; adding
+268 verbose addRemoteTarball [ 'https://registry.npmjs.org/bindings/-/bindings-1.5.0.tgz',
+268 verbose addRemoteTarball   '10353c9e945334bc0511a6d90b38fbc7c9c504df' ]
+269 info retry fetch attempt 1 at 7:58:47 PM
+270 info attempt registry request try #1 at 7:58:47 PM
+271 http fetch GET https://registry.npmjs.org/bindings/-/bindings-1.5.0.tgz
+272 http fetch 200 https://registry.npmjs.org/nan/-/nan-2.14.2.tgz
+273 http fetch 200 https://registry.npmjs.org/bindings/-/bindings-1.5.0.tgz
+274 silly fetchAndShaCheck shasum f5376400695168f4cc694ac9393d0c9585eeea19
+275 silly fetchAndShaCheck shasum 10353c9e945334bc0511a6d90b38fbc7c9c504df
+276 verbose addTmpTarball /tmp/npm-7219-c0b1e979/registry.npmjs.org/nan/-/nan-2.14.2.tgz not in flight; adding
+277 verbose addTmpTarball already have metadata; skipping unpack for nan@2.14.2
+278 verbose addTmpTarball /tmp/npm-7219-c0b1e979/registry.npmjs.org/bindings/-/bindings-1.5.0.tgz not in flight; adding
+279 verbose addTmpTarball already have metadata; skipping unpack for bindings@1.5.0
+280 silly cache afterAdd bindings@1.5.0
+281 verbose afterAdd /home/akclark/.npm/bindings/1.5.0/package/package.json not in flight; writing
+282 silly cache afterAdd nan@2.14.2
+283 verbose afterAdd /home/akclark/.npm/nan/2.14.2/package/package.json not in flight; writing
+284 verbose afterAdd /home/akclark/.npm/bindings/1.5.0/package/package.json written
+285 verbose afterAdd /home/akclark/.npm/nan/2.14.2/package/package.json written
+286 silly fetchNamedPackageData file-uri-to-path
+287 silly mapToRegistry name file-uri-to-path
+288 silly mapToRegistry using default registry
+289 silly mapToRegistry registry https://registry.npmjs.org/
+290 silly mapToRegistry uri https://registry.npmjs.org/file-uri-to-path
+291 verbose request uri https://registry.npmjs.org/file-uri-to-path
+292 verbose request no auth needed
+293 info attempt registry request try #1 at 7:58:47 PM
+294 http request GET https://registry.npmjs.org/file-uri-to-path
+295 http 200 https://registry.npmjs.org/file-uri-to-path
+296 verbose headers { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+296 verbose headers   'content-type': 'application/json',
+296 verbose headers   'transfer-encoding': 'chunked',
+296 verbose headers   connection: 'keep-alive',
+296 verbose headers   'set-cookie':
+296 verbose headers    [ '__cfduid=de2bbee7e396e14aa09e0f7a711b335f11612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+296 verbose headers   'cf-ray': '61a6026a2a312717-DEN',
+296 verbose headers   'cache-control': 'public, max-age=300',
+296 verbose headers   etag: 'W/"45b0e7d73754ec9cd3750bf6010b230f"',
+296 verbose headers   'last-modified': 'Fri, 11 Oct 2019 20:21:56 GMT',
+296 verbose headers   vary: 'accept-encoding, accept',
+296 verbose headers   'cf-cache-status': 'HIT',
+296 verbose headers   'cf-request-id': '07fb9fd65c00002717931a1000000001',
+296 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+296 verbose headers   server: 'cloudflare',
+296 verbose headers   'content-encoding': 'gzip' }
+297 silly get cb [ 200,
+297 silly get   { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+297 silly get     'content-type': 'application/json',
+297 silly get     'transfer-encoding': 'chunked',
+297 silly get     connection: 'keep-alive',
+297 silly get     'set-cookie':
+297 silly get      [ '__cfduid=de2bbee7e396e14aa09e0f7a711b335f11612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+297 silly get     'cf-ray': '61a6026a2a312717-DEN',
+297 silly get     'cache-control': 'public, max-age=300',
+297 silly get     etag: 'W/"45b0e7d73754ec9cd3750bf6010b230f"',
+297 silly get     'last-modified': 'Fri, 11 Oct 2019 20:21:56 GMT',
+297 silly get     vary: 'accept-encoding, accept',
+297 silly get     'cf-cache-status': 'HIT',
+297 silly get     'cf-request-id': '07fb9fd65c00002717931a1000000001',
+297 silly get     'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+297 silly get     server: 'cloudflare',
+297 silly get     'content-encoding': 'gzip' } ]
+298 verbose get saving file-uri-to-path to /home/akclark/.npm/registry.npmjs.org/file-uri-to-path/.cache.json
+299 silly resolveWithNewModule file-uri-to-path@1.0.0 checking installable status
+300 silly cache add args [ 'file-uri-to-path@1.0.0', null ]
+301 verbose cache add spec file-uri-to-path@1.0.0
+302 silly cache add parsed spec Result {
+302 silly cache add   raw: 'file-uri-to-path@1.0.0',
+302 silly cache add   scope: null,
+302 silly cache add   name: 'file-uri-to-path',
+302 silly cache add   rawSpec: '1.0.0',
+302 silly cache add   spec: '1.0.0',
+302 silly cache add   type: 'version' }
+303 silly addNamed file-uri-to-path@1.0.0
+304 verbose addNamed "1.0.0" is a plain semver version for file-uri-to-path
+305 silly mapToRegistry name file-uri-to-path
+306 silly mapToRegistry using default registry
+307 silly mapToRegistry registry https://registry.npmjs.org/
+308 silly mapToRegistry uri https://registry.npmjs.org/file-uri-to-path
+309 verbose addNameVersion registry:https://registry.npmjs.org/file-uri-to-path not in flight; fetching
+310 verbose get https://registry.npmjs.org/file-uri-to-path not expired, no request
+311 silly mapToRegistry name file-uri-to-path
+312 silly mapToRegistry using default registry
+313 silly mapToRegistry registry https://registry.npmjs.org/
+314 silly mapToRegistry uri https://registry.npmjs.org/file-uri-to-path
+315 verbose addRemoteTarball https://registry.npmjs.org/file-uri-to-path/-/file-uri-to-path-1.0.0.tgz not in flight; adding
+316 verbose addRemoteTarball [ 'https://registry.npmjs.org/file-uri-to-path/-/file-uri-to-path-1.0.0.tgz',
+316 verbose addRemoteTarball   '553a7b8446ff6f684359c445f1e37a05dacc33dd' ]
+317 info retry fetch attempt 1 at 7:58:47 PM
+318 info attempt registry request try #1 at 7:58:47 PM
+319 http fetch GET https://registry.npmjs.org/file-uri-to-path/-/file-uri-to-path-1.0.0.tgz
+320 http fetch 200 https://registry.npmjs.org/file-uri-to-path/-/file-uri-to-path-1.0.0.tgz
+321 silly fetchAndShaCheck shasum 553a7b8446ff6f684359c445f1e37a05dacc33dd
+322 verbose addTmpTarball /tmp/npm-7219-c0b1e979/registry.npmjs.org/file-uri-to-path/-/file-uri-to-path-1.0.0.tgz not in flight; adding
+323 verbose addTmpTarball already have metadata; skipping unpack for file-uri-to-path@1.0.0
+324 silly cache afterAdd file-uri-to-path@1.0.0
+325 verbose afterAdd /home/akclark/.npm/file-uri-to-path/1.0.0/package/package.json not in flight; writing
+326 verbose afterAdd /home/akclark/.npm/file-uri-to-path/1.0.0/package/package.json written
+327 silly fetchNamedPackageData postgres-array
+328 silly mapToRegistry name postgres-array
+329 silly mapToRegistry using default registry
+330 silly mapToRegistry registry https://registry.npmjs.org/
+331 silly mapToRegistry uri https://registry.npmjs.org/postgres-array
+332 verbose request uri https://registry.npmjs.org/postgres-array
+333 verbose request no auth needed
+334 info attempt registry request try #1 at 7:58:47 PM
+335 http request GET https://registry.npmjs.org/postgres-array
+336 http 200 https://registry.npmjs.org/postgres-array
+337 verbose headers { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+337 verbose headers   'content-type': 'application/json',
+337 verbose headers   'transfer-encoding': 'chunked',
+337 verbose headers   connection: 'keep-alive',
+337 verbose headers   'set-cookie':
+337 verbose headers    [ '__cfduid=d1b45d95cc5a3a1a5eb0d7c93ba24bcab1612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+337 verbose headers   'cf-ray': '61a6026b2c2ef77c-DEN',
+337 verbose headers   'cache-control': 'public, max-age=300',
+337 verbose headers   etag: 'W/"8e87e7131f47a954b965c6bf49ed62dc"',
+337 verbose headers   'last-modified': 'Thu, 29 Oct 2020 19:49:55 GMT',
+337 verbose headers   vary: 'accept-encoding, accept',
+337 verbose headers   'cf-cache-status': 'HIT',
+337 verbose headers   'cf-request-id': '07fb9fd6fd0000f77c81310000000001',
+337 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+337 verbose headers   server: 'cloudflare',
+337 verbose headers   'content-encoding': 'gzip' }
+338 silly get cb [ 200,
+338 silly get   { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+338 silly get     'content-type': 'application/json',
+338 silly get     'transfer-encoding': 'chunked',
+338 silly get     connection: 'keep-alive',
+338 silly get     'set-cookie':
+338 silly get      [ '__cfduid=d1b45d95cc5a3a1a5eb0d7c93ba24bcab1612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+338 silly get     'cf-ray': '61a6026b2c2ef77c-DEN',
+338 silly get     'cache-control': 'public, max-age=300',
+338 silly get     etag: 'W/"8e87e7131f47a954b965c6bf49ed62dc"',
+338 silly get     'last-modified': 'Thu, 29 Oct 2020 19:49:55 GMT',
+338 silly get     vary: 'accept-encoding, accept',
+338 silly get     'cf-cache-status': 'HIT',
+338 silly get     'cf-request-id': '07fb9fd6fd0000f77c81310000000001',
+338 silly get     'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+338 silly get     server: 'cloudflare',
+338 silly get     'content-encoding': 'gzip' } ]
+339 verbose get saving postgres-array to /home/akclark/.npm/registry.npmjs.org/postgres-array/.cache.json
+340 silly resolveWithNewModule postgres-array@1.0.3 checking installable status
+341 silly cache add args [ 'postgres-array@~1.0.0', null ]
+342 verbose cache add spec postgres-array@~1.0.0
+343 silly cache add parsed spec Result {
+343 silly cache add   raw: 'postgres-array@~1.0.0',
+343 silly cache add   scope: null,
+343 silly cache add   name: 'postgres-array',
+343 silly cache add   rawSpec: '~1.0.0',
+343 silly cache add   spec: '>=1.0.0 <1.1.0',
+343 silly cache add   type: 'range' }
+344 silly addNamed postgres-array@>=1.0.0 <1.1.0
+345 verbose addNamed ">=1.0.0 <1.1.0" is a valid semver range for postgres-array
+346 silly addNameRange { name: 'postgres-array',
+346 silly addNameRange   range: '>=1.0.0 <1.1.0',
+346 silly addNameRange   hasData: false }
+347 silly mapToRegistry name postgres-array
+348 silly mapToRegistry using default registry
+349 silly mapToRegistry registry https://registry.npmjs.org/
+350 silly mapToRegistry uri https://registry.npmjs.org/postgres-array
+351 verbose addNameRange registry:https://registry.npmjs.org/postgres-array not in flight; fetching
+352 verbose get https://registry.npmjs.org/postgres-array not expired, no request
+353 silly addNameRange number 2 { name: 'postgres-array',
+353 silly addNameRange   range: '>=1.0.0 <1.1.0',
+353 silly addNameRange   hasData: true }
+354 silly addNameRange versions [ 'postgres-array',
+354 silly addNameRange   [ '1.0.0', '1.0.1', '1.0.2', '1.0.3', '2.0.0', '3.0.0', '3.0.1' ] ]
+355 silly addNamed postgres-array@1.0.3
+356 verbose addNamed "1.0.3" is a plain semver version for postgres-array
+357 silly mapToRegistry name postgres-array
+358 silly mapToRegistry using default registry
+359 silly mapToRegistry registry https://registry.npmjs.org/
+360 silly mapToRegistry uri https://registry.npmjs.org/postgres-array
+361 verbose addRemoteTarball https://registry.npmjs.org/postgres-array/-/postgres-array-1.0.3.tgz not in flight; adding
+362 verbose addRemoteTarball [ 'https://registry.npmjs.org/postgres-array/-/postgres-array-1.0.3.tgz',
+362 verbose addRemoteTarball   'c561fc3b266b21451fc6555384f4986d78ec80f5' ]
+363 info retry fetch attempt 1 at 7:58:47 PM
+364 info attempt registry request try #1 at 7:58:47 PM
+365 http fetch GET https://registry.npmjs.org/postgres-array/-/postgres-array-1.0.3.tgz
+366 http fetch 200 https://registry.npmjs.org/postgres-array/-/postgres-array-1.0.3.tgz
+367 silly fetchAndShaCheck shasum c561fc3b266b21451fc6555384f4986d78ec80f5
+368 verbose addTmpTarball /tmp/npm-7219-c0b1e979/registry.npmjs.org/postgres-array/-/postgres-array-1.0.3.tgz not in flight; adding
+369 verbose addTmpTarball already have metadata; skipping unpack for postgres-array@1.0.3
+370 silly cache afterAdd postgres-array@1.0.3
+371 verbose afterAdd /home/akclark/.npm/postgres-array/1.0.3/package/package.json not in flight; writing
+372 verbose afterAdd /home/akclark/.npm/postgres-array/1.0.3/package/package.json written
+373 silly fetchNamedPackageData core-util-is
+374 silly mapToRegistry name core-util-is
+375 silly mapToRegistry using default registry
+376 silly mapToRegistry registry https://registry.npmjs.org/
+377 silly mapToRegistry uri https://registry.npmjs.org/core-util-is
+378 silly fetchNamedPackageData isarray
+379 silly mapToRegistry name isarray
+380 silly mapToRegistry using default registry
+381 silly mapToRegistry registry https://registry.npmjs.org/
+382 silly mapToRegistry uri https://registry.npmjs.org/isarray
+383 silly fetchNamedPackageData string_decoder
+384 silly mapToRegistry name string_decoder
+385 silly mapToRegistry using default registry
+386 silly mapToRegistry registry https://registry.npmjs.org/
+387 silly mapToRegistry uri https://registry.npmjs.org/string_decoder
+388 verbose request uri https://registry.npmjs.org/core-util-is
+389 verbose request no auth needed
+390 info attempt registry request try #1 at 7:58:47 PM
+391 http request GET https://registry.npmjs.org/core-util-is
+392 verbose request uri https://registry.npmjs.org/isarray
+393 verbose request no auth needed
+394 info attempt registry request try #1 at 7:58:47 PM
+395 http request GET https://registry.npmjs.org/isarray
+396 verbose request uri https://registry.npmjs.org/string_decoder
+397 verbose request no auth needed
+398 info attempt registry request try #1 at 7:58:47 PM
+399 http request GET https://registry.npmjs.org/string_decoder
+400 http 200 https://registry.npmjs.org/isarray
+401 verbose headers { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+401 verbose headers   'content-type': 'application/json',
+401 verbose headers   'transfer-encoding': 'chunked',
+401 verbose headers   connection: 'keep-alive',
+401 verbose headers   'set-cookie':
+401 verbose headers    [ '__cfduid=d1b45d95cc5a3a1a5eb0d7c93ba24bcab1612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+401 verbose headers   'cf-ray': '61a6026c4d93f77c-DEN',
+401 verbose headers   age: '4698',
+401 verbose headers   'cache-control': 'public, max-age=300',
+401 verbose headers   etag: 'W/"f8d13869b081e2301428e8269cb470a1"',
+401 verbose headers   'last-modified': 'Mon, 08 Jul 2019 13:21:26 GMT',
+401 verbose headers   vary: 'accept-encoding, accept',
+401 verbose headers   'cf-cache-status': 'HIT',
+401 verbose headers   'cf-request-id': '07fb9fd7ae0000f77c943df000000001',
+401 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+401 verbose headers   server: 'cloudflare',
+401 verbose headers   'content-encoding': 'gzip' }
+402 silly get cb [ 200,
+402 silly get   { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+402 silly get     'content-type': 'application/json',
+402 silly get     'transfer-encoding': 'chunked',
+402 silly get     connection: 'keep-alive',
+402 silly get     'set-cookie':
+402 silly get      [ '__cfduid=d1b45d95cc5a3a1a5eb0d7c93ba24bcab1612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+402 silly get     'cf-ray': '61a6026c4d93f77c-DEN',
+402 silly get     age: '4698',
+402 silly get     'cache-control': 'public, max-age=300',
+402 silly get     etag: 'W/"f8d13869b081e2301428e8269cb470a1"',
+402 silly get     'last-modified': 'Mon, 08 Jul 2019 13:21:26 GMT',
+402 silly get     vary: 'accept-encoding, accept',
+402 silly get     'cf-cache-status': 'HIT',
+402 silly get     'cf-request-id': '07fb9fd7ae0000f77c943df000000001',
+402 silly get     'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+402 silly get     server: 'cloudflare',
+402 silly get     'content-encoding': 'gzip' } ]
+403 verbose get saving isarray to /home/akclark/.npm/registry.npmjs.org/isarray/.cache.json
+404 silly resolveWithNewModule isarray@0.0.1 checking installable status
+405 silly cache add args [ 'isarray@0.0.1', null ]
+406 verbose cache add spec isarray@0.0.1
+407 silly cache add parsed spec Result {
+407 silly cache add   raw: 'isarray@0.0.1',
+407 silly cache add   scope: null,
+407 silly cache add   name: 'isarray',
+407 silly cache add   rawSpec: '0.0.1',
+407 silly cache add   spec: '0.0.1',
+407 silly cache add   type: 'version' }
+408 silly addNamed isarray@0.0.1
+409 verbose addNamed "0.0.1" is a plain semver version for isarray
+410 silly mapToRegistry name isarray
+411 silly mapToRegistry using default registry
+412 silly mapToRegistry registry https://registry.npmjs.org/
+413 silly mapToRegistry uri https://registry.npmjs.org/isarray
+414 verbose addNameVersion registry:https://registry.npmjs.org/isarray not in flight; fetching
+415 http 200 https://registry.npmjs.org/string_decoder
+416 verbose headers { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+416 verbose headers   'content-type': 'application/json',
+416 verbose headers   'transfer-encoding': 'chunked',
+416 verbose headers   connection: 'keep-alive',
+416 verbose headers   'set-cookie':
+416 verbose headers    [ '__cfduid=de2bbee7e396e14aa09e0f7a711b335f11612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+416 verbose headers   'cf-ray': '61a6026c4d9b2717-DEN',
+416 verbose headers   age: '3194',
+416 verbose headers   'cache-control': 'public, max-age=300',
+416 verbose headers   etag: 'W/"0a93d953e853f8bf50ba2c73d36557a6"',
+416 verbose headers   'last-modified': 'Wed, 07 Aug 2019 09:20:40 GMT',
+416 verbose headers   vary: 'accept-encoding, accept',
+416 verbose headers   'cf-cache-status': 'HIT',
+416 verbose headers   'cf-request-id': '07fb9fd7ae00002717c5954000000001',
+416 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+416 verbose headers   server: 'cloudflare',
+416 verbose headers   'content-encoding': 'gzip' }
+417 silly get cb [ 200,
+417 silly get   { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+417 silly get     'content-type': 'application/json',
+417 silly get     'transfer-encoding': 'chunked',
+417 silly get     connection: 'keep-alive',
+417 silly get     'set-cookie':
+417 silly get      [ '__cfduid=de2bbee7e396e14aa09e0f7a711b335f11612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+417 silly get     'cf-ray': '61a6026c4d9b2717-DEN',
+417 silly get     age: '3194',
+417 silly get     'cache-control': 'public, max-age=300',
+417 silly get     etag: 'W/"0a93d953e853f8bf50ba2c73d36557a6"',
+417 silly get     'last-modified': 'Wed, 07 Aug 2019 09:20:40 GMT',
+417 silly get     vary: 'accept-encoding, accept',
+417 silly get     'cf-cache-status': 'HIT',
+417 silly get     'cf-request-id': '07fb9fd7ae00002717c5954000000001',
+417 silly get     'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+417 silly get     server: 'cloudflare',
+417 silly get     'content-encoding': 'gzip' } ]
+418 verbose get saving string_decoder to /home/akclark/.npm/registry.npmjs.org/string_decoder/.cache.json
+419 verbose get https://registry.npmjs.org/isarray not expired, no request
+420 silly mapToRegistry name isarray
+421 silly mapToRegistry using default registry
+422 silly mapToRegistry registry https://registry.npmjs.org/
+423 silly mapToRegistry uri https://registry.npmjs.org/isarray
+424 verbose addRemoteTarball https://registry.npmjs.org/isarray/-/isarray-0.0.1.tgz not in flight; adding
+425 verbose addRemoteTarball [ 'https://registry.npmjs.org/isarray/-/isarray-0.0.1.tgz',
+425 verbose addRemoteTarball   '8a18acfca9a8f4177e09abfc6038939b05d1eedf' ]
+426 silly resolveWithNewModule string_decoder@0.10.31 checking installable status
+427 silly cache add args [ 'string_decoder@~0.10.x', null ]
+428 verbose cache add spec string_decoder@~0.10.x
+429 silly cache add parsed spec Result {
+429 silly cache add   raw: 'string_decoder@~0.10.x',
+429 silly cache add   scope: null,
+429 silly cache add   name: 'string_decoder',
+429 silly cache add   rawSpec: '~0.10.x',
+429 silly cache add   spec: '>=0.10.0 <0.11.0',
+429 silly cache add   type: 'range' }
+430 silly addNamed string_decoder@>=0.10.0 <0.11.0
+431 verbose addNamed ">=0.10.0 <0.11.0" is a valid semver range for string_decoder
+432 silly addNameRange { name: 'string_decoder',
+432 silly addNameRange   range: '>=0.10.0 <0.11.0',
+432 silly addNameRange   hasData: false }
+433 silly mapToRegistry name string_decoder
+434 silly mapToRegistry using default registry
+435 silly mapToRegistry registry https://registry.npmjs.org/
+436 silly mapToRegistry uri https://registry.npmjs.org/string_decoder
+437 verbose addNameRange registry:https://registry.npmjs.org/string_decoder not in flight; fetching
+438 verbose get https://registry.npmjs.org/string_decoder not expired, no request
+439 silly addNameRange number 2 { name: 'string_decoder',
+439 silly addNameRange   range: '>=0.10.0 <0.11.0',
+439 silly addNameRange   hasData: true }
+440 silly addNameRange versions [ 'string_decoder',
+440 silly addNameRange   [ '0.0.0',
+440 silly addNameRange     '0.0.1',
+440 silly addNameRange     '0.10.24',
+440 silly addNameRange     '0.11.10',
+440 silly addNameRange     '0.10.25',
+440 silly addNameRange     '0.11.10-1',
+440 silly addNameRange     '0.10.25-1',
+440 silly addNameRange     '0.10.31',
+440 silly addNameRange     '1.0.0',
+440 silly addNameRange     '1.0.1',
+440 silly addNameRange     '1.0.2',
+440 silly addNameRange     '1.0.3',
+440 silly addNameRange     '1.1.0',
+440 silly addNameRange     '1.1.1',
+440 silly addNameRange     '1.2.0',
+440 silly addNameRange     '1.3.0' ] ]
+441 silly addNamed string_decoder@0.10.31
+442 verbose addNamed "0.10.31" is a plain semver version for string_decoder
+443 silly mapToRegistry name string_decoder
+444 silly mapToRegistry using default registry
+445 silly mapToRegistry registry https://registry.npmjs.org/
+446 silly mapToRegistry uri https://registry.npmjs.org/string_decoder
+447 verbose addRemoteTarball https://registry.npmjs.org/string_decoder/-/string_decoder-0.10.31.tgz not in flight; adding
+448 verbose addRemoteTarball [ 'https://registry.npmjs.org/string_decoder/-/string_decoder-0.10.31.tgz',
+448 verbose addRemoteTarball   '62e203bc41766c6c28c9fc84301dab1c5310fa94' ]
+449 http 200 https://registry.npmjs.org/core-util-is
+450 verbose headers { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+450 verbose headers   'content-type': 'application/json; charset=UTF-8',
+450 verbose headers   'transfer-encoding': 'chunked',
+450 verbose headers   connection: 'keep-alive',
+450 verbose headers   'set-cookie':
+450 verbose headers    [ '__cfduid=dc9cfe4c0d7ded4c00c7e102ebd6652e81612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+450 verbose headers   'cf-ray': '61a6026c49a2c7a5-DEN',
+450 verbose headers   age: '3194',
+450 verbose headers   'cache-control': 'public, max-age=300',
+450 verbose headers   etag: 'W/"8076d16a76bac5764f6fda9911b2b501"',
+450 verbose headers   'last-modified': 'Sat, 26 May 2018 21:08:01 GMT',
+450 verbose headers   vary: 'accept-encoding, accept',
+450 verbose headers   'cf-cache-status': 'HIT',
+450 verbose headers   'cf-request-id': '07fb9fd7b50000c7a5a0218000000001',
+450 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+450 verbose headers   server: 'cloudflare',
+450 verbose headers   'content-encoding': 'gzip' }
+451 silly get cb [ 200,
+451 silly get   { date: 'Sun, 31 Jan 2021 19:58:47 GMT',
+451 silly get     'content-type': 'application/json; charset=UTF-8',
+451 silly get     'transfer-encoding': 'chunked',
+451 silly get     connection: 'keep-alive',
+451 silly get     'set-cookie':
+451 silly get      [ '__cfduid=dc9cfe4c0d7ded4c00c7e102ebd6652e81612123127; expires=Tue, 02-Mar-21 19:58:47 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+451 silly get     'cf-ray': '61a6026c49a2c7a5-DEN',
+451 silly get     age: '3194',
+451 silly get     'cache-control': 'public, max-age=300',
+451 silly get     etag: 'W/"8076d16a76bac5764f6fda9911b2b501"',
+451 silly get     'last-modified': 'Sat, 26 May 2018 21:08:01 GMT',
+451 silly get     vary: 'accept-encoding, accept',
+451 silly get     'cf-cache-status': 'HIT',
+451 silly get     'cf-request-id': '07fb9fd7b50000c7a5a0218000000001',
+451 silly get     'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+451 silly get     server: 'cloudflare',
+451 silly get     'content-encoding': 'gzip' } ]
+452 verbose get saving core-util-is to /home/akclark/.npm/registry.npmjs.org/core-util-is/.cache.json
+453 silly resolveWithNewModule core-util-is@1.0.2 checking installable status
+454 silly cache add args [ 'core-util-is@~1.0.0', null ]
+455 verbose cache add spec core-util-is@~1.0.0
+456 silly cache add parsed spec Result {
+456 silly cache add   raw: 'core-util-is@~1.0.0',
+456 silly cache add   scope: null,
+456 silly cache add   name: 'core-util-is',
+456 silly cache add   rawSpec: '~1.0.0',
+456 silly cache add   spec: '>=1.0.0 <1.1.0',
+456 silly cache add   type: 'range' }
+457 silly addNamed core-util-is@>=1.0.0 <1.1.0
+458 verbose addNamed ">=1.0.0 <1.1.0" is a valid semver range for core-util-is
+459 silly addNameRange { name: 'core-util-is', range: '>=1.0.0 <1.1.0', hasData: false }
+460 silly mapToRegistry name core-util-is
+461 silly mapToRegistry using default registry
+462 silly mapToRegistry registry https://registry.npmjs.org/
+463 silly mapToRegistry uri https://registry.npmjs.org/core-util-is
+464 verbose addNameRange registry:https://registry.npmjs.org/core-util-is not in flight; fetching
+465 verbose get https://registry.npmjs.org/core-util-is not expired, no request
+466 silly addNameRange number 2 { name: 'core-util-is', range: '>=1.0.0 <1.1.0', hasData: true }
+467 silly addNameRange versions [ 'core-util-is', [ '1.0.0', '1.0.1', '1.0.2' ] ]
+468 silly addNamed core-util-is@1.0.2
+469 verbose addNamed "1.0.2" is a plain semver version for core-util-is
+470 silly mapToRegistry name core-util-is
+471 silly mapToRegistry using default registry
+472 silly mapToRegistry registry https://registry.npmjs.org/
+473 silly mapToRegistry uri https://registry.npmjs.org/core-util-is
+474 verbose addRemoteTarball https://registry.npmjs.org/core-util-is/-/core-util-is-1.0.2.tgz not in flight; adding
+475 verbose addRemoteTarball [ 'https://registry.npmjs.org/core-util-is/-/core-util-is-1.0.2.tgz',
+475 verbose addRemoteTarball   'b5fd54220aa2bc5ab57aab7140c940754503c1a7' ]
+476 info retry fetch attempt 1 at 7:58:47 PM
+477 info attempt registry request try #1 at 7:58:47 PM
+478 http fetch GET https://registry.npmjs.org/string_decoder/-/string_decoder-0.10.31.tgz
+479 info retry fetch attempt 1 at 7:58:47 PM
+480 info attempt registry request try #1 at 7:58:47 PM
+481 http fetch GET https://registry.npmjs.org/isarray/-/isarray-0.0.1.tgz
+482 info retry fetch attempt 1 at 7:58:47 PM
+483 info attempt registry request try #1 at 7:58:47 PM
+484 http fetch GET https://registry.npmjs.org/core-util-is/-/core-util-is-1.0.2.tgz
+485 http fetch 200 https://registry.npmjs.org/string_decoder/-/string_decoder-0.10.31.tgz
+486 silly fetchAndShaCheck shasum 62e203bc41766c6c28c9fc84301dab1c5310fa94
+487 verbose addTmpTarball /tmp/npm-7219-c0b1e979/registry.npmjs.org/string_decoder/-/string_decoder-0.10.31.tgz not in flight; adding
+488 verbose addTmpTarball already have metadata; skipping unpack for string_decoder@0.10.31
+489 silly cache afterAdd string_decoder@0.10.31
+490 verbose afterAdd /home/akclark/.npm/string_decoder/0.10.31/package/package.json not in flight; writing
+491 http fetch 200 https://registry.npmjs.org/isarray/-/isarray-0.0.1.tgz
+492 verbose afterAdd /home/akclark/.npm/string_decoder/0.10.31/package/package.json written
+493 http fetch 200 https://registry.npmjs.org/core-util-is/-/core-util-is-1.0.2.tgz
+494 silly fetchAndShaCheck shasum 8a18acfca9a8f4177e09abfc6038939b05d1eedf
+495 silly fetchAndShaCheck shasum b5fd54220aa2bc5ab57aab7140c940754503c1a7
+496 verbose addTmpTarball /tmp/npm-7219-c0b1e979/registry.npmjs.org/isarray/-/isarray-0.0.1.tgz not in flight; adding
+497 verbose addTmpTarball already have metadata; skipping unpack for isarray@0.0.1
+498 verbose addTmpTarball /tmp/npm-7219-c0b1e979/registry.npmjs.org/core-util-is/-/core-util-is-1.0.2.tgz not in flight; adding
+499 verbose addTmpTarball already have metadata; skipping unpack for core-util-is@1.0.2
+500 silly cache afterAdd core-util-is@1.0.2
+501 verbose afterAdd /home/akclark/.npm/core-util-is/1.0.2/package/package.json not in flight; writing
+502 silly cache afterAdd isarray@0.0.1
+503 verbose afterAdd /home/akclark/.npm/isarray/0.0.1/package/package.json not in flight; writing
+504 verbose afterAdd /home/akclark/.npm/core-util-is/1.0.2/package/package.json written
+505 verbose afterAdd /home/akclark/.npm/isarray/0.0.1/package/package.json written
+506 silly loadAllDepsIntoIdealTree Finishing
+507 silly idealTree:prePrune TimeTrackerAPI@1.0.0
+507 silly idealTree:prePrune ├── @types/node@14.14.22
+507 silly idealTree:prePrune ├── abbrev@1.1.1
+507 silly idealTree:prePrune ├── accepts@1.3.7
+507 silly idealTree:prePrune ├── ansi-regex@2.1.1
+507 silly idealTree:prePrune ├── ansi-styles@3.2.1
+507 silly idealTree:prePrune ├── any-promise@1.3.0
+507 silly idealTree:prePrune ├── array-flatten@1.1.1
+507 silly idealTree:prePrune ├── balanced-match@1.0.0
+507 silly idealTree:prePrune ├── bindings@1.5.0
+507 silly idealTree:prePrune ├── bluebird@3.7.2
+507 silly idealTree:prePrune ├── body-parser@1.19.0
+507 silly idealTree:prePrune ├── brace-expansion@1.1.11
+507 silly idealTree:prePrune ├── buffer-writer@2.0.0
+507 silly idealTree:prePrune ├── bytes@3.1.0
+507 silly idealTree:prePrune ├── camelcase@5.3.1
+507 silly idealTree:prePrune ├── cli-color@1.4.0
+507 silly idealTree:prePrune ├── cliui@5.0.0
+507 silly idealTree:prePrune ├── color-convert@1.9.3
+507 silly idealTree:prePrune ├── color-name@1.1.3
+507 silly idealTree:prePrune ├── commander@2.20.3
+507 silly idealTree:prePrune ├── concat-map@0.0.1
+507 silly idealTree:prePrune ├── config-chain@1.1.12
+507 silly idealTree:prePrune ├── content-disposition@0.5.3
+507 silly idealTree:prePrune ├── content-type@1.0.4
+507 silly idealTree:prePrune ├── cookie-signature@1.0.6
+507 silly idealTree:prePrune ├── cookie@0.4.0
+507 silly idealTree:prePrune ├── core-util-is@1.0.2
+507 silly idealTree:prePrune ├── cors@2.8.5
+507 silly idealTree:prePrune ├── d@1.0.1
+507 silly idealTree:prePrune ├── debug@2.6.9
+507 silly idealTree:prePrune ├── decamelize@1.2.0
+507 silly idealTree:prePrune ├── depd@1.1.2
+507 silly idealTree:prePrune ├── destroy@1.0.4
+507 silly idealTree:prePrune ├── dottie@2.0.2
+507 silly idealTree:prePrune ├─┬ editorconfig@0.15.3
+507 silly idealTree:prePrune │ ├── lru-cache@4.1.5
+507 silly idealTree:prePrune │ ├── semver@5.7.1
+507 silly idealTree:prePrune │ └── yallist@2.1.2
+507 silly idealTree:prePrune ├── ee-first@1.1.1
+507 silly idealTree:prePrune ├── emoji-regex@7.0.3
+507 silly idealTree:prePrune ├── encodeurl@1.0.2
+507 silly idealTree:prePrune ├── es5-ext@0.10.53
+507 silly idealTree:prePrune ├── es6-iterator@2.0.3
+507 silly idealTree:prePrune ├── es6-symbol@3.1.3
+507 silly idealTree:prePrune ├── es6-weak-map@2.0.3
+507 silly idealTree:prePrune ├── escape-html@1.0.3
+507 silly idealTree:prePrune ├── etag@1.8.1
+507 silly idealTree:prePrune ├── event-emitter@0.3.5
+507 silly idealTree:prePrune ├── express@4.17.1
+507 silly idealTree:prePrune ├─┬ ext@1.4.0
+507 silly idealTree:prePrune │ └── type@2.1.0
+507 silly idealTree:prePrune ├── file-uri-to-path@1.0.0
+507 silly idealTree:prePrune ├── finalhandler@1.1.2
+507 silly idealTree:prePrune ├── find-up@3.0.0
+507 silly idealTree:prePrune ├── forwarded@0.1.2
+507 silly idealTree:prePrune ├── fresh@0.5.2
+507 silly idealTree:prePrune ├── fs-extra@7.0.1
+507 silly idealTree:prePrune ├── fs.realpath@1.0.0
+507 silly idealTree:prePrune ├── function-bind@1.1.1
+507 silly idealTree:prePrune ├── get-caller-file@2.0.5
+507 silly idealTree:prePrune ├── glob@7.1.6
+507 silly idealTree:prePrune ├── graceful-fs@4.2.4
+507 silly idealTree:prePrune ├── has@1.0.3
+507 silly idealTree:prePrune ├── http-errors@1.7.2
+507 silly idealTree:prePrune ├── iconv-lite@0.4.24
+507 silly idealTree:prePrune ├── inflection@1.12.0
+507 silly idealTree:prePrune ├── inflight@1.0.6
+507 silly idealTree:prePrune ├── inherits@2.0.3
+507 silly idealTree:prePrune ├── ini@1.3.8
+507 silly idealTree:prePrune ├── ipaddr.js@1.9.1
+507 silly idealTree:prePrune ├── is-core-module@2.2.0
+507 silly idealTree:prePrune ├── is-fullwidth-code-point@2.0.0
+507 silly idealTree:prePrune ├── is-promise@2.2.2
+507 silly idealTree:prePrune ├── isarray@0.0.1
+507 silly idealTree:prePrune ├── js-beautify@1.13.5
+507 silly idealTree:prePrune ├── jsonfile@4.0.0
+507 silly idealTree:prePrune ├── libpq@1.8.9
+507 silly idealTree:prePrune ├── locate-path@3.0.0
+507 silly idealTree:prePrune ├── lodash@4.17.20
+507 silly idealTree:prePrune ├── lru-cache@6.0.0
+507 silly idealTree:prePrune ├── lru-queue@0.1.0
+507 silly idealTree:prePrune ├── media-typer@0.3.0
+507 silly idealTree:prePrune ├─┬ memoizee@0.4.15
+507 silly idealTree:prePrune │ └── next-tick@1.1.0
+507 silly idealTree:prePrune ├── merge-descriptors@1.0.1
+507 silly idealTree:prePrune ├── methods@1.1.2
+507 silly idealTree:prePrune ├── mime-db@1.45.0
+507 silly idealTree:prePrune ├── mime-types@2.1.28
+507 silly idealTree:prePrune ├── mime@1.6.0
+507 silly idealTree:prePrune ├── minimatch@3.0.4
+507 silly idealTree:prePrune ├── mkdirp@1.0.4
+507 silly idealTree:prePrune ├── moment-timezone@0.5.32
+507 silly idealTree:prePrune ├── moment@2.29.1
+507 silly idealTree:prePrune ├── ms@2.0.0
+507 silly idealTree:prePrune ├── nan@2.14.2
+507 silly idealTree:prePrune ├── negotiator@0.6.2
+507 silly idealTree:prePrune ├── next-tick@1.0.0
+507 silly idealTree:prePrune ├── nopt@5.0.0
+507 silly idealTree:prePrune ├── object-assign@4.1.1
+507 silly idealTree:prePrune ├── on-finished@2.3.0
+507 silly idealTree:prePrune ├── once@1.4.0
+507 silly idealTree:prePrune ├── p-limit@2.3.0
+507 silly idealTree:prePrune ├── p-locate@3.0.0
+507 silly idealTree:prePrune ├── p-try@2.2.0
+507 silly idealTree:prePrune ├── packet-reader@1.0.0
+507 silly idealTree:prePrune ├── parseurl@1.3.3
+507 silly idealTree:prePrune ├── path-exists@3.0.0
+507 silly idealTree:prePrune ├── path-is-absolute@1.0.1
+507 silly idealTree:prePrune ├── path-parse@1.0.6
+507 silly idealTree:prePrune ├── path-to-regexp@0.1.7
+507 silly idealTree:prePrune ├── pg-connection-string@2.4.0
+507 silly idealTree:prePrune ├── pg-hstore@2.3.3
+507 silly idealTree:prePrune ├── pg-int8@1.0.1
+507 silly idealTree:prePrune ├─┬ pg-native@3.0.0
+507 silly idealTree:prePrune │ ├── pg-types@1.13.0
+507 silly idealTree:prePrune │ ├── postgres-array@1.0.3
+507 silly idealTree:prePrune │ ├── readable-stream@1.0.31
+507 silly idealTree:prePrune │ └── string_decoder@0.10.31
+507 silly idealTree:prePrune ├── pg-pool@3.2.2
+507 silly idealTree:prePrune ├── pg-protocol@1.4.0
+507 silly idealTree:prePrune ├── pg-types@2.2.0
+507 silly idealTree:prePrune ├── pg@8.5.1
+507 silly idealTree:prePrune ├── pgpass@1.0.4
+507 silly idealTree:prePrune ├── postgres-array@2.0.0
+507 silly idealTree:prePrune ├── postgres-bytea@1.0.0
+507 silly idealTree:prePrune ├── postgres-date@1.0.7
+507 silly idealTree:prePrune ├── postgres-interval@1.2.0
+507 silly idealTree:prePrune ├── proto-list@1.2.4
+507 silly idealTree:prePrune ├── proxy-addr@2.0.6
+507 silly idealTree:prePrune ├── pseudomap@1.0.2
+507 silly idealTree:prePrune ├── qs@6.7.0
+507 silly idealTree:prePrune ├── range-parser@1.2.1
+507 silly idealTree:prePrune ├── raw-body@2.4.0
+507 silly idealTree:prePrune ├── readable-stream@3.6.0
+507 silly idealTree:prePrune ├── require-directory@2.1.1
+507 silly idealTree:prePrune ├── require-main-filename@2.0.0
+507 silly idealTree:prePrune ├── resolve@1.19.0
+507 silly idealTree:prePrune ├── retry-as-promised@3.2.0
+507 silly idealTree:prePrune ├── safe-buffer@5.1.2
+507 silly idealTree:prePrune ├── safer-buffer@2.1.2
+507 silly idealTree:prePrune ├── semver@7.3.4
+507 silly idealTree:prePrune ├─┬ send@0.17.1
+507 silly idealTree:prePrune │ └── ms@2.1.1
+507 silly idealTree:prePrune ├── sequelize-cli@6.2.0
+507 silly idealTree:prePrune ├── sequelize-pool@6.1.0
+507 silly idealTree:prePrune ├─┬ sequelize@6.5.0
+507 silly idealTree:prePrune │ ├── debug@4.3.1
+507 silly idealTree:prePrune │ └── ms@2.1.2
+507 silly idealTree:prePrune ├── serve-static@1.14.1
+507 silly idealTree:prePrune ├── set-blocking@2.0.0
+507 silly idealTree:prePrune ├── setprototypeof@1.1.1
+507 silly idealTree:prePrune ├── sigmund@1.0.1
+507 silly idealTree:prePrune ├── split2@3.2.2
+507 silly idealTree:prePrune ├── statuses@1.5.0
+507 silly idealTree:prePrune ├─┬ string_decoder@1.3.0
+507 silly idealTree:prePrune │ └── safe-buffer@5.2.1
+507 silly idealTree:prePrune ├── string-width@3.1.0
+507 silly idealTree:prePrune ├─┬ strip-ansi@5.2.0
+507 silly idealTree:prePrune │ └── ansi-regex@4.1.0
+507 silly idealTree:prePrune ├── timers-ext@0.1.7
+507 silly idealTree:prePrune ├── toidentifier@1.0.0
+507 silly idealTree:prePrune ├── toposort-class@1.0.1
+507 silly idealTree:prePrune ├── type-is@1.6.18
+507 silly idealTree:prePrune ├── type@1.2.0
+507 silly idealTree:prePrune ├── umzug@2.3.0
+507 silly idealTree:prePrune ├── underscore@1.12.0
+507 silly idealTree:prePrune ├── universalify@0.1.2
+507 silly idealTree:prePrune ├── unpipe@1.0.0
+507 silly idealTree:prePrune ├── util-deprecate@1.0.2
+507 silly idealTree:prePrune ├── utils-merge@1.0.1
+507 silly idealTree:prePrune ├── uuid@8.3.2
+507 silly idealTree:prePrune ├── validator@10.11.0
+507 silly idealTree:prePrune ├── vary@1.1.2
+507 silly idealTree:prePrune ├── which-module@2.0.0
+507 silly idealTree:prePrune ├── wkx@0.5.0
+507 silly idealTree:prePrune ├── wrap-ansi@5.1.0
+507 silly idealTree:prePrune ├── wrappy@1.0.2
+507 silly idealTree:prePrune ├── xtend@4.0.2
+507 silly idealTree:prePrune ├── y18n@4.0.1
+507 silly idealTree:prePrune ├── yallist@4.0.0
+507 silly idealTree:prePrune ├── yargs-parser@13.1.2
+507 silly idealTree:prePrune └── yargs@13.3.2
+508 silly loadIdealTree Finishing
+509 silly currentTree TimeTrackerAPI@1.0.0
+509 silly currentTree ├── @types/node@14.14.22
+509 silly currentTree ├── abbrev@1.1.1
+509 silly currentTree ├── accepts@1.3.7
+509 silly currentTree ├── ansi-regex@2.1.1
+509 silly currentTree ├── ansi-styles@3.2.1
+509 silly currentTree ├── any-promise@1.3.0
+509 silly currentTree ├── array-flatten@1.1.1
+509 silly currentTree ├── balanced-match@1.0.0
+509 silly currentTree ├── bluebird@3.7.2
+509 silly currentTree ├── body-parser@1.19.0
+509 silly currentTree ├── brace-expansion@1.1.11
+509 silly currentTree ├── buffer-writer@2.0.0
+509 silly currentTree ├── bytes@3.1.0
+509 silly currentTree ├── camelcase@5.3.1
+509 silly currentTree ├── cli-color@1.4.0
+509 silly currentTree ├── cliui@5.0.0
+509 silly currentTree ├── color-convert@1.9.3
+509 silly currentTree ├── color-name@1.1.3
+509 silly currentTree ├── commander@2.20.3
+509 silly currentTree ├── concat-map@0.0.1
+509 silly currentTree ├── config-chain@1.1.12
+509 silly currentTree ├── content-disposition@0.5.3
+509 silly currentTree ├── content-type@1.0.4
+509 silly currentTree ├── cookie-signature@1.0.6
+509 silly currentTree ├── cookie@0.4.0
+509 silly currentTree ├── cors@2.8.5
+509 silly currentTree ├── d@1.0.1
+509 silly currentTree ├── debug@2.6.9
+509 silly currentTree ├── decamelize@1.2.0
+509 silly currentTree ├── depd@1.1.2
+509 silly currentTree ├── destroy@1.0.4
+509 silly currentTree ├── dottie@2.0.2
+509 silly currentTree ├─┬ editorconfig@0.15.3
+509 silly currentTree │ ├── lru-cache@4.1.5
+509 silly currentTree │ ├── semver@5.7.1
+509 silly currentTree │ └── yallist@2.1.2
+509 silly currentTree ├── ee-first@1.1.1
+509 silly currentTree ├── emoji-regex@7.0.3
+509 silly currentTree ├── encodeurl@1.0.2
+509 silly currentTree ├── es5-ext@0.10.53
+509 silly currentTree ├── es6-iterator@2.0.3
+509 silly currentTree ├── es6-symbol@3.1.3
+509 silly currentTree ├── es6-weak-map@2.0.3
+509 silly currentTree ├── escape-html@1.0.3
+509 silly currentTree ├── etag@1.8.1
+509 silly currentTree ├── event-emitter@0.3.5
+509 silly currentTree ├── express@4.17.1
+509 silly currentTree ├─┬ ext@1.4.0
+509 silly currentTree │ └── type@2.1.0
+509 silly currentTree ├── finalhandler@1.1.2
+509 silly currentTree ├── find-up@3.0.0
+509 silly currentTree ├── forwarded@0.1.2
+509 silly currentTree ├── fresh@0.5.2
+509 silly currentTree ├── fs-extra@7.0.1
+509 silly currentTree ├── fs.realpath@1.0.0
+509 silly currentTree ├── function-bind@1.1.1
+509 silly currentTree ├── get-caller-file@2.0.5
+509 silly currentTree ├── glob@7.1.6
+509 silly currentTree ├── graceful-fs@4.2.4
+509 silly currentTree ├── has@1.0.3
+509 silly currentTree ├── http-errors@1.7.2
+509 silly currentTree ├── iconv-lite@0.4.24
+509 silly currentTree ├── inflection@1.12.0
+509 silly currentTree ├── inflight@1.0.6
+509 silly currentTree ├── inherits@2.0.3
+509 silly currentTree ├── ini@1.3.8
+509 silly currentTree ├── ipaddr.js@1.9.1
+509 silly currentTree ├── is-core-module@2.2.0
+509 silly currentTree ├── is-fullwidth-code-point@2.0.0
+509 silly currentTree ├── is-promise@2.2.2
+509 silly currentTree ├── js-beautify@1.13.5
+509 silly currentTree ├── jsonfile@4.0.0
+509 silly currentTree ├── locate-path@3.0.0
+509 silly currentTree ├── lodash@4.17.20
+509 silly currentTree ├── lru-cache@6.0.0
+509 silly currentTree ├── lru-queue@0.1.0
+509 silly currentTree ├── media-typer@0.3.0
+509 silly currentTree ├─┬ memoizee@0.4.15
+509 silly currentTree │ └── next-tick@1.1.0
+509 silly currentTree ├── merge-descriptors@1.0.1
+509 silly currentTree ├── methods@1.1.2
+509 silly currentTree ├── mime-db@1.45.0
+509 silly currentTree ├── mime-types@2.1.28
+509 silly currentTree ├── mime@1.6.0
+509 silly currentTree ├── minimatch@3.0.4
+509 silly currentTree ├── mkdirp@1.0.4
+509 silly currentTree ├── moment-timezone@0.5.32
+509 silly currentTree ├── moment@2.29.1
+509 silly currentTree ├── ms@2.0.0
+509 silly currentTree ├── negotiator@0.6.2
+509 silly currentTree ├── next-tick@1.0.0
+509 silly currentTree ├── nopt@5.0.0
+509 silly currentTree ├── object-assign@4.1.1
+509 silly currentTree ├── on-finished@2.3.0
+509 silly currentTree ├── once@1.4.0
+509 silly currentTree ├── p-limit@2.3.0
+509 silly currentTree ├── p-locate@3.0.0
+509 silly currentTree ├── p-try@2.2.0
+509 silly currentTree ├── packet-reader@1.0.0
+509 silly currentTree ├── parseurl@1.3.3
+509 silly currentTree ├── path-exists@3.0.0
+509 silly currentTree ├── path-is-absolute@1.0.1
+509 silly currentTree ├── path-parse@1.0.6
+509 silly currentTree ├── path-to-regexp@0.1.7
+509 silly currentTree ├── pg-connection-string@2.4.0
+509 silly currentTree ├── pg-hstore@2.3.3
+509 silly currentTree ├── pg-int8@1.0.1
+509 silly currentTree ├── pg-pool@3.2.2
+509 silly currentTree ├── pg-protocol@1.4.0
+509 silly currentTree ├── pg-types@2.2.0
+509 silly currentTree ├── pg@8.5.1
+509 silly currentTree ├── pgpass@1.0.4
+509 silly currentTree ├── postgres-array@2.0.0
+509 silly currentTree ├── postgres-bytea@1.0.0
+509 silly currentTree ├── postgres-date@1.0.7
+509 silly currentTree ├── postgres-interval@1.2.0
+509 silly currentTree ├── proto-list@1.2.4
+509 silly currentTree ├── proxy-addr@2.0.6
+509 silly currentTree ├── pseudomap@1.0.2
+509 silly currentTree ├── qs@6.7.0
+509 silly currentTree ├── range-parser@1.2.1
+509 silly currentTree ├── raw-body@2.4.0
+509 silly currentTree ├── readable-stream@3.6.0
+509 silly currentTree ├── require-directory@2.1.1
+509 silly currentTree ├── require-main-filename@2.0.0
+509 silly currentTree ├── resolve@1.19.0
+509 silly currentTree ├── retry-as-promised@3.2.0
+509 silly currentTree ├── safe-buffer@5.1.2
+509 silly currentTree ├── safer-buffer@2.1.2
+509 silly currentTree ├── semver@7.3.4
+509 silly currentTree ├─┬ send@0.17.1
+509 silly currentTree │ └── ms@2.1.1
+509 silly currentTree ├── sequelize-cli@6.2.0
+509 silly currentTree ├── sequelize-pool@6.1.0
+509 silly currentTree ├─┬ sequelize@6.5.0
+509 silly currentTree │ ├── debug@4.3.1
+509 silly currentTree │ └── ms@2.1.2
+509 silly currentTree ├── serve-static@1.14.1
+509 silly currentTree ├── set-blocking@2.0.0
+509 silly currentTree ├── setprototypeof@1.1.1
+509 silly currentTree ├── sigmund@1.0.1
+509 silly currentTree ├── split2@3.2.2
+509 silly currentTree ├── statuses@1.5.0
+509 silly currentTree ├─┬ string_decoder@1.3.0
+509 silly currentTree │ └── safe-buffer@5.2.1
+509 silly currentTree ├── string-width@3.1.0
+509 silly currentTree ├─┬ strip-ansi@5.2.0
+509 silly currentTree │ └── ansi-regex@4.1.0
+509 silly currentTree ├── timers-ext@0.1.7
+509 silly currentTree ├── toidentifier@1.0.0
+509 silly currentTree ├── toposort-class@1.0.1
+509 silly currentTree ├── type-is@1.6.18
+509 silly currentTree ├── type@1.2.0
+509 silly currentTree ├── umzug@2.3.0
+509 silly currentTree ├── underscore@1.12.0
+509 silly currentTree ├── universalify@0.1.2
+509 silly currentTree ├── unpipe@1.0.0
+509 silly currentTree ├── util-deprecate@1.0.2
+509 silly currentTree ├── utils-merge@1.0.1
+509 silly currentTree ├── uuid@8.3.2
+509 silly currentTree ├── validator@10.11.0
+509 silly currentTree ├── vary@1.1.2
+509 silly currentTree ├── which-module@2.0.0
+509 silly currentTree ├── wkx@0.5.0
+509 silly currentTree ├── wrap-ansi@5.1.0
+509 silly currentTree ├── wrappy@1.0.2
+509 silly currentTree ├── xtend@4.0.2
+509 silly currentTree ├── y18n@4.0.1
+509 silly currentTree ├── yallist@4.0.0
+509 silly currentTree ├── yargs-parser@13.1.2
+509 silly currentTree └── yargs@13.3.2
+510 silly idealTree TimeTrackerAPI@1.0.0
+510 silly idealTree ├── @types/node@14.14.22
+510 silly idealTree ├── abbrev@1.1.1
+510 silly idealTree ├── accepts@1.3.7
+510 silly idealTree ├── ansi-regex@2.1.1
+510 silly idealTree ├── ansi-styles@3.2.1
+510 silly idealTree ├── any-promise@1.3.0
+510 silly idealTree ├── array-flatten@1.1.1
+510 silly idealTree ├── balanced-match@1.0.0
+510 silly idealTree ├── bindings@1.5.0
+510 silly idealTree ├── bluebird@3.7.2
+510 silly idealTree ├── body-parser@1.19.0
+510 silly idealTree ├── brace-expansion@1.1.11
+510 silly idealTree ├── buffer-writer@2.0.0
+510 silly idealTree ├── bytes@3.1.0
+510 silly idealTree ├── camelcase@5.3.1
+510 silly idealTree ├── cli-color@1.4.0
+510 silly idealTree ├── cliui@5.0.0
+510 silly idealTree ├── color-convert@1.9.3
+510 silly idealTree ├── color-name@1.1.3
+510 silly idealTree ├── commander@2.20.3
+510 silly idealTree ├── concat-map@0.0.1
+510 silly idealTree ├── config-chain@1.1.12
+510 silly idealTree ├── content-disposition@0.5.3
+510 silly idealTree ├── content-type@1.0.4
+510 silly idealTree ├── cookie-signature@1.0.6
+510 silly idealTree ├── cookie@0.4.0
+510 silly idealTree ├── core-util-is@1.0.2
+510 silly idealTree ├── cors@2.8.5
+510 silly idealTree ├── d@1.0.1
+510 silly idealTree ├── debug@2.6.9
+510 silly idealTree ├── decamelize@1.2.0
+510 silly idealTree ├── depd@1.1.2
+510 silly idealTree ├── destroy@1.0.4
+510 silly idealTree ├── dottie@2.0.2
+510 silly idealTree ├─┬ editorconfig@0.15.3
+510 silly idealTree │ ├── lru-cache@4.1.5
+510 silly idealTree │ ├── semver@5.7.1
+510 silly idealTree │ └── yallist@2.1.2
+510 silly idealTree ├── ee-first@1.1.1
+510 silly idealTree ├── emoji-regex@7.0.3
+510 silly idealTree ├── encodeurl@1.0.2
+510 silly idealTree ├── es5-ext@0.10.53
+510 silly idealTree ├── es6-iterator@2.0.3
+510 silly idealTree ├── es6-symbol@3.1.3
+510 silly idealTree ├── es6-weak-map@2.0.3
+510 silly idealTree ├── escape-html@1.0.3
+510 silly idealTree ├── etag@1.8.1
+510 silly idealTree ├── event-emitter@0.3.5
+510 silly idealTree ├── express@4.17.1
+510 silly idealTree ├─┬ ext@1.4.0
+510 silly idealTree │ └── type@2.1.0
+510 silly idealTree ├── file-uri-to-path@1.0.0
+510 silly idealTree ├── finalhandler@1.1.2
+510 silly idealTree ├── find-up@3.0.0
+510 silly idealTree ├── forwarded@0.1.2
+510 silly idealTree ├── fresh@0.5.2
+510 silly idealTree ├── fs-extra@7.0.1
+510 silly idealTree ├── fs.realpath@1.0.0
+510 silly idealTree ├── function-bind@1.1.1
+510 silly idealTree ├── get-caller-file@2.0.5
+510 silly idealTree ├── glob@7.1.6
+510 silly idealTree ├── graceful-fs@4.2.4
+510 silly idealTree ├── has@1.0.3
+510 silly idealTree ├── http-errors@1.7.2
+510 silly idealTree ├── iconv-lite@0.4.24
+510 silly idealTree ├── inflection@1.12.0
+510 silly idealTree ├── inflight@1.0.6
+510 silly idealTree ├── inherits@2.0.3
+510 silly idealTree ├── ini@1.3.8
+510 silly idealTree ├── ipaddr.js@1.9.1
+510 silly idealTree ├── is-core-module@2.2.0
+510 silly idealTree ├── is-fullwidth-code-point@2.0.0
+510 silly idealTree ├── is-promise@2.2.2
+510 silly idealTree ├── isarray@0.0.1
+510 silly idealTree ├── js-beautify@1.13.5
+510 silly idealTree ├── jsonfile@4.0.0
+510 silly idealTree ├── libpq@1.8.9
+510 silly idealTree ├── locate-path@3.0.0
+510 silly idealTree ├── lodash@4.17.20
+510 silly idealTree ├── lru-cache@6.0.0
+510 silly idealTree ├── lru-queue@0.1.0
+510 silly idealTree ├── media-typer@0.3.0
+510 silly idealTree ├─┬ memoizee@0.4.15
+510 silly idealTree │ └── next-tick@1.1.0
+510 silly idealTree ├── merge-descriptors@1.0.1
+510 silly idealTree ├── methods@1.1.2
+510 silly idealTree ├── mime-db@1.45.0
+510 silly idealTree ├── mime-types@2.1.28
+510 silly idealTree ├── mime@1.6.0
+510 silly idealTree ├── minimatch@3.0.4
+510 silly idealTree ├── mkdirp@1.0.4
+510 silly idealTree ├── moment-timezone@0.5.32
+510 silly idealTree ├── moment@2.29.1
+510 silly idealTree ├── ms@2.0.0
+510 silly idealTree ├── nan@2.14.2
+510 silly idealTree ├── negotiator@0.6.2
+510 silly idealTree ├── next-tick@1.0.0
+510 silly idealTree ├── nopt@5.0.0
+510 silly idealTree ├── object-assign@4.1.1
+510 silly idealTree ├── on-finished@2.3.0
+510 silly idealTree ├── once@1.4.0
+510 silly idealTree ├── p-limit@2.3.0
+510 silly idealTree ├── p-locate@3.0.0
+510 silly idealTree ├── p-try@2.2.0
+510 silly idealTree ├── packet-reader@1.0.0
+510 silly idealTree ├── parseurl@1.3.3
+510 silly idealTree ├── path-exists@3.0.0
+510 silly idealTree ├── path-is-absolute@1.0.1
+510 silly idealTree ├── path-parse@1.0.6
+510 silly idealTree ├── path-to-regexp@0.1.7
+510 silly idealTree ├── pg-connection-string@2.4.0
+510 silly idealTree ├── pg-hstore@2.3.3
+510 silly idealTree ├── pg-int8@1.0.1
+510 silly idealTree ├─┬ pg-native@3.0.0
+510 silly idealTree │ ├── pg-types@1.13.0
+510 silly idealTree │ ├── postgres-array@1.0.3
+510 silly idealTree │ ├── readable-stream@1.0.31
+510 silly idealTree │ └── string_decoder@0.10.31
+510 silly idealTree ├── pg-pool@3.2.2
+510 silly idealTree ├── pg-protocol@1.4.0
+510 silly idealTree ├── pg-types@2.2.0
+510 silly idealTree ├── pg@8.5.1
+510 silly idealTree ├── pgpass@1.0.4
+510 silly idealTree ├── postgres-array@2.0.0
+510 silly idealTree ├── postgres-bytea@1.0.0
+510 silly idealTree ├── postgres-date@1.0.7
+510 silly idealTree ├── postgres-interval@1.2.0
+510 silly idealTree ├── proto-list@1.2.4
+510 silly idealTree ├── proxy-addr@2.0.6
+510 silly idealTree ├── pseudomap@1.0.2
+510 silly idealTree ├── qs@6.7.0
+510 silly idealTree ├── range-parser@1.2.1
+510 silly idealTree ├── raw-body@2.4.0
+510 silly idealTree ├── readable-stream@3.6.0
+510 silly idealTree ├── require-directory@2.1.1
+510 silly idealTree ├── require-main-filename@2.0.0
+510 silly idealTree ├── resolve@1.19.0
+510 silly idealTree ├── retry-as-promised@3.2.0
+510 silly idealTree ├── safe-buffer@5.1.2
+510 silly idealTree ├── safer-buffer@2.1.2
+510 silly idealTree ├── semver@7.3.4
+510 silly idealTree ├─┬ send@0.17.1
+510 silly idealTree │ └── ms@2.1.1
+510 silly idealTree ├── sequelize-cli@6.2.0
+510 silly idealTree ├── sequelize-pool@6.1.0
+510 silly idealTree ├─┬ sequelize@6.5.0
+510 silly idealTree │ ├── debug@4.3.1
+510 silly idealTree │ └── ms@2.1.2
+510 silly idealTree ├── serve-static@1.14.1
+510 silly idealTree ├── set-blocking@2.0.0
+510 silly idealTree ├── setprototypeof@1.1.1
+510 silly idealTree ├── sigmund@1.0.1
+510 silly idealTree ├── split2@3.2.2
+510 silly idealTree ├── statuses@1.5.0
+510 silly idealTree ├─┬ string_decoder@1.3.0
+510 silly idealTree │ └── safe-buffer@5.2.1
+510 silly idealTree ├── string-width@3.1.0
+510 silly idealTree ├─┬ strip-ansi@5.2.0
+510 silly idealTree │ └── ansi-regex@4.1.0
+510 silly idealTree ├── timers-ext@0.1.7
+510 silly idealTree ├── toidentifier@1.0.0
+510 silly idealTree ├── toposort-class@1.0.1
+510 silly idealTree ├── type-is@1.6.18
+510 silly idealTree ├── type@1.2.0
+510 silly idealTree ├── umzug@2.3.0
+510 silly idealTree ├── underscore@1.12.0
+510 silly idealTree ├── universalify@0.1.2
+510 silly idealTree ├── unpipe@1.0.0
+510 silly idealTree ├── util-deprecate@1.0.2
+510 silly idealTree ├── utils-merge@1.0.1
+510 silly idealTree ├── uuid@8.3.2
+510 silly idealTree ├── validator@10.11.0
+510 silly idealTree ├── vary@1.1.2
+510 silly idealTree ├── which-module@2.0.0
+510 silly idealTree ├── wkx@0.5.0
+510 silly idealTree ├── wrap-ansi@5.1.0
+510 silly idealTree ├── wrappy@1.0.2
+510 silly idealTree ├── xtend@4.0.2
+510 silly idealTree ├── y18n@4.0.1
+510 silly idealTree ├── yallist@4.0.0
+510 silly idealTree ├── yargs-parser@13.1.2
+510 silly idealTree └── yargs@13.3.2
+511 silly generateActionsToTake Starting
+512 silly install generateActionsToTake
+513 silly generateActionsToTake Finishing
+514 silly diffTrees action count 18
+515 silly diffTrees update body-parser@1.19.0
+516 silly diffTrees add core-util-is@1.0.2
+517 silly diffTrees add file-uri-to-path@1.0.0
+518 silly diffTrees add bindings@1.5.0
+519 silly diffTrees add isarray@0.0.1
+520 silly diffTrees add nan@2.14.2
+521 silly diffTrees add libpq@1.8.9
+522 silly diffTrees add postgres-array@1.0.3
+523 silly diffTrees add pg-types@1.13.0
+524 silly diffTrees add string_decoder@0.10.31
+525 silly diffTrees add readable-stream@1.0.31
+526 silly diffTrees update cors@2.8.5
+527 silly diffTrees update express@4.17.1
+528 silly diffTrees update pg@8.5.1
+529 silly diffTrees update pg-hstore@2.3.3
+530 silly diffTrees add pg-native@3.0.0
+531 silly diffTrees update sequelize@6.5.0
+532 silly diffTrees update sequelize-cli@6.2.0
+533 silly decomposeActions action count 144
+534 silly decomposeActions fetch body-parser@1.19.0
+535 silly decomposeActions extract body-parser@1.19.0
+536 silly decomposeActions test body-parser@1.19.0
+537 silly decomposeActions preinstall body-parser@1.19.0
+538 silly decomposeActions build body-parser@1.19.0
+539 silly decomposeActions install body-parser@1.19.0
+540 silly decomposeActions postinstall body-parser@1.19.0
+541 silly decomposeActions finalize body-parser@1.19.0
+542 silly decomposeActions fetch core-util-is@1.0.2
+543 silly decomposeActions extract core-util-is@1.0.2
+544 silly decomposeActions test core-util-is@1.0.2
+545 silly decomposeActions preinstall core-util-is@1.0.2
+546 silly decomposeActions build core-util-is@1.0.2
+547 silly decomposeActions install core-util-is@1.0.2
+548 silly decomposeActions postinstall core-util-is@1.0.2
+549 silly decomposeActions finalize core-util-is@1.0.2
+550 silly decomposeActions fetch file-uri-to-path@1.0.0
+551 silly decomposeActions extract file-uri-to-path@1.0.0
+552 silly decomposeActions test file-uri-to-path@1.0.0
+553 silly decomposeActions preinstall file-uri-to-path@1.0.0
+554 silly decomposeActions build file-uri-to-path@1.0.0
+555 silly decomposeActions install file-uri-to-path@1.0.0
+556 silly decomposeActions postinstall file-uri-to-path@1.0.0
+557 silly decomposeActions finalize file-uri-to-path@1.0.0
+558 silly decomposeActions fetch bindings@1.5.0
+559 silly decomposeActions extract bindings@1.5.0
+560 silly decomposeActions test bindings@1.5.0
+561 silly decomposeActions preinstall bindings@1.5.0
+562 silly decomposeActions build bindings@1.5.0
+563 silly decomposeActions install bindings@1.5.0
+564 silly decomposeActions postinstall bindings@1.5.0
+565 silly decomposeActions finalize bindings@1.5.0
+566 silly decomposeActions fetch isarray@0.0.1
+567 silly decomposeActions extract isarray@0.0.1
+568 silly decomposeActions test isarray@0.0.1
+569 silly decomposeActions preinstall isarray@0.0.1
+570 silly decomposeActions build isarray@0.0.1
+571 silly decomposeActions install isarray@0.0.1
+572 silly decomposeActions postinstall isarray@0.0.1
+573 silly decomposeActions finalize isarray@0.0.1
+574 silly decomposeActions fetch nan@2.14.2
+575 silly decomposeActions extract nan@2.14.2
+576 silly decomposeActions test nan@2.14.2
+577 silly decomposeActions preinstall nan@2.14.2
+578 silly decomposeActions build nan@2.14.2
+579 silly decomposeActions install nan@2.14.2
+580 silly decomposeActions postinstall nan@2.14.2
+581 silly decomposeActions finalize nan@2.14.2
+582 silly decomposeActions fetch libpq@1.8.9
+583 silly decomposeActions extract libpq@1.8.9
+584 silly decomposeActions test libpq@1.8.9
+585 silly decomposeActions preinstall libpq@1.8.9
+586 silly decomposeActions build libpq@1.8.9
+587 silly decomposeActions install libpq@1.8.9
+588 silly decomposeActions postinstall libpq@1.8.9
+589 silly decomposeActions finalize libpq@1.8.9
+590 silly decomposeActions fetch postgres-array@1.0.3
+591 silly decomposeActions extract postgres-array@1.0.3
+592 silly decomposeActions test postgres-array@1.0.3
+593 silly decomposeActions preinstall postgres-array@1.0.3
+594 silly decomposeActions build postgres-array@1.0.3
+595 silly decomposeActions install postgres-array@1.0.3
+596 silly decomposeActions postinstall postgres-array@1.0.3
+597 silly decomposeActions finalize postgres-array@1.0.3
+598 silly decomposeActions fetch pg-types@1.13.0
+599 silly decomposeActions extract pg-types@1.13.0
+600 silly decomposeActions test pg-types@1.13.0
+601 silly decomposeActions preinstall pg-types@1.13.0
+602 silly decomposeActions build pg-types@1.13.0
+603 silly decomposeActions install pg-types@1.13.0
+604 silly decomposeActions postinstall pg-types@1.13.0
+605 silly decomposeActions finalize pg-types@1.13.0
+606 silly decomposeActions fetch string_decoder@0.10.31
+607 silly decomposeActions extract string_decoder@0.10.31
+608 silly decomposeActions test string_decoder@0.10.31
+609 silly decomposeActions preinstall string_decoder@0.10.31
+610 silly decomposeActions build string_decoder@0.10.31
+611 silly decomposeActions install string_decoder@0.10.31
+612 silly decomposeActions postinstall string_decoder@0.10.31
+613 silly decomposeActions finalize string_decoder@0.10.31
+614 silly decomposeActions fetch readable-stream@1.0.31
+615 silly decomposeActions extract readable-stream@1.0.31
+616 silly decomposeActions test readable-stream@1.0.31
+617 silly decomposeActions preinstall readable-stream@1.0.31
+618 silly decomposeActions build readable-stream@1.0.31
+619 silly decomposeActions install readable-stream@1.0.31
+620 silly decomposeActions postinstall readable-stream@1.0.31
+621 silly decomposeActions finalize readable-stream@1.0.31
+622 silly decomposeActions fetch cors@2.8.5
+623 silly decomposeActions extract cors@2.8.5
+624 silly decomposeActions test cors@2.8.5
+625 silly decomposeActions preinstall cors@2.8.5
+626 silly decomposeActions build cors@2.8.5
+627 silly decomposeActions install cors@2.8.5
+628 silly decomposeActions postinstall cors@2.8.5
+629 silly decomposeActions finalize cors@2.8.5
+630 silly decomposeActions fetch express@4.17.1
+631 silly decomposeActions extract express@4.17.1
+632 silly decomposeActions test express@4.17.1
+633 silly decomposeActions preinstall express@4.17.1
+634 silly decomposeActions build express@4.17.1
+635 silly decomposeActions install express@4.17.1
+636 silly decomposeActions postinstall express@4.17.1
+637 silly decomposeActions finalize express@4.17.1
+638 silly decomposeActions fetch pg@8.5.1
+639 silly decomposeActions extract pg@8.5.1
+640 silly decomposeActions test pg@8.5.1
+641 silly decomposeActions preinstall pg@8.5.1
+642 silly decomposeActions build pg@8.5.1
+643 silly decomposeActions install pg@8.5.1
+644 silly decomposeActions postinstall pg@8.5.1
+645 silly decomposeActions finalize pg@8.5.1
+646 silly decomposeActions fetch pg-hstore@2.3.3
+647 silly decomposeActions extract pg-hstore@2.3.3
+648 silly decomposeActions test pg-hstore@2.3.3
+649 silly decomposeActions preinstall pg-hstore@2.3.3
+650 silly decomposeActions build pg-hstore@2.3.3
+651 silly decomposeActions install pg-hstore@2.3.3
+652 silly decomposeActions postinstall pg-hstore@2.3.3
+653 silly decomposeActions finalize pg-hstore@2.3.3
+654 silly decomposeActions fetch pg-native@3.0.0
+655 silly decomposeActions extract pg-native@3.0.0
+656 silly decomposeActions test pg-native@3.0.0
+657 silly decomposeActions preinstall pg-native@3.0.0
+658 silly decomposeActions build pg-native@3.0.0
+659 silly decomposeActions install pg-native@3.0.0
+660 silly decomposeActions postinstall pg-native@3.0.0
+661 silly decomposeActions finalize pg-native@3.0.0
+662 silly decomposeActions fetch sequelize@6.5.0
+663 silly decomposeActions extract sequelize@6.5.0
+664 silly decomposeActions test sequelize@6.5.0
+665 silly decomposeActions preinstall sequelize@6.5.0
+666 silly decomposeActions build sequelize@6.5.0
+667 silly decomposeActions install sequelize@6.5.0
+668 silly decomposeActions postinstall sequelize@6.5.0
+669 silly decomposeActions finalize sequelize@6.5.0
+670 silly decomposeActions fetch sequelize-cli@6.2.0
+671 silly decomposeActions extract sequelize-cli@6.2.0
+672 silly decomposeActions test sequelize-cli@6.2.0
+673 silly decomposeActions preinstall sequelize-cli@6.2.0
+674 silly decomposeActions build sequelize-cli@6.2.0
+675 silly decomposeActions install sequelize-cli@6.2.0
+676 silly decomposeActions postinstall sequelize-cli@6.2.0
+677 silly decomposeActions finalize sequelize-cli@6.2.0
+678 silly executeActions Starting
+679 silly install executeActions
+680 silly doSerial global-install 0
+681 silly doParallel fetch 18
+682 verbose lock using /home/akclark/.npm/_locks/staging-9b39af3e0fb6c607.lock for /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging
+683 silly doParallel extract 18
+684 silly extract body-parser@1.19.0
+685 silly extract core-util-is@1.0.2
+686 silly extract file-uri-to-path@1.0.0
+687 silly extract bindings@1.5.0
+688 silly extract isarray@0.0.1
+689 silly extract nan@2.14.2
+690 silly extract libpq@1.8.9
+691 silly extract postgres-array@1.0.3
+692 silly extract pg-types@1.13.0
+693 silly extract string_decoder@0.10.31
+694 silly extract readable-stream@1.0.31
+695 silly extract cors@2.8.5
+696 silly extract express@4.17.1
+697 silly extract pg@8.5.1
+698 silly extract pg-hstore@2.3.3
+699 silly extract pg-native@3.0.0
+700 silly extract sequelize@6.5.0
+701 silly extract sequelize-cli@6.2.0
+702 silly addNamed body-parser@1.19.0
+703 verbose addNamed "1.19.0" is a plain semver version for body-parser
+704 silly mapToRegistry name body-parser
+705 silly mapToRegistry using default registry
+706 silly mapToRegistry registry https://registry.npmjs.org/
+707 silly mapToRegistry uri https://registry.npmjs.org/body-parser
+708 verbose addNameVersion registry:https://registry.npmjs.org/body-parser not in flight; fetching
+709 silly addNamed cors@2.8.5
+710 verbose addNamed "2.8.5" is a plain semver version for cors
+711 silly mapToRegistry name cors
+712 silly mapToRegistry using default registry
+713 silly mapToRegistry registry https://registry.npmjs.org/
+714 silly mapToRegistry uri https://registry.npmjs.org/cors
+715 verbose addNameVersion registry:https://registry.npmjs.org/cors not in flight; fetching
+716 silly addNamed express@4.17.1
+717 verbose addNamed "4.17.1" is a plain semver version for express
+718 silly mapToRegistry name express
+719 silly mapToRegistry using default registry
+720 silly mapToRegistry registry https://registry.npmjs.org/
+721 silly mapToRegistry uri https://registry.npmjs.org/express
+722 verbose addNameVersion registry:https://registry.npmjs.org/express not in flight; fetching
+723 silly addNamed pg@8.5.1
+724 verbose addNamed "8.5.1" is a plain semver version for pg
+725 silly mapToRegistry name pg
+726 silly mapToRegistry using default registry
+727 silly mapToRegistry registry https://registry.npmjs.org/
+728 silly mapToRegistry uri https://registry.npmjs.org/pg
+729 verbose addNameVersion registry:https://registry.npmjs.org/pg not in flight; fetching
+730 silly addNamed pg-hstore@2.3.3
+731 verbose addNamed "2.3.3" is a plain semver version for pg-hstore
+732 silly mapToRegistry name pg-hstore
+733 silly mapToRegistry using default registry
+734 silly mapToRegistry registry https://registry.npmjs.org/
+735 silly mapToRegistry uri https://registry.npmjs.org/pg-hstore
+736 verbose addNameVersion registry:https://registry.npmjs.org/pg-hstore not in flight; fetching
+737 silly addNamed sequelize@6.5.0
+738 verbose addNamed "6.5.0" is a plain semver version for sequelize
+739 silly mapToRegistry name sequelize
+740 silly mapToRegistry using default registry
+741 silly mapToRegistry registry https://registry.npmjs.org/
+742 silly mapToRegistry uri https://registry.npmjs.org/sequelize
+743 verbose addNameVersion registry:https://registry.npmjs.org/sequelize not in flight; fetching
+744 silly addNamed sequelize-cli@6.2.0
+745 verbose addNamed "6.2.0" is a plain semver version for sequelize-cli
+746 silly mapToRegistry name sequelize-cli
+747 silly mapToRegistry using default registry
+748 silly mapToRegistry registry https://registry.npmjs.org/
+749 silly mapToRegistry uri https://registry.npmjs.org/sequelize-cli
+750 verbose addNameVersion registry:https://registry.npmjs.org/sequelize-cli not in flight; fetching
+751 verbose unbuild node_modules/.staging/core-util-is-7801ace6
+752 verbose unbuild node_modules/.staging/file-uri-to-path-1f9e0d9d
+753 verbose unbuild node_modules/.staging/bindings-61666fd3
+754 verbose unbuild node_modules/.staging/isarray-2ff6bb7f
+755 verbose unbuild node_modules/.staging/nan-326af0f2
+756 verbose unbuild node_modules/.staging/libpq-90620056
+757 verbose unbuild node_modules/.staging/postgres-array-3a509877
+758 verbose unbuild node_modules/.staging/pg-types-049c1285
+759 verbose unbuild node_modules/.staging/string_decoder-5d832017
+760 verbose unbuild node_modules/.staging/readable-stream-537d3bb0
+761 verbose unbuild node_modules/.staging/pg-native-e5a9c3c9
+762 verbose request uri https://registry.npmjs.org/body-parser
+763 verbose request no auth needed
+764 info attempt registry request try #1 at 7:58:48 PM
+765 verbose etag W/"69165633b8917311c8a5b29b5aa3a438"
+766 verbose lastModified Fri, 29 Nov 2019 09:32:45 GMT
+767 http request GET https://registry.npmjs.org/body-parser
+768 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/core-util-is-7801ace6 is being purged from base /home/akclark/source/repos/TimeTrackerAPI
+769 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/core-util-is-7801ace6
+770 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/file-uri-to-path-1f9e0d9d is being purged from base /home/akclark/source/repos/TimeTrackerAPI
+771 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/file-uri-to-path-1f9e0d9d
+772 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/bindings-61666fd3 is being purged from base /home/akclark/source/repos/TimeTrackerAPI
+773 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/bindings-61666fd3
+774 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/isarray-2ff6bb7f is being purged from base /home/akclark/source/repos/TimeTrackerAPI
+775 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/isarray-2ff6bb7f
+776 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/nan-326af0f2 is being purged from base /home/akclark/source/repos/TimeTrackerAPI
+777 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/nan-326af0f2
+778 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/libpq-90620056 is being purged from base /home/akclark/source/repos/TimeTrackerAPI
+779 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/libpq-90620056
+780 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/postgres-array-3a509877 is being purged from base /home/akclark/source/repos/TimeTrackerAPI
+781 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/postgres-array-3a509877
+782 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-types-049c1285 is being purged from base /home/akclark/source/repos/TimeTrackerAPI
+783 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-types-049c1285
+784 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/string_decoder-5d832017 is being purged from base /home/akclark/source/repos/TimeTrackerAPI
+785 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/string_decoder-5d832017
+786 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/readable-stream-537d3bb0 is being purged from base /home/akclark/source/repos/TimeTrackerAPI
+787 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/readable-stream-537d3bb0
+788 verbose request uri https://registry.npmjs.org/cors
+789 verbose request no auth needed
+790 info attempt registry request try #1 at 7:58:48 PM
+791 verbose etag W/"158c1c99bef274f24886ea063ec191c5"
+792 verbose lastModified Fri, 22 Jan 2021 21:18:44 GMT
+793 http request GET https://registry.npmjs.org/cors
+794 verbose request uri https://registry.npmjs.org/pg-hstore
+795 verbose request no auth needed
+796 info attempt registry request try #1 at 7:58:48 PM
+797 verbose etag W/"83cabd8a2340481d89eb42da6db01a9d"
+798 verbose lastModified Mon, 03 Jun 2019 20:41:34 GMT
+799 http request GET https://registry.npmjs.org/pg-hstore
+800 verbose request uri https://registry.npmjs.org/pg
+801 verbose request no auth needed
+802 info attempt registry request try #1 at 7:58:48 PM
+803 verbose etag W/"8bfaf29f6054a5f59776149499e0d969"
+804 verbose lastModified Fri, 13 Nov 2020 15:00:25 GMT
+805 http request GET https://registry.npmjs.org/pg
+806 verbose request uri https://registry.npmjs.org/express
+807 verbose request no auth needed
+808 info attempt registry request try #1 at 7:58:48 PM
+809 verbose etag W/"08fbfa1060cbe9da1f8d1b9b9c2fdc2c"
+810 verbose lastModified Fri, 22 Jan 2021 21:18:13 GMT
+811 http request GET https://registry.npmjs.org/express
+812 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-native-e5a9c3c9 is being purged from base /home/akclark/source/repos/TimeTrackerAPI
+813 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-native-e5a9c3c9
+814 verbose tar unpack /home/akclark/.npm/core-util-is/1.0.2/package.tgz
+815 verbose tar unpacking to /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/core-util-is-7801ace6
+816 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/core-util-is-7801ace6 is being purged
+817 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/core-util-is-7801ace6
+818 verbose request uri https://registry.npmjs.org/sequelize-cli
+819 verbose request no auth needed
+820 info attempt registry request try #1 at 7:58:48 PM
+821 verbose etag W/"3049191ff4817fc23a3ffbc7cc5a49e7"
+822 verbose lastModified Sun, 05 Jul 2020 05:57:51 GMT
+823 http request GET https://registry.npmjs.org/sequelize-cli
+824 verbose tar unpack /home/akclark/.npm/file-uri-to-path/1.0.0/package.tgz
+825 verbose tar unpacking to /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/file-uri-to-path-1f9e0d9d
+826 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/file-uri-to-path-1f9e0d9d is being purged
+827 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/file-uri-to-path-1f9e0d9d
+828 verbose tar unpack /home/akclark/.npm/bindings/1.5.0/package.tgz
+829 verbose tar unpacking to /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/bindings-61666fd3
+830 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/bindings-61666fd3 is being purged
+831 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/bindings-61666fd3
+832 verbose tar unpack /home/akclark/.npm/isarray/0.0.1/package.tgz
+833 verbose tar unpacking to /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/isarray-2ff6bb7f
+834 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/isarray-2ff6bb7f is being purged
+835 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/isarray-2ff6bb7f
+836 verbose tar unpack /home/akclark/.npm/nan/2.14.2/package.tgz
+837 verbose tar unpacking to /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/nan-326af0f2
+838 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/nan-326af0f2 is being purged
+839 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/nan-326af0f2
+840 verbose tar unpack /home/akclark/.npm/libpq/1.8.9/package.tgz
+841 verbose tar unpacking to /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/libpq-90620056
+842 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/libpq-90620056 is being purged
+843 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/libpq-90620056
+844 verbose tar unpack /home/akclark/.npm/postgres-array/1.0.3/package.tgz
+845 verbose tar unpacking to /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/postgres-array-3a509877
+846 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/postgres-array-3a509877 is being purged
+847 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/postgres-array-3a509877
+848 verbose tar unpack /home/akclark/.npm/pg-types/1.13.0/package.tgz
+849 verbose tar unpacking to /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-types-049c1285
+850 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-types-049c1285 is being purged
+851 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-types-049c1285
+852 verbose tar unpack /home/akclark/.npm/string_decoder/0.10.31/package.tgz
+853 verbose tar unpacking to /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/string_decoder-5d832017
+854 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/string_decoder-5d832017 is being purged
+855 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/string_decoder-5d832017
+856 verbose tar unpack /home/akclark/.npm/readable-stream/1.0.31/package.tgz
+857 verbose tar unpacking to /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/readable-stream-537d3bb0
+858 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/readable-stream-537d3bb0 is being purged
+859 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/readable-stream-537d3bb0
+860 verbose tar unpack /home/akclark/.npm/pg-native/3.0.0/package.tgz
+861 verbose tar unpacking to /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-native-e5a9c3c9
+862 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-native-e5a9c3c9 is being purged
+863 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-native-e5a9c3c9
+864 verbose request uri https://registry.npmjs.org/sequelize
+865 verbose request no auth needed
+866 info attempt registry request try #1 at 7:58:48 PM
+867 verbose etag W/"ae0184b6d02f1bf016ed163c33d8a7b5"
+868 verbose lastModified Wed, 27 Jan 2021 04:07:11 GMT
+869 http request GET https://registry.npmjs.org/sequelize
+870 silly gunzTarPerm modes [ '755', '644' ]
+871 silly gunzTarPerm modes [ '755', '644' ]
+872 silly gunzTarPerm modes [ '755', '644' ]
+873 silly gunzTarPerm modes [ '755', '644' ]
+874 silly gunzTarPerm modes [ '755', '644' ]
+875 silly gunzTarPerm modes [ '755', '644' ]
+876 silly gunzTarPerm modes [ '755', '644' ]
+877 silly gunzTarPerm modes [ '755', '644' ]
+878 silly gunzTarPerm modes [ '755', '644' ]
+879 silly gunzTarPerm modes [ '755', '644' ]
+880 silly gunzTarPerm modes [ '755', '644' ]
+881 http 304 https://registry.npmjs.org/body-parser
+882 verbose headers { date: 'Sun, 31 Jan 2021 19:58:48 GMT',
+882 verbose headers   connection: 'keep-alive',
+882 verbose headers   'set-cookie':
+882 verbose headers    [ '__cfduid=d9d103e8845239b31c6f167d79dcb8dca1612123128; expires=Tue, 02-Mar-21 19:58:48 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+882 verbose headers   'cf-ray': '61a6026fca64f77c-DEN',
+882 verbose headers   age: '474',
+882 verbose headers   'cache-control': 'public, max-age=300',
+882 verbose headers   etag: '"69165633b8917311c8a5b29b5aa3a438"',
+882 verbose headers   'last-modified': 'Fri, 29 Nov 2019 09:32:45 GMT',
+882 verbose headers   vary: 'Accept-Encoding',
+882 verbose headers   'cf-cache-status': 'HIT',
+882 verbose headers   'cf-request-id': '07fb9fd9e20000f77c99343000000001',
+882 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+882 verbose headers   server: 'cloudflare' }
+883 silly get cb [ 304,
+883 silly get   { date: 'Sun, 31 Jan 2021 19:58:48 GMT',
+883 silly get     connection: 'keep-alive',
+883 silly get     'set-cookie':
+883 silly get      [ '__cfduid=d9d103e8845239b31c6f167d79dcb8dca1612123128; expires=Tue, 02-Mar-21 19:58:48 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+883 silly get     'cf-ray': '61a6026fca64f77c-DEN',
+883 silly get     age: '474',
+883 silly get     'cache-control': 'public, max-age=300',
+883 silly get     etag: '"69165633b8917311c8a5b29b5aa3a438"',
+883 silly get     'last-modified': 'Fri, 29 Nov 2019 09:32:45 GMT',
+883 silly get     vary: 'Accept-Encoding',
+883 silly get     'cf-cache-status': 'HIT',
+883 silly get     'cf-request-id': '07fb9fd9e20000f77c99343000000001',
+883 silly get     'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+883 silly get     server: 'cloudflare' } ]
+884 verbose etag https://registry.npmjs.org/body-parser from cache
+885 verbose get saving body-parser to /home/akclark/.npm/registry.npmjs.org/body-parser/.cache.json
+886 http 304 https://registry.npmjs.org/cors
+887 verbose headers { date: 'Sun, 31 Jan 2021 19:58:48 GMT',
+887 verbose headers   connection: 'keep-alive',
+887 verbose headers   'set-cookie':
+887 verbose headers    [ '__cfduid=da465766b389b6b3c364a44ea4c47d1431612123128; expires=Tue, 02-Mar-21 19:58:48 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+887 verbose headers   'cf-ray': '61a6026fcdb7c7a5-DEN',
+887 verbose headers   age: '1129',
+887 verbose headers   'cache-control': 'public, max-age=300',
+887 verbose headers   etag: '"158c1c99bef274f24886ea063ec191c5"',
+887 verbose headers   'last-modified': 'Fri, 22 Jan 2021 21:18:44 GMT',
+887 verbose headers   vary: 'Accept-Encoding',
+887 verbose headers   'cf-cache-status': 'HIT',
+887 verbose headers   'cf-request-id': '07fb9fd9e10000c7a57a234000000001',
+887 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+887 verbose headers   server: 'cloudflare' }
+888 silly get cb [ 304,
+888 silly get   { date: 'Sun, 31 Jan 2021 19:58:48 GMT',
+888 silly get     connection: 'keep-alive',
+888 silly get     'set-cookie':
+888 silly get      [ '__cfduid=da465766b389b6b3c364a44ea4c47d1431612123128; expires=Tue, 02-Mar-21 19:58:48 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+888 silly get     'cf-ray': '61a6026fcdb7c7a5-DEN',
+888 silly get     age: '1129',
+888 silly get     'cache-control': 'public, max-age=300',
+888 silly get     etag: '"158c1c99bef274f24886ea063ec191c5"',
+888 silly get     'last-modified': 'Fri, 22 Jan 2021 21:18:44 GMT',
+888 silly get     vary: 'Accept-Encoding',
+888 silly get     'cf-cache-status': 'HIT',
+888 silly get     'cf-request-id': '07fb9fd9e10000c7a57a234000000001',
+888 silly get     'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+888 silly get     server: 'cloudflare' } ]
+889 verbose etag https://registry.npmjs.org/cors from cache
+890 verbose get saving cors to /home/akclark/.npm/registry.npmjs.org/cors/.cache.json
+891 http 304 https://registry.npmjs.org/pg-hstore
+892 verbose headers { date: 'Sun, 31 Jan 2021 19:58:48 GMT',
+892 verbose headers   connection: 'keep-alive',
+892 verbose headers   'set-cookie':
+892 verbose headers    [ '__cfduid=da5e73306c5f54e1e9ce1cecbf0aa9caa1612123128; expires=Tue, 02-Mar-21 19:58:48 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+892 verbose headers   'cf-ray': '61a6026fcb3b2717-DEN',
+892 verbose headers   age: '188',
+892 verbose headers   'cache-control': 'public, max-age=300',
+892 verbose headers   etag: '"83cabd8a2340481d89eb42da6db01a9d"',
+892 verbose headers   'last-modified': 'Mon, 03 Jun 2019 20:41:34 GMT',
+892 verbose headers   vary: 'Accept-Encoding',
+892 verbose headers   'cf-cache-status': 'HIT',
+892 verbose headers   'cf-request-id': '07fb9fd9e100002717cf2a2000000001',
+892 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+892 verbose headers   server: 'cloudflare' }
+893 silly get cb [ 304,
+893 silly get   { date: 'Sun, 31 Jan 2021 19:58:48 GMT',
+893 silly get     connection: 'keep-alive',
+893 silly get     'set-cookie':
+893 silly get      [ '__cfduid=da5e73306c5f54e1e9ce1cecbf0aa9caa1612123128; expires=Tue, 02-Mar-21 19:58:48 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+893 silly get     'cf-ray': '61a6026fcb3b2717-DEN',
+893 silly get     age: '188',
+893 silly get     'cache-control': 'public, max-age=300',
+893 silly get     etag: '"83cabd8a2340481d89eb42da6db01a9d"',
+893 silly get     'last-modified': 'Mon, 03 Jun 2019 20:41:34 GMT',
+893 silly get     vary: 'Accept-Encoding',
+893 silly get     'cf-cache-status': 'HIT',
+893 silly get     'cf-request-id': '07fb9fd9e100002717cf2a2000000001',
+893 silly get     'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+893 silly get     server: 'cloudflare' } ]
+894 verbose etag https://registry.npmjs.org/pg-hstore from cache
+895 verbose get saving pg-hstore to /home/akclark/.npm/registry.npmjs.org/pg-hstore/.cache.json
+896 silly gunzTarPerm extractEntry package.json
+897 silly gunzTarPerm extractEntry package.json
+898 silly gunzTarPerm extractEntry package.json
+899 silly gunzTarPerm extractEntry package.json
+900 silly gunzTarPerm extractEntry package.json
+901 silly gunzTarPerm modified mode [ 'package.json', 436, 420 ]
+902 silly gunzTarPerm extractEntry package.json
+903 silly gunzTarPerm extractEntry package.json
+904 silly gunzTarPerm extractEntry package.json
+905 silly gunzTarPerm modified mode [ 'package.json', 436, 420 ]
+906 silly gunzTarPerm extractEntry package.json
+907 silly gunzTarPerm extractEntry package.json
+908 silly gunzTarPerm modified mode [ 'package.json', 436, 420 ]
+909 silly gunzTarPerm extractEntry package.json
+910 silly gunzTarPerm modified mode [ 'package.json', 436, 420 ]
+911 silly gunzTarPerm extractEntry README.md
+912 silly gunzTarPerm extractEntry LICENSE
+913 silly gunzTarPerm extractEntry .npmignore
+914 silly gunzTarPerm extractEntry README.md
+915 silly gunzTarPerm extractEntry bindings.js
+916 silly gunzTarPerm extractEntry LICENSE.md
+917 silly gunzTarPerm extractEntry README.md
+918 silly gunzTarPerm extractEntry index.js
+919 silly gunzTarPerm extractEntry CHANGELOG.md
+920 silly gunzTarPerm modified mode [ 'CHANGELOG.md', 436, 420 ]
+921 silly gunzTarPerm extractEntry .travis.yml
+922 silly gunzTarPerm extractEntry binding.gyp
+923 silly gunzTarPerm extractEntry index.d.ts
+924 silly gunzTarPerm extractEntry index.js
+925 silly gunzTarPerm extractEntry .npmignore
+926 silly gunzTarPerm modified mode [ '.npmignore', 436, 420 ]
+927 silly gunzTarPerm extractEntry README.md
+928 silly gunzTarPerm modified mode [ 'README.md', 436, 420 ]
+929 silly gunzTarPerm extractEntry .travis.yml
+930 silly gunzTarPerm extractEntry index.js
+931 silly gunzTarPerm extractEntry include_dirs.js
+932 silly gunzTarPerm modified mode [ 'include_dirs.js', 436, 420 ]
+933 silly gunzTarPerm extractEntry .npmignore
+934 silly gunzTarPerm extractEntry README.md
+935 silly gunzTarPerm modified mode [ 'README.md', 436, 420 ]
+936 silly gunzTarPerm extractEntry .eslintrc
+937 silly gunzTarPerm modified mode [ '.eslintrc', 436, 420 ]
+938 silly gunzTarPerm extractEntry .travis.yml
+939 silly gunzTarPerm modified mode [ '.travis.yml', 436, 420 ]
+940 silly mapToRegistry name body-parser
+941 silly mapToRegistry using default registry
+942 silly mapToRegistry registry https://registry.npmjs.org/
+943 silly mapToRegistry uri https://registry.npmjs.org/body-parser
+944 verbose addRemoteTarball https://registry.npmjs.org/body-parser/-/body-parser-1.19.0.tgz not in flight; adding
+945 verbose addRemoteTarball [ 'https://registry.npmjs.org/body-parser/-/body-parser-1.19.0.tgz',
+945 verbose addRemoteTarball   '96b2709e57c9c4e09a6fd66a8fd979844f69f08a' ]
+946 silly mapToRegistry name cors
+947 silly mapToRegistry using default registry
+948 silly mapToRegistry registry https://registry.npmjs.org/
+949 silly mapToRegistry uri https://registry.npmjs.org/cors
+950 verbose addRemoteTarball https://registry.npmjs.org/cors/-/cors-2.8.5.tgz not in flight; adding
+951 verbose addRemoteTarball [ 'https://registry.npmjs.org/cors/-/cors-2.8.5.tgz',
+951 verbose addRemoteTarball   'eac11da51592dd86b9f06f6e7ac293b3df875d29' ]
+952 silly mapToRegistry name pg-hstore
+953 silly mapToRegistry using default registry
+954 silly mapToRegistry registry https://registry.npmjs.org/
+955 silly mapToRegistry uri https://registry.npmjs.org/pg-hstore
+956 verbose addRemoteTarball https://registry.npmjs.org/pg-hstore/-/pg-hstore-2.3.3.tgz not in flight; adding
+957 verbose addRemoteTarball [ 'https://registry.npmjs.org/pg-hstore/-/pg-hstore-2.3.3.tgz',
+957 verbose addRemoteTarball   'd1978c12a85359830b1388d3b0ff233b88928e96' ]
+958 info retry fetch attempt 1 at 7:58:48 PM
+959 info attempt registry request try #1 at 7:58:48 PM
+960 http fetch GET https://registry.npmjs.org/body-parser/-/body-parser-1.19.0.tgz
+961 info retry fetch attempt 1 at 7:58:48 PM
+962 info attempt registry request try #1 at 7:58:48 PM
+963 http fetch GET https://registry.npmjs.org/cors/-/cors-2.8.5.tgz
+964 info retry fetch attempt 1 at 7:58:48 PM
+965 info attempt registry request try #1 at 7:58:48 PM
+966 http fetch GET https://registry.npmjs.org/pg-hstore/-/pg-hstore-2.3.3.tgz
+967 silly gunzTarPerm extractEntry test.js
+968 silly gunzTarPerm extractEntry float.patch
+969 silly gunzTarPerm extractEntry LICENSE
+970 silly gunzTarPerm extractEntry index.js
+971 silly gunzTarPerm extractEntry README.md
+972 silly gunzTarPerm extractEntry build/build.js
+973 silly gunzTarPerm extractEntry component.json
+974 silly gunzTarPerm extractEntry LICENSE.md
+975 silly gunzTarPerm modified mode [ 'LICENSE.md', 436, 420 ]
+976 silly gunzTarPerm extractEntry nan_callbacks_12_inl.h
+977 silly gunzTarPerm modified mode [ 'nan_callbacks_12_inl.h', 436, 420 ]
+978 silly gunzTarPerm extractEntry nan_callbacks_pre_12_inl.h
+979 silly gunzTarPerm modified mode [ 'nan_callbacks_pre_12_inl.h', 436, 420 ]
+980 silly gunzTarPerm extractEntry index.js
+981 silly gunzTarPerm extractEntry Makefile
+982 silly gunzTarPerm extractEntry README.md
+983 silly gunzTarPerm extractEntry src/addon.cc
+984 silly gunzTarPerm extractEntry src/addon.h
+985 silly gunzTarPerm extractEntry src/connect-async-worker.cc
+986 silly gunzTarPerm extractEntry src/connect-async-worker.h
+987 silly gunzTarPerm extractEntry src/connection.cc
+988 silly gunzTarPerm extractEntry src/connection.h
+989 silly gunzTarPerm extractEntry test/async-connection.js
+990 silly gunzTarPerm extractEntry test/async-socket.js
+991 silly gunzTarPerm extractEntry test/cancel.js
+992 silly gunzTarPerm extractEntry test/construction.js
+993 silly gunzTarPerm extractEntry test/copy-in.js
+994 silly gunzTarPerm extractEntry test/copy-out.js
+995 silly gunzTarPerm extractEntry test/error-conditions.js
+996 silly gunzTarPerm extractEntry test/error-info.js
+997 silly gunzTarPerm extractEntry test/escaping.js
+998 silly gunzTarPerm extractEntry test/helper.js
+999 silly gunzTarPerm extractEntry test/index.js
+1000 silly gunzTarPerm extractEntry test/load.js
+1001 silly gunzTarPerm extractEntry test/many-connections.js
+1002 silly gunzTarPerm extractEntry test/mocha.opts
+1003 silly gunzTarPerm extractEntry test/multiple-queries.js
+1004 silly gunzTarPerm extractEntry test/non-blocking-controls.js
+1005 silly gunzTarPerm extractEntry test/notification.js
+1006 silly gunzTarPerm extractEntry test/result-accessors.js
+1007 silly gunzTarPerm extractEntry test/server-version.js
+1008 silly gunzTarPerm extractEntry test/socket.js
+1009 silly gunzTarPerm extractEntry test/sync-integration.js
+1010 silly gunzTarPerm extractEntry test/sync-parameters.js
+1011 silly gunzTarPerm extractEntry test/sync-prepare.js
+1012 silly gunzTarPerm extractEntry test/sync.js
+1013 silly gunzTarPerm extractEntry vendor/build.sh
+1014 silly gunzTarPerm extractEntry vendor/install_libpq.sh
+1015 silly gunzTarPerm extractEntry vendor/install_openssl.sh
+1016 silly gunzTarPerm extractEntry license
+1017 silly gunzTarPerm extractEntry readme.md
+1018 silly gunzTarPerm extractEntry LICENSE
+1019 silly gunzTarPerm modified mode [ 'LICENSE', 436, 420 ]
+1020 silly gunzTarPerm extractEntry index.js
+1021 silly gunzTarPerm modified mode [ 'index.js', 436, 420 ]
+1022 silly gunzTarPerm extractEntry Makefile
+1023 silly gunzTarPerm extractEntry README.md
+1024 silly gunzTarPerm extractEntry LICENSE
+1025 silly gunzTarPerm modified mode [ 'LICENSE', 436, 420 ]
+1026 silly gunzTarPerm extractEntry transform.js
+1027 silly gunzTarPerm extractEntry index.js
+1028 silly gunzTarPerm modified mode [ 'index.js', 436, 420 ]
+1029 silly gunzTarPerm extractEntry Makefile
+1030 silly gunzTarPerm modified mode [ 'Makefile', 436, 420 ]
+1031 http 304 https://registry.npmjs.org/express
+1032 verbose headers { date: 'Sun, 31 Jan 2021 19:58:48 GMT',
+1032 verbose headers   connection: 'keep-alive',
+1032 verbose headers   'set-cookie':
+1032 verbose headers    [ '__cfduid=da5e73306c5f54e1e9ce1cecbf0aa9caa1612123128; expires=Tue, 02-Mar-21 19:58:48 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+1032 verbose headers   'cf-ray': '61a602710cc22717-DEN',
+1032 verbose headers   age: '2013',
+1032 verbose headers   'cache-control': 'public, max-age=300',
+1032 verbose headers   etag: '"08fbfa1060cbe9da1f8d1b9b9c2fdc2c"',
+1032 verbose headers   'last-modified': 'Fri, 22 Jan 2021 21:18:13 GMT',
+1032 verbose headers   vary: 'Accept-Encoding',
+1032 verbose headers   'cf-cache-status': 'HIT',
+1032 verbose headers   'cf-request-id': '07fb9fdaa300002717931ed000000001',
+1032 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+1032 verbose headers   server: 'cloudflare' }
+1033 silly get cb [ 304,
+1033 silly get   { date: 'Sun, 31 Jan 2021 19:58:48 GMT',
+1033 silly get     connection: 'keep-alive',
+1033 silly get     'set-cookie':
+1033 silly get      [ '__cfduid=da5e73306c5f54e1e9ce1cecbf0aa9caa1612123128; expires=Tue, 02-Mar-21 19:58:48 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+1033 silly get     'cf-ray': '61a602710cc22717-DEN',
+1033 silly get     age: '2013',
+1033 silly get     'cache-control': 'public, max-age=300',
+1033 silly get     etag: '"08fbfa1060cbe9da1f8d1b9b9c2fdc2c"',
+1033 silly get     'last-modified': 'Fri, 22 Jan 2021 21:18:13 GMT',
+1033 silly get     vary: 'Accept-Encoding',
+1033 silly get     'cf-cache-status': 'HIT',
+1033 silly get     'cf-request-id': '07fb9fdaa300002717931ed000000001',
+1033 silly get     'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+1033 silly get     server: 'cloudflare' } ]
+1034 verbose etag https://registry.npmjs.org/express from cache
+1035 verbose get saving express to /home/akclark/.npm/registry.npmjs.org/express/.cache.json
+1036 silly gunzTarPerm extractEntry nan_callbacks.h
+1037 silly gunzTarPerm modified mode [ 'nan_callbacks.h', 436, 420 ]
+1038 http 304 https://registry.npmjs.org/pg
+1039 verbose headers { date: 'Sun, 31 Jan 2021 19:58:48 GMT',
+1039 verbose headers   connection: 'keep-alive',
+1039 verbose headers   'set-cookie':
+1039 verbose headers    [ '__cfduid=d2604c0857700d4703dec51b28b7a6dc01612123128; expires=Tue, 02-Mar-21 19:58:48 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+1039 verbose headers   'cf-ray': '61a602710b48271b-DEN',
+1039 verbose headers   age: '188',
+1039 verbose headers   'cache-control': 'public, max-age=300',
+1039 verbose headers   etag: '"8bfaf29f6054a5f59776149499e0d969"',
+1039 verbose headers   'last-modified': 'Fri, 13 Nov 2020 15:00:25 GMT',
+1039 verbose headers   vary: 'Accept-Encoding',
+1039 verbose headers   'cf-cache-status': 'HIT',
+1039 verbose headers   'cf-request-id': '07fb9fdaa20000271b750b9000000001',
+1039 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+1039 verbose headers   server: 'cloudflare' }
+1040 silly get cb [ 304,
+1040 silly get   { date: 'Sun, 31 Jan 2021 19:58:48 GMT',
+1040 silly get     connection: 'keep-alive',
+1040 silly get     'set-cookie':
+1040 silly get      [ '__cfduid=d2604c0857700d4703dec51b28b7a6dc01612123128; expires=Tue, 02-Mar-21 19:58:48 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+1040 silly get     'cf-ray': '61a602710b48271b-DEN',
+1040 silly get     age: '188',
+1040 silly get     'cache-control': 'public, max-age=300',
+1040 silly get     etag: '"8bfaf29f6054a5f59776149499e0d969"',
+1040 silly get     'last-modified': 'Fri, 13 Nov 2020 15:00:25 GMT',
+1040 silly get     vary: 'Accept-Encoding',
+1040 silly get     'cf-cache-status': 'HIT',
+1040 silly get     'cf-request-id': '07fb9fdaa20000271b750b9000000001',
+1040 silly get     'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+1040 silly get     server: 'cloudflare' } ]
+1041 verbose etag https://registry.npmjs.org/pg from cache
+1042 verbose get saving pg to /home/akclark/.npm/registry.npmjs.org/pg/.cache.json
+1043 http 304 https://registry.npmjs.org/sequelize
+1044 verbose headers { date: 'Sun, 31 Jan 2021 19:58:48 GMT',
+1044 verbose headers   connection: 'keep-alive',
+1044 verbose headers   'set-cookie':
+1044 verbose headers    [ '__cfduid=db69e5a40ca88fe0e6af20d7b00be94f31612123128; expires=Tue, 02-Mar-21 19:58:48 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+1044 verbose headers   'cf-ray': '61a602711dc2f790-DEN',
+1044 verbose headers   age: '188',
+1044 verbose headers   'cache-control': 'public, max-age=300',
+1044 verbose headers   etag: '"ae0184b6d02f1bf016ed163c33d8a7b5"',
+1044 verbose headers   'last-modified': 'Wed, 27 Jan 2021 04:07:11 GMT',
+1044 verbose headers   vary: 'Accept-Encoding',
+1044 verbose headers   'cf-cache-status': 'HIT',
+1044 verbose headers   'cf-request-id': '07fb9fdab00000f7907d9b9000000001',
+1044 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+1044 verbose headers   server: 'cloudflare' }
+1045 silly get cb [ 304,
+1045 silly get   { date: 'Sun, 31 Jan 2021 19:58:48 GMT',
+1045 silly get     connection: 'keep-alive',
+1045 silly get     'set-cookie':
+1045 silly get      [ '__cfduid=db69e5a40ca88fe0e6af20d7b00be94f31612123128; expires=Tue, 02-Mar-21 19:58:48 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+1045 silly get     'cf-ray': '61a602711dc2f790-DEN',
+1045 silly get     age: '188',
+1045 silly get     'cache-control': 'public, max-age=300',
+1045 silly get     etag: '"ae0184b6d02f1bf016ed163c33d8a7b5"',
+1045 silly get     'last-modified': 'Wed, 27 Jan 2021 04:07:11 GMT',
+1045 silly get     vary: 'Accept-Encoding',
+1045 silly get     'cf-cache-status': 'HIT',
+1045 silly get     'cf-request-id': '07fb9fdab00000f7907d9b9000000001',
+1045 silly get     'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+1045 silly get     server: 'cloudflare' } ]
+1046 verbose etag https://registry.npmjs.org/sequelize from cache
+1047 verbose get saving sequelize to /home/akclark/.npm/registry.npmjs.org/sequelize/.cache.json
+1048 silly gunzTarPerm extractEntry lib/util.js
+1049 http fetch 200 https://registry.npmjs.org/pg-hstore/-/pg-hstore-2.3.3.tgz
+1050 silly gunzTarPerm extractEntry .travis.yml
+1051 silly gunzTarPerm extractEntry index.d.ts
+1052 silly gunzTarPerm extractEntry lib/arrayParser.js
+1053 silly gunzTarPerm extractEntry lib/binaryParsers.js
+1054 silly gunzTarPerm extractEntry duplex.js
+1055 silly gunzTarPerm extractEntry readable.js
+1056 silly gunzTarPerm modified mode [ 'readable.js', 436, 420 ]
+1057 silly gunzTarPerm extractEntry README.md
+1058 silly gunzTarPerm modified mode [ 'README.md', 436, 420 ]
+1059 silly gunzTarPerm extractEntry bench/index.js
+1060 silly gunzTarPerm modified mode [ 'bench/index.js', 436, 420 ]
+1061 silly gunzTarPerm extractEntry bench/leaks.js
+1062 silly gunzTarPerm modified mode [ 'bench/leaks.js', 436, 420 ]
+1063 silly gunzTarPerm extractEntry lib/build-result.js
+1064 silly gunzTarPerm modified mode [ 'lib/build-result.js', 436, 420 ]
+1065 silly gunzTarPerm extractEntry lib/copy-stream.js
+1066 silly gunzTarPerm modified mode [ 'lib/copy-stream.js', 436, 420 ]
+1067 silly gunzTarPerm extractEntry test/array-mode.js
+1068 silly gunzTarPerm modified mode [ 'test/array-mode.js', 436, 420 ]
+1069 silly gunzTarPerm extractEntry test/async-workflow.js
+1070 silly gunzTarPerm modified mode [ 'test/async-workflow.js', 436, 420 ]
+1071 silly gunzTarPerm extractEntry test/cancel.js
+1072 silly gunzTarPerm modified mode [ 'test/cancel.js', 436, 420 ]
+1073 silly gunzTarPerm extractEntry test/connection-errors.js
+1074 silly gunzTarPerm modified mode [ 'test/connection-errors.js', 436, 420 ]
+1075 silly gunzTarPerm extractEntry test/connection.js
+1076 silly gunzTarPerm modified mode [ 'test/connection.js', 436, 420 ]
+1077 silly gunzTarPerm extractEntry test/copy-from.js
+1078 silly gunzTarPerm modified mode [ 'test/copy-from.js', 436, 420 ]
+1079 silly gunzTarPerm extractEntry test/copy-to.js
+1080 silly gunzTarPerm modified mode [ 'test/copy-to.js', 436, 420 ]
+1081 silly gunzTarPerm extractEntry test/custom-types.js
+1082 silly gunzTarPerm modified mode [ 'test/custom-types.js', 436, 420 ]
+1083 silly gunzTarPerm extractEntry test/domains.js
+1084 silly gunzTarPerm modified mode [ 'test/domains.js', 436, 420 ]
+1085 silly gunzTarPerm extractEntry test/empty-query.js
+1086 silly gunzTarPerm modified mode [ 'test/empty-query.js', 436, 420 ]
+1087 silly gunzTarPerm extractEntry test/huge-query.js
+1088 silly gunzTarPerm modified mode [ 'test/huge-query.js', 436, 420 ]
+1089 silly gunzTarPerm extractEntry test/index.js
+1090 silly gunzTarPerm modified mode [ 'test/index.js', 436, 420 ]
+1091 silly gunzTarPerm extractEntry test/load.js
+1092 silly gunzTarPerm modified mode [ 'test/load.js', 436, 420 ]
+1093 silly gunzTarPerm extractEntry test/many-connections.js
+1094 silly gunzTarPerm modified mode [ 'test/many-connections.js', 436, 420 ]
+1095 silly gunzTarPerm extractEntry test/many-errors.js
+1096 silly gunzTarPerm modified mode [ 'test/many-errors.js', 436, 420 ]
+1097 silly gunzTarPerm extractEntry test/mocha.opts
+1098 silly gunzTarPerm modified mode [ 'test/mocha.opts', 436, 420 ]
+1099 silly gunzTarPerm extractEntry test/multiple-queries.js
+1100 silly gunzTarPerm modified mode [ 'test/multiple-queries.js', 436, 420 ]
+1101 silly gunzTarPerm extractEntry test/multiple-statement-results.js
+1102 silly gunzTarPerm modified mode [ 'test/multiple-statement-results.js', 436, 420 ]
+1103 silly gunzTarPerm extractEntry test/notify.js
+1104 silly gunzTarPerm modified mode [ 'test/notify.js', 436, 420 ]
+1105 silly gunzTarPerm extractEntry test/prepare.js
+1106 silly gunzTarPerm modified mode [ 'test/prepare.js', 436, 420 ]
+1107 silly gunzTarPerm extractEntry test/query-async.js
+1108 silly gunzTarPerm modified mode [ 'test/query-async.js', 436, 420 ]
+1109 silly gunzTarPerm extractEntry test/query-sync.js
+1110 silly gunzTarPerm modified mode [ 'test/query-sync.js', 436, 420 ]
+1111 silly gunzTarPerm extractEntry test/version.js
+1112 silly gunzTarPerm modified mode [ 'test/version.js', 436, 420 ]
+1113 http fetch 200 https://registry.npmjs.org/body-parser/-/body-parser-1.19.0.tgz
+1114 http fetch 200 https://registry.npmjs.org/cors/-/cors-2.8.5.tgz
+1115 http 304 https://registry.npmjs.org/sequelize-cli
+1116 verbose headers { date: 'Sun, 31 Jan 2021 19:58:48 GMT',
+1116 verbose headers   connection: 'keep-alive',
+1116 verbose headers   'set-cookie':
+1116 verbose headers    [ '__cfduid=dce21171dd1b717a7b1ee4095f72f15b61612123128; expires=Tue, 02-Mar-21 19:58:48 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+1116 verbose headers   'cf-ray': '61a602711b60f78c-DEN',
+1116 verbose headers   age: '188',
+1116 verbose headers   'cache-control': 'public, max-age=300',
+1116 verbose headers   etag: '"3049191ff4817fc23a3ffbc7cc5a49e7"',
+1116 verbose headers   'last-modified': 'Sun, 05 Jul 2020 05:57:51 GMT',
+1116 verbose headers   vary: 'Accept-Encoding',
+1116 verbose headers   'cf-cache-status': 'HIT',
+1116 verbose headers   'cf-request-id': '07fb9fdaac0000f78cfd085000000001',
+1116 verbose headers   'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+1116 verbose headers   server: 'cloudflare' }
+1117 silly get cb [ 304,
+1117 silly get   { date: 'Sun, 31 Jan 2021 19:58:48 GMT',
+1117 silly get     connection: 'keep-alive',
+1117 silly get     'set-cookie':
+1117 silly get      [ '__cfduid=dce21171dd1b717a7b1ee4095f72f15b61612123128; expires=Tue, 02-Mar-21 19:58:48 GMT; path=/; domain=.npmjs.org; HttpOnly; SameSite=Lax' ],
+1117 silly get     'cf-ray': '61a602711b60f78c-DEN',
+1117 silly get     age: '188',
+1117 silly get     'cache-control': 'public, max-age=300',
+1117 silly get     etag: '"3049191ff4817fc23a3ffbc7cc5a49e7"',
+1117 silly get     'last-modified': 'Sun, 05 Jul 2020 05:57:51 GMT',
+1117 silly get     vary: 'Accept-Encoding',
+1117 silly get     'cf-cache-status': 'HIT',
+1117 silly get     'cf-request-id': '07fb9fdaac0000f78cfd085000000001',
+1117 silly get     'expect-ct': 'max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"',
+1117 silly get     server: 'cloudflare' } ]
+1118 verbose etag https://registry.npmjs.org/sequelize-cli from cache
+1119 verbose get saving sequelize-cli to /home/akclark/.npm/registry.npmjs.org/sequelize-cli/.cache.json
+1120 silly gunzTarPerm extractEntry nan_converters_43_inl.h
+1121 silly gunzTarPerm modified mode [ 'nan_converters_43_inl.h', 436, 420 ]
+1122 silly gunzTarPerm extractEntry nan_converters_pre_43_inl.h
+1123 silly gunzTarPerm modified mode [ 'nan_converters_pre_43_inl.h', 436, 420 ]
+1124 silly fetchAndShaCheck shasum d1978c12a85359830b1388d3b0ff233b88928e96
+1125 silly fetchAndShaCheck shasum 96b2709e57c9c4e09a6fd66a8fd979844f69f08a
+1126 silly fetchAndShaCheck shasum eac11da51592dd86b9f06f6e7ac293b3df875d29
+1127 silly mapToRegistry name express
+1128 silly mapToRegistry using default registry
+1129 silly mapToRegistry registry https://registry.npmjs.org/
+1130 silly mapToRegistry uri https://registry.npmjs.org/express
+1131 verbose addRemoteTarball https://registry.npmjs.org/express/-/express-4.17.1.tgz not in flight; adding
+1132 verbose addRemoteTarball [ 'https://registry.npmjs.org/express/-/express-4.17.1.tgz',
+1132 verbose addRemoteTarball   '4491fc38605cf51f8629d39c2b5d026f98a4c134' ]
+1133 verbose addTmpTarball /tmp/npm-7219-c0b1e979/registry.npmjs.org/pg-hstore/-/pg-hstore-2.3.3.tgz not in flight; adding
+1134 verbose addTmpTarball already have metadata; skipping unpack for pg-hstore@2.3.3
+1135 verbose addTmpTarball /tmp/npm-7219-c0b1e979/registry.npmjs.org/body-parser/-/body-parser-1.19.0.tgz not in flight; adding
+1136 verbose addTmpTarball already have metadata; skipping unpack for body-parser@1.19.0
+1137 verbose addTmpTarball /tmp/npm-7219-c0b1e979/registry.npmjs.org/cors/-/cors-2.8.5.tgz not in flight; adding
+1138 verbose addTmpTarball already have metadata; skipping unpack for cors@2.8.5
+1139 info retry fetch attempt 1 at 7:58:48 PM
+1140 info attempt registry request try #1 at 7:58:48 PM
+1141 http fetch GET https://registry.npmjs.org/express/-/express-4.17.1.tgz
+1142 silly gunzTarPerm extractEntry History.md
+1143 silly gunzTarPerm extractEntry test/test.js
+1144 silly mapToRegistry name pg
+1145 silly mapToRegistry using default registry
+1146 silly mapToRegistry registry https://registry.npmjs.org/
+1147 silly mapToRegistry uri https://registry.npmjs.org/pg
+1148 verbose addRemoteTarball https://registry.npmjs.org/pg/-/pg-8.5.1.tgz not in flight; adding
+1149 verbose addRemoteTarball [ 'https://registry.npmjs.org/pg/-/pg-8.5.1.tgz',
+1149 verbose addRemoteTarball   '34dcb15f6db4a29c702bf5031ef2e1e25a06a120' ]
+1150 silly gunzTarPerm extractEntry lib/textParsers.js
+1151 silly gunzTarPerm extractEntry passthrough.js
+1152 silly gunzTarPerm extractEntry writable.js
+1153 silly gunzTarPerm extractEntry nan_converters.h
+1154 silly gunzTarPerm modified mode [ 'nan_converters.h', 436, 420 ]
+1155 silly gunzTarPerm extractEntry nan_define_own_property_helper.h
+1156 silly gunzTarPerm modified mode [ 'nan_define_own_property_helper.h', 436, 420 ]
+1157 info retry fetch attempt 1 at 7:58:48 PM
+1158 info attempt registry request try #1 at 7:58:48 PM
+1159 http fetch GET https://registry.npmjs.org/pg/-/pg-8.5.1.tgz
+1160 silly mapToRegistry name sequelize
+1161 silly mapToRegistry using default registry
+1162 silly mapToRegistry registry https://registry.npmjs.org/
+1163 silly mapToRegistry uri https://registry.npmjs.org/sequelize
+1164 verbose addRemoteTarball https://registry.npmjs.org/sequelize/-/sequelize-6.5.0.tgz not in flight; adding
+1165 verbose addRemoteTarball [ 'https://registry.npmjs.org/sequelize/-/sequelize-6.5.0.tgz',
+1165 verbose addRemoteTarball   'c968a03f6fbbcda40717f73edb39fadf27b85e96' ]
+1166 silly mapToRegistry name sequelize-cli
+1167 silly mapToRegistry using default registry
+1168 silly mapToRegistry registry https://registry.npmjs.org/
+1169 silly mapToRegistry uri https://registry.npmjs.org/sequelize-cli
+1170 verbose addRemoteTarball https://registry.npmjs.org/sequelize-cli/-/sequelize-cli-6.2.0.tgz not in flight; adding
+1171 verbose addRemoteTarball [ 'https://registry.npmjs.org/sequelize-cli/-/sequelize-cli-6.2.0.tgz',
+1171 verbose addRemoteTarball   'fd02bfeae23b8226872f9947f3f8212cc49a4771' ]
+1172 info retry fetch attempt 1 at 7:58:48 PM
+1173 info attempt registry request try #1 at 7:58:48 PM
+1174 http fetch GET https://registry.npmjs.org/sequelize/-/sequelize-6.5.0.tgz
+1175 info retry fetch attempt 1 at 7:58:48 PM
+1176 info attempt registry request try #1 at 7:58:48 PM
+1177 http fetch GET https://registry.npmjs.org/sequelize-cli/-/sequelize-cli-6.2.0.tgz
+1178 silly gunzTarPerm extractEntry test/index.js
+1179 silly gunzTarPerm extractEntry test/types.js
+1180 silly gunzTarPerm extractEntry test/tests.json
+1181 silly gunzTarPerm extractEntry lib/_stream_duplex.js
+1182 silly gunzTarPerm modified mode [ 'lib/_stream_duplex.js', 436, 420 ]
+1183 silly gunzTarPerm extractEntry lib/_stream_passthrough.js
+1184 silly gunzTarPerm modified mode [ 'lib/_stream_passthrough.js', 436, 420 ]
+1185 verbose unbuild node_modules/.staging/pg-hstore-89a95fa2
+1186 silly gunzTarPerm extractEntry nan_implementation_12_inl.h
+1187 silly gunzTarPerm modified mode [ 'nan_implementation_12_inl.h', 436, 420 ]
+1188 silly gunzTarPerm extractEntry nan_implementation_pre_12_inl.h
+1189 silly gunzTarPerm modified mode [ 'nan_implementation_pre_12_inl.h', 436, 420 ]
+1190 silly gunzTarPerm extractEntry nan_json.h
+1191 silly gunzTarPerm modified mode [ 'nan_json.h', 436, 420 ]
+1192 verbose unbuild node_modules/.staging/body-parser-ccf8467d
+1193 verbose unbuild node_modules/.staging/cors-12e8692c
+1194 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-hstore-89a95fa2 is being purged from base /home/akclark/source/repos/TimeTrackerAPI
+1195 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-hstore-89a95fa2
+1196 silly gunzTarPerm extractEntry nan_maybe_43_inl.h
+1197 silly gunzTarPerm modified mode [ 'nan_maybe_43_inl.h', 436, 420 ]
+1198 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/body-parser-ccf8467d is being purged from base /home/akclark/source/repos/TimeTrackerAPI
+1199 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/body-parser-ccf8467d
+1200 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/cors-12e8692c is being purged from base /home/akclark/source/repos/TimeTrackerAPI
+1201 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/cors-12e8692c
+1202 verbose tar unpack /home/akclark/.npm/pg-hstore/2.3.3/package.tgz
+1203 verbose tar unpacking to /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-hstore-89a95fa2
+1204 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-hstore-89a95fa2 is being purged
+1205 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-hstore-89a95fa2
+1206 verbose tar unpack /home/akclark/.npm/body-parser/1.19.0/package.tgz
+1207 verbose tar unpacking to /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/body-parser-ccf8467d
+1208 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/body-parser-ccf8467d is being purged
+1209 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/body-parser-ccf8467d
+1210 verbose tar unpack /home/akclark/.npm/cors/2.8.5/package.tgz
+1211 verbose tar unpacking to /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/cors-12e8692c
+1212 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/cors-12e8692c is being purged
+1213 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/cors-12e8692c
+1214 silly gunzTarPerm modes [ '755', '644' ]
+1215 silly gunzTarPerm modes [ '755', '644' ]
+1216 silly gunzTarPerm modes [ '755', '644' ]
+1217 silly gunzTarPerm extractEntry lib/_stream_readable.js
+1218 silly gunzTarPerm modified mode [ 'lib/_stream_readable.js', 436, 420 ]
+1219 silly gunzTarPerm extractEntry package.json
+1220 silly gunzTarPerm extractEntry nan_maybe_pre_43_inl.h
+1221 silly gunzTarPerm modified mode [ 'nan_maybe_pre_43_inl.h', 436, 420 ]
+1222 silly gunzTarPerm extractEntry nan_new.h
+1223 silly gunzTarPerm modified mode [ 'nan_new.h', 436, 420 ]
+1224 silly gunzTarPerm extractEntry nan_object_wrap.h
+1225 silly gunzTarPerm modified mode [ 'nan_object_wrap.h', 436, 420 ]
+1226 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/bindings-61666fd3/node_modules is being purged
+1227 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/bindings-61666fd3/node_modules
+1228 silly gunzTarPerm extractEntry package.json
+1229 silly gunzTarPerm extractEntry package.json
+1230 silly gunzTarPerm extractEntry .jshintrc
+1231 silly gunzTarPerm extractEntry .travis.yml
+1232 silly gunzTarPerm extractEntry lib/_stream_transform.js
+1233 silly gunzTarPerm modified mode [ 'lib/_stream_transform.js', 436, 420 ]
+1234 silly gunzTarPerm extractEntry lib/_stream_writable.js
+1235 silly gunzTarPerm modified mode [ 'lib/_stream_writable.js', 436, 420 ]
+1236 silly gunzTarPerm extractEntry HISTORY.md
+1237 silly gunzTarPerm extractEntry index.js
+1238 silly gunzTarPerm extractEntry LICENSE
+1239 silly gunzTarPerm extractEntry README.md
+1240 silly gunzTarPerm extractEntry lib/read.js
+1241 silly gunzTarPerm extractEntry lib/types/json.js
+1242 silly gunzTarPerm extractEntry lib/types/raw.js
+1243 silly gunzTarPerm extractEntry lib/types/text.js
+1244 silly gunzTarPerm extractEntry lib/types/urlencoded.js
+1245 silly gunzTarPerm extractEntry CONTRIBUTING.md
+1246 silly gunzTarPerm extractEntry HISTORY.md
+1247 http fetch 200 https://registry.npmjs.org/sequelize-cli/-/sequelize-cli-6.2.0.tgz
+1248 http fetch 200 https://registry.npmjs.org/sequelize/-/sequelize-6.5.0.tgz
+1249 http fetch 200 https://registry.npmjs.org/express/-/express-4.17.1.tgz
+1250 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/string_decoder-5d832017/node_modules is being purged
+1251 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/string_decoder-5d832017/node_modules
+1252 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/postgres-array-3a509877/node_modules is being purged
+1253 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/postgres-array-3a509877/node_modules
+1254 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/isarray-2ff6bb7f/node_modules is being purged
+1255 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/isarray-2ff6bb7f/node_modules
+1256 silly fetchAndShaCheck shasum fd02bfeae23b8226872f9947f3f8212cc49a4771
+1257 silly gunzTarPerm extractEntry nan_persistent_12_inl.h
+1258 silly gunzTarPerm modified mode [ 'nan_persistent_12_inl.h', 436, 420 ]
+1259 silly gunzTarPerm extractEntry nan_persistent_pre_12_inl.h
+1260 silly gunzTarPerm modified mode [ 'nan_persistent_pre_12_inl.h', 436, 420 ]
+1261 verbose addTmpTarball /tmp/npm-7219-c0b1e979/registry.npmjs.org/sequelize-cli/-/sequelize-cli-6.2.0.tgz not in flight; adding
+1262 verbose addTmpTarball already have metadata; skipping unpack for sequelize-cli@6.2.0
+1263 silly gunzTarPerm extractEntry LICENSE
+1264 silly gunzTarPerm extractEntry README.md
+1265 silly gunzTarPerm extractEntry LICENSE
+1266 silly gunzTarPerm extractEntry README.md
+1267 silly fetchAndShaCheck shasum 4491fc38605cf51f8629d39c2b5d026f98a4c134
+1268 silly gunzTarPerm extractEntry nan_private.h
+1269 silly gunzTarPerm modified mode [ 'nan_private.h', 436, 420 ]
+1270 silly gunzTarPerm extractEntry nan_string_bytes.h
+1271 silly gunzTarPerm modified mode [ 'nan_string_bytes.h', 436, 420 ]
+1272 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/core-util-is-7801ace6/node_modules is being purged
+1273 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/core-util-is-7801ace6/node_modules
+1274 verbose addTmpTarball /tmp/npm-7219-c0b1e979/registry.npmjs.org/express/-/express-4.17.1.tgz not in flight; adding
+1275 verbose addTmpTarball already have metadata; skipping unpack for express@4.17.1
+1276 silly gunzTarPerm extractEntry lib/index.js
+1277 silly gunzTarPerm extractEntry test/index.js
+1278 silly gunzTarPerm extractEntry test/mocha.opts
+1279 silly gunzTarPerm extractEntry test/parse.js
+1280 silly gunzTarPerm extractEntry test/stringify.js
+1281 silly gunzTarPerm extractEntry lib/index.js
+1282 http fetch 200 https://registry.npmjs.org/pg/-/pg-8.5.1.tgz
+1283 verbose unbuild node_modules/.staging/sequelize-cli-34bc2ba5
+1284 silly gunzTarPerm extractEntry nan_typedarray_contents.h
+1285 silly gunzTarPerm modified mode [ 'nan_typedarray_contents.h', 436, 420 ]
+1286 silly gunzTarPerm extractEntry nan_weak.h
+1287 silly gunzTarPerm modified mode [ 'nan_weak.h', 436, 420 ]
+1288 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/sequelize-cli-34bc2ba5 is being purged from base /home/akclark/source/repos/TimeTrackerAPI
+1289 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/sequelize-cli-34bc2ba5
+1290 verbose tar unpack /home/akclark/.npm/sequelize-cli/6.2.0/package.tgz
+1291 verbose tar unpacking to /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/sequelize-cli-34bc2ba5
+1292 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/sequelize-cli-34bc2ba5 is being purged
+1293 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/sequelize-cli-34bc2ba5
+1294 silly fetchAndShaCheck shasum 34dcb15f6db4a29c702bf5031ef2e1e25a06a120
+1295 silly gunzTarPerm modes [ '755', '644' ]
+1296 verbose addTmpTarball /tmp/npm-7219-c0b1e979/registry.npmjs.org/pg/-/pg-8.5.1.tgz not in flight; adding
+1297 verbose addTmpTarball already have metadata; skipping unpack for pg@8.5.1
+1298 verbose unbuild node_modules/.staging/express-a7ef5341
+1299 silly fetchAndShaCheck shasum c968a03f6fbbcda40717f73edb39fadf27b85e96
+1300 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/express-a7ef5341 is being purged from base /home/akclark/source/repos/TimeTrackerAPI
+1301 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/express-a7ef5341
+1302 silly gunzTarPerm extractEntry LICENSE
+1303 silly gunzTarPerm modified mode [ 'LICENSE', 436, 420 ]
+1304 verbose tar unpack /home/akclark/.npm/express/4.17.1/package.tgz
+1305 verbose tar unpacking to /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/express-a7ef5341
+1306 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/express-a7ef5341 is being purged
+1307 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/express-a7ef5341
+1308 silly gunzTarPerm extractEntry nan.h
+1309 silly gunzTarPerm modified mode [ 'nan.h', 436, 420 ]
+1310 silly gunzTarPerm extractEntry README.md
+1311 silly gunzTarPerm modified mode [ 'README.md', 436, 420 ]
+1312 silly gunzTarPerm modes [ '755', '644' ]
+1313 silly gunzTarPerm extractEntry lib/sequelize
+1314 silly gunzTarPerm modified mode [ 'lib/sequelize', 509, 493 ]
+1315 silly gunzTarPerm extractEntry lib/helpers/asset-helper.js
+1316 silly gunzTarPerm modified mode [ 'lib/helpers/asset-helper.js', 436, 420 ]
+1317 verbose addTmpTarball /tmp/npm-7219-c0b1e979/registry.npmjs.org/sequelize/-/sequelize-6.5.0.tgz not in flight; adding
+1318 verbose addTmpTarball already have metadata; skipping unpack for sequelize@6.5.0
+1319 silly gunzTarPerm extractEntry package.json
+1320 verbose unbuild node_modules/.staging/pg-760c34a2
+1321 silly gunzTarPerm extractEntry doc/asyncworker.md
+1322 silly gunzTarPerm modified mode [ 'doc/asyncworker.md', 436, 420 ]
+1323 silly gunzTarPerm extractEntry doc/buffers.md
+1324 silly gunzTarPerm modified mode [ 'doc/buffers.md', 436, 420 ]
+1325 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-760c34a2 is being purged from base /home/akclark/source/repos/TimeTrackerAPI
+1326 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-760c34a2
+1327 silly gunzTarPerm extractEntry History.md
+1328 silly gunzTarPerm extractEntry index.js
+1329 silly gunzTarPerm extractEntry lib/helpers/config-helper.js
+1330 silly gunzTarPerm modified mode [ 'lib/helpers/config-helper.js', 436, 420 ]
+1331 silly gunzTarPerm extractEntry lib/assets/migrations/create-table.js
+1332 silly gunzTarPerm modified mode [ 'lib/assets/migrations/create-table.js', 436, 420 ]
+1333 verbose tar unpack /home/akclark/.npm/pg/8.5.1/package.tgz
+1334 verbose tar unpacking to /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-760c34a2
+1335 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-760c34a2 is being purged
+1336 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-760c34a2
+1337 silly gunzTarPerm modes [ '755', '644' ]
+1338 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/file-uri-to-path-1f9e0d9d/node_modules is being purged
+1339 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/file-uri-to-path-1f9e0d9d/node_modules
+1340 silly gunzTarPerm extractEntry doc/callback.md
+1341 silly gunzTarPerm modified mode [ 'doc/callback.md', 436, 420 ]
+1342 silly gunzTarPerm extractEntry doc/converters.md
+1343 silly gunzTarPerm modified mode [ 'doc/converters.md', 436, 420 ]
+1344 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-types-049c1285/node_modules is being purged
+1345 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-types-049c1285/node_modules
+1346 silly gunzTarPerm extractEntry LICENSE
+1347 silly gunzTarPerm modified mode [ 'LICENSE', 384, 420 ]
+1348 silly gunzTarPerm extractEntry LICENSE
+1349 silly gunzTarPerm extractEntry Readme.md
+1350 silly gunzTarPerm extractEntry lib/application.js
+1351 verbose unbuild node_modules/.staging/sequelize-be5c4833
+1352 silly gunzTarPerm extractEntry lib/commands/database.js
+1353 silly gunzTarPerm modified mode [ 'lib/commands/database.js', 436, 420 ]
+1354 silly gunzTarPerm extractEntry lib/helpers/generic-helper.js
+1355 silly gunzTarPerm modified mode [ 'lib/helpers/generic-helper.js', 436, 420 ]
+1356 silly gunzTarPerm extractEntry lib/assets/models/index.js
+1357 silly gunzTarPerm modified mode [ 'lib/assets/models/index.js', 436, 420 ]
+1358 silly gunzTarPerm extractEntry lib/helpers/index.js
+1359 silly gunzTarPerm modified mode [ 'lib/helpers/index.js', 436, 420 ]
+1360 silly gunzTarPerm extractEntry lib/helpers/init-helper.js
+1361 silly gunzTarPerm modified mode [ 'lib/helpers/init-helper.js', 436, 420 ]
+1362 silly gunzTarPerm extractEntry lib/commands/init.js
+1363 silly gunzTarPerm modified mode [ 'lib/commands/init.js', 436, 420 ]
+1364 silly gunzTarPerm extractEntry lib/commands/migrate_undo_all.js
+1365 silly gunzTarPerm modified mode [ 'lib/commands/migrate_undo_all.js', 436, 420 ]
+1366 silly gunzTarPerm extractEntry lib/commands/migrate_undo.js
+1367 silly gunzTarPerm modified mode [ 'lib/commands/migrate_undo.js', 436, 420 ]
+1368 silly gunzTarPerm extractEntry lib/commands/migrate.js
+1369 silly gunzTarPerm modified mode [ 'lib/commands/migrate.js', 436, 420 ]
+1370 silly gunzTarPerm extractEntry lib/commands/migration_generate.js
+1371 silly gunzTarPerm modified mode [ 'lib/commands/migration_generate.js', 436, 420 ]
+1372 silly gunzTarPerm extractEntry lib/helpers/migration-helper.js
+1373 silly gunzTarPerm modified mode [ 'lib/helpers/migration-helper.js', 436, 420 ]
+1374 silly gunzTarPerm extractEntry lib/core/migrator.js
+1375 silly gunzTarPerm modified mode [ 'lib/core/migrator.js', 436, 420 ]
+1376 silly gunzTarPerm extractEntry lib/commands/model_generate.js
+1377 silly gunzTarPerm modified mode [ 'lib/commands/model_generate.js', 436, 420 ]
+1378 silly gunzTarPerm extractEntry lib/helpers/model-helper.js
+1379 silly gunzTarPerm modified mode [ 'lib/helpers/model-helper.js', 436, 420 ]
+1380 silly gunzTarPerm extractEntry lib/assets/models/model.js
+1381 silly gunzTarPerm modified mode [ 'lib/assets/models/model.js', 436, 420 ]
+1382 silly gunzTarPerm extractEntry lib/helpers/path-helper.js
+1383 silly gunzTarPerm modified mode [ 'lib/helpers/path-helper.js', 436, 420 ]
+1384 silly gunzTarPerm extractEntry lib/commands/seed_generate.js
+1385 silly gunzTarPerm modified mode [ 'lib/commands/seed_generate.js', 436, 420 ]
+1386 silly gunzTarPerm extractEntry lib/commands/seed_one.js
+1387 silly gunzTarPerm modified mode [ 'lib/commands/seed_one.js', 436, 420 ]
+1388 silly gunzTarPerm extractEntry lib/commands/seed.js
+1389 silly gunzTarPerm modified mode [ 'lib/commands/seed.js', 436, 420 ]
+1390 silly gunzTarPerm extractEntry lib/assets/migrations/skeleton.js
+1391 silly gunzTarPerm modified mode [ 'lib/assets/migrations/skeleton.js', 436, 420 ]
+1392 silly gunzTarPerm extractEntry lib/assets/seeders/skeleton.js
+1393 silly gunzTarPerm modified mode [ 'lib/assets/seeders/skeleton.js', 436, 420 ]
+1394 silly gunzTarPerm extractEntry lib/helpers/template-helper.js
+1395 silly gunzTarPerm modified mode [ 'lib/helpers/template-helper.js', 436, 420 ]
+1396 silly gunzTarPerm extractEntry lib/helpers/umzug-helper.js
+1397 silly gunzTarPerm modified mode [ 'lib/helpers/umzug-helper.js', 436, 420 ]
+1398 silly gunzTarPerm extractEntry lib/helpers/version-helper.js
+1399 silly gunzTarPerm modified mode [ 'lib/helpers/version-helper.js', 436, 420 ]
+1400 silly gunzTarPerm extractEntry lib/helpers/view-helper.js
+1401 silly gunzTarPerm modified mode [ 'lib/helpers/view-helper.js', 436, 420 ]
+1402 silly gunzTarPerm extractEntry lib/core/yargs.js
+1403 silly gunzTarPerm modified mode [ 'lib/core/yargs.js', 436, 420 ]
+1404 silly gunzTarPerm extractEntry package.json
+1405 silly gunzTarPerm modified mode [ 'package.json', 436, 420 ]
+1406 silly gunzTarPerm extractEntry CHANGELOG.md
+1407 silly gunzTarPerm modified mode [ 'CHANGELOG.md', 436, 420 ]
+1408 silly gunzTarPerm extractEntry README.md
+1409 silly gunzTarPerm modified mode [ 'README.md', 436, 420 ]
+1410 silly gunzTarPerm extractEntry lib/express.js
+1411 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/sequelize-be5c4833 is being purged from base /home/akclark/source/repos/TimeTrackerAPI
+1412 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/sequelize-be5c4833
+1413 silly gunzTarPerm extractEntry lib/client.js
+1414 silly gunzTarPerm extractEntry lib/native/client.js
+1415 silly gunzTarPerm extractEntry lib/connection-parameters.js
+1416 silly gunzTarPerm extractEntry lib/connection.js
+1417 silly gunzTarPerm extractEntry lib/defaults.js
+1418 silly gunzTarPerm modified mode [ 'lib/defaults.js', 384, 420 ]
+1419 silly gunzTarPerm extractEntry lib/index.js
+1420 silly gunzTarPerm extractEntry lib/native/index.js
+1421 silly gunzTarPerm modified mode [ 'lib/native/index.js', 384, 420 ]
+1422 silly gunzTarPerm extractEntry lib/native/query.js
+1423 silly gunzTarPerm modified mode [ 'lib/native/query.js', 384, 420 ]
+1424 silly gunzTarPerm extractEntry lib/query.js
+1425 silly gunzTarPerm extractEntry lib/result.js
+1426 silly gunzTarPerm extractEntry lib/sasl.js
+1427 silly gunzTarPerm modified mode [ 'lib/sasl.js', 384, 420 ]
+1428 silly gunzTarPerm extractEntry lib/type-overrides.js
+1429 silly gunzTarPerm modified mode [ 'lib/type-overrides.js', 384, 420 ]
+1430 silly gunzTarPerm extractEntry lib/utils.js
+1431 silly gunzTarPerm extractEntry package.json
+1432 silly gunzTarPerm extractEntry README.md
+1433 silly gunzTarPerm modified mode [ 'README.md', 384, 420 ]
+1434 verbose tar unpack /home/akclark/.npm/sequelize/6.5.0/package.tgz
+1435 verbose tar unpacking to /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/sequelize-be5c4833
+1436 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/sequelize-be5c4833 is being purged
+1437 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/sequelize-be5c4833
+1438 silly gunzTarPerm extractEntry lib/middleware/init.js
+1439 silly gunzTarPerm modes [ '755', '644' ]
+1440 silly gunzTarPerm extractEntry lib/middleware/query.js
+1441 silly gunzTarPerm extractEntry doc/errors.md
+1442 silly gunzTarPerm modified mode [ 'doc/errors.md', 436, 420 ]
+1443 silly gunzTarPerm extractEntry doc/json.md
+1444 silly gunzTarPerm modified mode [ 'doc/json.md', 436, 420 ]
+1445 silly gunzTarPerm extractEntry lib/request.js
+1446 silly gunzTarPerm extractEntry LICENSE
+1447 silly gunzTarPerm extractEntry lib/response.js
+1448 silly gunzTarPerm extractEntry lib/errors/connection/access-denied-error.js
+1449 silly gunzTarPerm extractEntry lib/errors/aggregate-error.js
+1450 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/cors-12e8692c/node_modules is being purged
+1451 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/cors-12e8692c/node_modules
+1452 silly gunzTarPerm extractEntry doc/maybe_types.md
+1453 silly gunzTarPerm modified mode [ 'doc/maybe_types.md', 436, 420 ]
+1454 silly gunzTarPerm extractEntry doc/methods.md
+1455 silly gunzTarPerm modified mode [ 'doc/methods.md', 436, 420 ]
+1456 silly gunzTarPerm extractEntry lib/router/index.js
+1457 silly gunzTarPerm extractEntry lib/router/layer.js
+1458 silly gunzTarPerm extractEntry doc/new.md
+1459 silly gunzTarPerm modified mode [ 'doc/new.md', 436, 420 ]
+1460 silly gunzTarPerm extractEntry doc/node_misc.md
+1461 silly gunzTarPerm modified mode [ 'doc/node_misc.md', 436, 420 ]
+1462 silly gunzTarPerm extractEntry lib/errors/association-error.js
+1463 silly gunzTarPerm extractEntry lib/dialects/mssql/async-queue.js
+1464 silly gunzTarPerm extractEntry lib/router/route.js
+1465 silly gunzTarPerm extractEntry lib/utils.js
+1466 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/readable-stream-537d3bb0/node_modules is being purged
+1467 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/readable-stream-537d3bb0/node_modules
+1468 silly gunzTarPerm extractEntry doc/object_wrappers.md
+1469 silly gunzTarPerm modified mode [ 'doc/object_wrappers.md', 436, 420 ]
+1470 silly gunzTarPerm extractEntry doc/persistent.md
+1471 silly gunzTarPerm modified mode [ 'doc/persistent.md', 436, 420 ]
+1472 silly gunzTarPerm extractEntry lib/view.js
+1473 silly gunzTarPerm extractEntry lib/errors/base-error.js
+1474 silly gunzTarPerm extractEntry lib/associations/base.js
+1475 silly gunzTarPerm extractEntry doc/scopes.md
+1476 silly gunzTarPerm modified mode [ 'doc/scopes.md', 436, 420 ]
+1477 silly gunzTarPerm extractEntry doc/script.md
+1478 silly gunzTarPerm modified mode [ 'doc/script.md', 436, 420 ]
+1479 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-hstore-89a95fa2/node_modules is being purged
+1480 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-hstore-89a95fa2/node_modules
+1481 silly gunzTarPerm extractEntry lib/associations/belongs-to-many.js
+1482 silly gunzTarPerm extractEntry lib/associations/belongs-to.js
+1483 silly gunzTarPerm extractEntry doc/string_bytes.md
+1484 silly gunzTarPerm modified mode [ 'doc/string_bytes.md', 436, 420 ]
+1485 silly gunzTarPerm extractEntry doc/v8_internals.md
+1486 silly gunzTarPerm modified mode [ 'doc/v8_internals.md', 436, 420 ]
+1487 silly gunzTarPerm extractEntry doc/v8_misc.md
+1488 silly gunzTarPerm modified mode [ 'doc/v8_misc.md', 436, 420 ]
+1489 silly gunzTarPerm extractEntry tools/1to2.js
+1490 silly gunzTarPerm modified mode [ 'tools/1to2.js', 509, 493 ]
+1491 silly gunzTarPerm extractEntry tools/package.json
+1492 silly gunzTarPerm modified mode [ 'tools/package.json', 436, 420 ]
+1493 silly gunzTarPerm extractEntry tools/README.md
+1494 silly gunzTarPerm modified mode [ 'tools/README.md', 436, 420 ]
+1495 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/body-parser-ccf8467d/node_modules is being purged
+1496 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/body-parser-ccf8467d/node_modules
+1497 silly gunzTarPerm extractEntry lib/errors/bulk-record-error.js
+1498 silly gunzTarPerm extractEntry lib/utils/class-to-invokable.js
+1499 silly gunzTarPerm extractEntry lib/errors/connection/connection-acquire-timeout-error.js
+1500 silly gunzTarPerm extractEntry lib/errors/connection-error.js
+1501 silly gunzTarPerm extractEntry lib/dialects/abstract/connection-manager.js
+1502 silly gunzTarPerm extractEntry lib/dialects/mariadb/connection-manager.js
+1503 silly gunzTarPerm extractEntry lib/dialects/mssql/connection-manager.js
+1504 silly gunzTarPerm extractEntry lib/dialects/mysql/connection-manager.js
+1505 silly gunzTarPerm extractEntry lib/dialects/postgres/connection-manager.js
+1506 silly gunzTarPerm extractEntry lib/dialects/sqlite/connection-manager.js
+1507 silly gunzTarPerm extractEntry lib/errors/connection/connection-refused-error.js
+1508 silly gunzTarPerm extractEntry lib/errors/connection/connection-timed-out-error.js
+1509 silly gunzTarPerm extractEntry lib/data-types.js
+1510 silly gunzTarPerm extractEntry lib/dialects/mariadb/data-types.js
+1511 silly gunzTarPerm extractEntry lib/dialects/mssql/data-types.js
+1512 silly gunzTarPerm extractEntry lib/dialects/mysql/data-types.js
+1513 silly gunzTarPerm extractEntry lib/dialects/postgres/data-types.js
+1514 silly gunzTarPerm extractEntry lib/dialects/sqlite/data-types.js
+1515 silly gunzTarPerm extractEntry lib/errors/database-error.js
+1516 silly gunzTarPerm extractEntry lib/deferrable.js
+1517 silly gunzTarPerm extractEntry lib/utils/deprecations.js
+1518 silly gunzTarPerm extractEntry lib/errors/eager-loading-error.js
+1519 silly gunzTarPerm extractEntry lib/errors/empty-result-error.js
+1520 silly gunzTarPerm extractEntry lib/errors/database/exclusion-constraint-error.js
+1521 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-760c34a2/node_modules is being purged
+1522 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-760c34a2/node_modules
+1523 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/express-a7ef5341/node_modules is being purged
+1524 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/express-a7ef5341/node_modules
+1525 silly gunzTarPerm extractEntry lib/errors/database/foreign-key-constraint-error.js
+1526 silly gunzTarPerm extractEntry lib/associations/has-many.js
+1527 silly gunzTarPerm extractEntry lib/associations/has-one.js
+1528 silly gunzTarPerm extractEntry lib/associations/helpers.js
+1529 silly gunzTarPerm extractEntry lib/hooks.js
+1530 silly gunzTarPerm extractEntry lib/errors/connection/host-not-found-error.js
+1531 silly gunzTarPerm extractEntry lib/errors/connection/host-not-reachable-error.js
+1532 silly gunzTarPerm extractEntry lib/dialects/postgres/hstore.js
+1533 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-native-e5a9c3c9/node_modules is being purged
+1534 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-native-e5a9c3c9/node_modules
+1535 silly gunzTarPerm extractEntry lib/index-hints.js
+1536 silly gunzTarPerm extractEntry index.js
+1537 silly gunzTarPerm extractEntry lib/associations/index.js
+1538 silly gunzTarPerm extractEntry lib/dialects/abstract/index.js
+1539 silly gunzTarPerm extractEntry lib/dialects/mariadb/index.js
+1540 silly gunzTarPerm extractEntry lib/dialects/mssql/index.js
+1541 silly gunzTarPerm extractEntry lib/dialects/mysql/index.js
+1542 silly gunzTarPerm extractEntry lib/dialects/postgres/index.js
+1543 silly gunzTarPerm extractEntry lib/dialects/sqlite/index.js
+1544 silly gunzTarPerm extractEntry lib/errors/index.js
+1545 silly gunzTarPerm extractEntry lib/errors/instance-error.js
+1546 silly gunzTarPerm extractEntry lib/instance-validator.js
+1547 silly gunzTarPerm extractEntry lib/errors/connection/invalid-connection-error.js
+1548 silly gunzTarPerm extractEntry lib/utils/join-sql-fragments.js
+1549 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/libpq-90620056/node_modules is being purged
+1550 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/libpq-90620056/node_modules
+1551 silly gunzTarPerm extractEntry lib/utils/logger.js
+1552 silly gunzTarPerm extractEntry lib/associations/mixin.js
+1553 silly gunzTarPerm extractEntry lib/model-manager.js
+1554 silly gunzTarPerm extractEntry lib/model.js
+1555 silly gunzTarPerm extractEntry lib/dialects/abstract/query-generator/operators.js
+1556 silly gunzTarPerm extractEntry lib/operators.js
+1557 silly gunzTarPerm extractEntry lib/errors/optimistic-lock-error.js
+1558 silly gunzTarPerm extractEntry lib/dialects/parserStore.js
+1559 silly gunzTarPerm extractEntry lib/errors/query-error.js
+1560 silly gunzTarPerm extractEntry lib/dialects/abstract/query-generator.js
+1561 silly gunzTarPerm extractEntry lib/dialects/mariadb/query-generator.js
+1562 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/sequelize-cli-34bc2ba5/node_modules is being purged
+1563 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/sequelize-cli-34bc2ba5/node_modules
+1564 silly gunzTarPerm extractEntry lib/dialects/mssql/query-generator.js
+1565 silly gunzTarPerm extractEntry lib/dialects/mysql/query-generator.js
+1566 silly gunzTarPerm extractEntry lib/dialects/postgres/query-generator.js
+1567 silly gunzTarPerm extractEntry lib/dialects/sqlite/query-generator.js
+1568 silly gunzTarPerm extractEntry lib/dialects/abstract/query-interface.js
+1569 silly gunzTarPerm extractEntry lib/dialects/mssql/query-interface.js
+1570 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/nan-326af0f2/node_modules is being purged
+1571 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/nan-326af0f2/node_modules
+1572 silly gunzTarPerm extractEntry lib/dialects/mysql/query-interface.js
+1573 silly gunzTarPerm extractEntry lib/dialects/postgres/query-interface.js
+1574 silly gunzTarPerm extractEntry lib/dialects/sqlite/query-interface.js
+1575 silly gunzTarPerm extractEntry lib/query-types.js
+1576 silly gunzTarPerm extractEntry lib/dialects/abstract/query.js
+1577 silly gunzTarPerm extractEntry lib/dialects/mariadb/query.js
+1578 silly gunzTarPerm extractEntry lib/dialects/mssql/query.js
+1579 silly gunzTarPerm extractEntry lib/dialects/mysql/query.js
+1580 silly gunzTarPerm extractEntry lib/dialects/postgres/query.js
+1581 silly gunzTarPerm extractEntry lib/dialects/sqlite/query.js
+1582 silly gunzTarPerm extractEntry lib/dialects/abstract/query-generator/helpers/quote.js
+1583 silly gunzTarPerm extractEntry lib/dialects/postgres/range.js
+1584 silly gunzTarPerm extractEntry lib/errors/sequelize-scope-error.js
+1585 silly gunzTarPerm extractEntry lib/sequelize.js
+1586 silly gunzTarPerm extractEntry lib/sql-string.js
+1587 silly gunzTarPerm extractEntry lib/table-hints.js
+1588 silly gunzTarPerm extractEntry lib/errors/database/timeout-error.js
+1589 silly gunzTarPerm extractEntry lib/dialects/abstract/query-generator/transaction.js
+1590 silly gunzTarPerm extractEntry lib/transaction.js
+1591 silly gunzTarPerm extractEntry lib/errors/validation/unique-constraint-error.js
+1592 silly gunzTarPerm extractEntry lib/errors/database/unknown-constraint-error.js
+1593 silly gunzTarPerm extractEntry lib/utils.js
+1594 silly gunzTarPerm extractEntry lib/errors/validation-error.js
+1595 silly gunzTarPerm extractEntry lib/utils/validator-extras.js
+1596 silly gunzTarPerm extractEntry package.json
+1597 silly gunzTarPerm extractEntry README.md
+1598 silly gunzTarPerm extractEntry types/lib/associations/base.d.ts
+1599 silly gunzTarPerm extractEntry types/lib/associations/belongs-to-many.d.ts
+1600 silly gunzTarPerm extractEntry types/lib/associations/belongs-to.d.ts
+1601 silly gunzTarPerm extractEntry types/lib/connection-manager.d.ts
+1602 silly gunzTarPerm extractEntry types/lib/data-types.d.ts
+1603 silly gunzTarPerm extractEntry types/lib/deferrable.d.ts
+1604 silly gunzTarPerm extractEntry types/lib/errors.d.ts
+1605 silly gunzTarPerm extractEntry types/lib/associations/has-many.d.ts
+1606 silly gunzTarPerm extractEntry types/lib/associations/has-one.d.ts
+1607 silly gunzTarPerm extractEntry types/lib/hooks.d.ts
+1608 silly gunzTarPerm extractEntry types/lib/index-hints.d.ts
+1609 silly gunzTarPerm extractEntry types/index.d.ts
+1610 silly gunzTarPerm extractEntry types/lib/associations/index.d.ts
+1611 silly gunzTarPerm extractEntry types/lib/instance-validator.d.ts
+1612 silly gunzTarPerm extractEntry types/lib/utils/logger.d.ts
+1613 silly gunzTarPerm extractEntry types/lib/model-manager.d.ts
+1614 silly gunzTarPerm extractEntry types/lib/model.d.ts
+1615 silly gunzTarPerm extractEntry types/lib/operators.d.ts
+1616 silly gunzTarPerm extractEntry types/lib/query-interface.d.ts
+1617 silly gunzTarPerm extractEntry types/lib/query-types.d.ts
+1618 silly gunzTarPerm extractEntry types/lib/sequelize.d.ts
+1619 silly gunzTarPerm extractEntry types/type-helpers/set-required.d.ts
+1620 silly gunzTarPerm extractEntry types/lib/sql-string.d.ts
+1621 silly gunzTarPerm extractEntry types/lib/table-hints.d.ts
+1622 silly gunzTarPerm extractEntry types/lib/transaction.d.ts
+1623 silly gunzTarPerm extractEntry types/lib/utils.d.ts
+1624 silly gunzTarPerm extractEntry types/lib/utils/validator-extras.d.ts
+1625 silly gentlyRm /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/sequelize-be5c4833/node_modules is being purged
+1626 verbose gentlyRm don't care about contents; nuking /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/sequelize-be5c4833/node_modules
+1627 silly doParallel preinstall 18
+1628 silly preinstall body-parser@1.19.0 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/body-parser-ccf8467d
+1629 info lifecycle body-parser@1.19.0~preinstall: body-parser@1.19.0
+1630 silly preinstall core-util-is@1.0.2 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/core-util-is-7801ace6
+1631 info lifecycle core-util-is@1.0.2~preinstall: core-util-is@1.0.2
+1632 silly preinstall file-uri-to-path@1.0.0 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/file-uri-to-path-1f9e0d9d
+1633 info lifecycle file-uri-to-path@1.0.0~preinstall: file-uri-to-path@1.0.0
+1634 silly preinstall bindings@1.5.0 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/bindings-61666fd3
+1635 info lifecycle bindings@1.5.0~preinstall: bindings@1.5.0
+1636 silly preinstall isarray@0.0.1 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/isarray-2ff6bb7f
+1637 info lifecycle isarray@0.0.1~preinstall: isarray@0.0.1
+1638 silly preinstall nan@2.14.2 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/nan-326af0f2
+1639 info lifecycle nan@2.14.2~preinstall: nan@2.14.2
+1640 silly preinstall libpq@1.8.9 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/libpq-90620056
+1641 info lifecycle libpq@1.8.9~preinstall: libpq@1.8.9
+1642 silly preinstall postgres-array@1.0.3 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/postgres-array-3a509877
+1643 info lifecycle postgres-array@1.0.3~preinstall: postgres-array@1.0.3
+1644 silly preinstall pg-types@1.13.0 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-types-049c1285
+1645 info lifecycle pg-types@1.13.0~preinstall: pg-types@1.13.0
+1646 silly preinstall string_decoder@0.10.31 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/string_decoder-5d832017
+1647 info lifecycle string_decoder@0.10.31~preinstall: string_decoder@0.10.31
+1648 silly preinstall readable-stream@1.0.31 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/readable-stream-537d3bb0
+1649 info lifecycle readable-stream@1.0.31~preinstall: readable-stream@1.0.31
+1650 silly preinstall cors@2.8.5 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/cors-12e8692c
+1651 info lifecycle cors@2.8.5~preinstall: cors@2.8.5
+1652 silly preinstall express@4.17.1 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/express-a7ef5341
+1653 info lifecycle express@4.17.1~preinstall: express@4.17.1
+1654 silly preinstall pg@8.5.1 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-760c34a2
+1655 info lifecycle pg@8.5.1~preinstall: pg@8.5.1
+1656 silly preinstall pg-hstore@2.3.3 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-hstore-89a95fa2
+1657 info lifecycle pg-hstore@2.3.3~preinstall: pg-hstore@2.3.3
+1658 silly preinstall pg-native@3.0.0 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/pg-native-e5a9c3c9
+1659 info lifecycle pg-native@3.0.0~preinstall: pg-native@3.0.0
+1660 silly preinstall sequelize@6.5.0 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/sequelize-be5c4833
+1661 info lifecycle sequelize@6.5.0~preinstall: sequelize@6.5.0
+1662 silly preinstall sequelize-cli@6.2.0 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/sequelize-cli-34bc2ba5
+1663 info lifecycle sequelize-cli@6.2.0~preinstall: sequelize-cli@6.2.0
+1664 silly lifecycle body-parser@1.19.0~preinstall: no script for preinstall, continuing
+1665 silly lifecycle core-util-is@1.0.2~preinstall: no script for preinstall, continuing
+1666 silly lifecycle file-uri-to-path@1.0.0~preinstall: no script for preinstall, continuing
+1667 silly lifecycle bindings@1.5.0~preinstall: no script for preinstall, continuing
+1668 silly lifecycle isarray@0.0.1~preinstall: no script for preinstall, continuing
+1669 silly lifecycle nan@2.14.2~preinstall: no script for preinstall, continuing
+1670 silly lifecycle libpq@1.8.9~preinstall: no script for preinstall, continuing
+1671 silly lifecycle postgres-array@1.0.3~preinstall: no script for preinstall, continuing
+1672 silly lifecycle pg-types@1.13.0~preinstall: no script for preinstall, continuing
+1673 silly lifecycle string_decoder@0.10.31~preinstall: no script for preinstall, continuing
+1674 silly lifecycle readable-stream@1.0.31~preinstall: no script for preinstall, continuing
+1675 silly lifecycle cors@2.8.5~preinstall: no script for preinstall, continuing
+1676 silly lifecycle express@4.17.1~preinstall: no script for preinstall, continuing
+1677 silly lifecycle pg@8.5.1~preinstall: no script for preinstall, continuing
+1678 silly lifecycle pg-hstore@2.3.3~preinstall: no script for preinstall, continuing
+1679 silly lifecycle pg-native@3.0.0~preinstall: no script for preinstall, continuing
+1680 silly lifecycle sequelize@6.5.0~preinstall: no script for preinstall, continuing
+1681 silly lifecycle sequelize-cli@6.2.0~preinstall: no script for preinstall, continuing
+1682 silly doReverseSerial remove 0
+1683 silly doSerial move 0
+1684 silly doSerial finalize 18
+1685 silly finalize /home/akclark/source/repos/TimeTrackerAPI/node_modules/body-parser
+1686 silly finalize /home/akclark/source/repos/TimeTrackerAPI/node_modules/core-util-is
+1687 silly finalize /home/akclark/source/repos/TimeTrackerAPI/node_modules/file-uri-to-path
+1688 silly finalize /home/akclark/source/repos/TimeTrackerAPI/node_modules/bindings
+1689 silly finalize /home/akclark/source/repos/TimeTrackerAPI/node_modules/isarray
+1690 silly finalize /home/akclark/source/repos/TimeTrackerAPI/node_modules/nan
+1691 silly finalize /home/akclark/source/repos/TimeTrackerAPI/node_modules/libpq
+1692 silly finalize /home/akclark/source/repos/TimeTrackerAPI/node_modules/pg-native/node_modules/postgres-array
+1693 silly finalize /home/akclark/source/repos/TimeTrackerAPI/node_modules/pg-native/node_modules/pg-types
+1694 silly finalize /home/akclark/source/repos/TimeTrackerAPI/node_modules/pg-native/node_modules/string_decoder
+1695 silly finalize /home/akclark/source/repos/TimeTrackerAPI/node_modules/pg-native/node_modules/readable-stream
+1696 silly finalize /home/akclark/source/repos/TimeTrackerAPI/node_modules/cors
+1697 silly finalize /home/akclark/source/repos/TimeTrackerAPI/node_modules/express
+1698 silly finalize /home/akclark/source/repos/TimeTrackerAPI/node_modules/pg
+1699 silly finalize /home/akclark/source/repos/TimeTrackerAPI/node_modules/pg-hstore
+1700 silly finalize /home/akclark/source/repos/TimeTrackerAPI/node_modules/pg-native
+1701 silly finalize /home/akclark/source/repos/TimeTrackerAPI/node_modules/sequelize
+1702 silly finalize /home/akclark/source/repos/TimeTrackerAPI/node_modules/sequelize-cli
+1703 silly doSerial build 18
+1704 silly build body-parser@1.19.0
+1705 info linkStuff body-parser@1.19.0
+1706 silly linkStuff body-parser@1.19.0 has /home/akclark/source/repos/TimeTrackerAPI/node_modules as its parent node_modules
+1707 verbose linkBins body-parser@1.19.0
+1708 verbose linkMans body-parser@1.19.0
+1709 silly build core-util-is@1.0.2
+1710 info linkStuff core-util-is@1.0.2
+1711 silly linkStuff core-util-is@1.0.2 has /home/akclark/source/repos/TimeTrackerAPI/node_modules as its parent node_modules
+1712 verbose linkBins core-util-is@1.0.2
+1713 verbose linkMans core-util-is@1.0.2
+1714 silly build file-uri-to-path@1.0.0
+1715 info linkStuff file-uri-to-path@1.0.0
+1716 silly linkStuff file-uri-to-path@1.0.0 has /home/akclark/source/repos/TimeTrackerAPI/node_modules as its parent node_modules
+1717 verbose linkBins file-uri-to-path@1.0.0
+1718 verbose linkMans file-uri-to-path@1.0.0
+1719 silly build bindings@1.5.0
+1720 info linkStuff bindings@1.5.0
+1721 silly linkStuff bindings@1.5.0 has /home/akclark/source/repos/TimeTrackerAPI/node_modules as its parent node_modules
+1722 verbose linkBins bindings@1.5.0
+1723 verbose linkMans bindings@1.5.0
+1724 silly build isarray@0.0.1
+1725 info linkStuff isarray@0.0.1
+1726 silly linkStuff isarray@0.0.1 has /home/akclark/source/repos/TimeTrackerAPI/node_modules as its parent node_modules
+1727 verbose linkBins isarray@0.0.1
+1728 verbose linkMans isarray@0.0.1
+1729 silly build nan@2.14.2
+1730 info linkStuff nan@2.14.2
+1731 silly linkStuff nan@2.14.2 has /home/akclark/source/repos/TimeTrackerAPI/node_modules as its parent node_modules
+1732 verbose linkBins nan@2.14.2
+1733 verbose linkMans nan@2.14.2
+1734 silly build libpq@1.8.9
+1735 info linkStuff libpq@1.8.9
+1736 silly linkStuff libpq@1.8.9 has /home/akclark/source/repos/TimeTrackerAPI/node_modules as its parent node_modules
+1737 verbose linkBins libpq@1.8.9
+1738 verbose linkMans libpq@1.8.9
+1739 silly build postgres-array@1.0.3
+1740 info linkStuff postgres-array@1.0.3
+1741 silly linkStuff postgres-array@1.0.3 has /home/akclark/source/repos/TimeTrackerAPI/node_modules/pg-native/node_modules as its parent node_modules
+1742 verbose linkBins postgres-array@1.0.3
+1743 verbose linkMans postgres-array@1.0.3
+1744 silly build pg-types@1.13.0
+1745 info linkStuff pg-types@1.13.0
+1746 silly linkStuff pg-types@1.13.0 has /home/akclark/source/repos/TimeTrackerAPI/node_modules/pg-native/node_modules as its parent node_modules
+1747 verbose linkBins pg-types@1.13.0
+1748 verbose linkMans pg-types@1.13.0
+1749 silly build string_decoder@0.10.31
+1750 info linkStuff string_decoder@0.10.31
+1751 silly linkStuff string_decoder@0.10.31 has /home/akclark/source/repos/TimeTrackerAPI/node_modules/pg-native/node_modules as its parent node_modules
+1752 verbose linkBins string_decoder@0.10.31
+1753 verbose linkMans string_decoder@0.10.31
+1754 silly build readable-stream@1.0.31
+1755 info linkStuff readable-stream@1.0.31
+1756 silly linkStuff readable-stream@1.0.31 has /home/akclark/source/repos/TimeTrackerAPI/node_modules/pg-native/node_modules as its parent node_modules
+1757 verbose linkBins readable-stream@1.0.31
+1758 verbose linkMans readable-stream@1.0.31
+1759 silly build cors@2.8.5
+1760 info linkStuff cors@2.8.5
+1761 silly linkStuff cors@2.8.5 has /home/akclark/source/repos/TimeTrackerAPI/node_modules as its parent node_modules
+1762 verbose linkBins cors@2.8.5
+1763 verbose linkMans cors@2.8.5
+1764 silly build express@4.17.1
+1765 info linkStuff express@4.17.1
+1766 silly linkStuff express@4.17.1 has /home/akclark/source/repos/TimeTrackerAPI/node_modules as its parent node_modules
+1767 verbose linkBins express@4.17.1
+1768 verbose linkMans express@4.17.1
+1769 silly build pg@8.5.1
+1770 info linkStuff pg@8.5.1
+1771 silly linkStuff pg@8.5.1 has /home/akclark/source/repos/TimeTrackerAPI/node_modules as its parent node_modules
+1772 verbose linkBins pg@8.5.1
+1773 verbose linkMans pg@8.5.1
+1774 silly build pg-hstore@2.3.3
+1775 info linkStuff pg-hstore@2.3.3
+1776 silly linkStuff pg-hstore@2.3.3 has /home/akclark/source/repos/TimeTrackerAPI/node_modules as its parent node_modules
+1777 verbose linkBins pg-hstore@2.3.3
+1778 verbose linkMans pg-hstore@2.3.3
+1779 silly build pg-native@3.0.0
+1780 info linkStuff pg-native@3.0.0
+1781 silly linkStuff pg-native@3.0.0 has /home/akclark/source/repos/TimeTrackerAPI/node_modules as its parent node_modules
+1782 verbose linkBins pg-native@3.0.0
+1783 verbose linkMans pg-native@3.0.0
+1784 silly build sequelize@6.5.0
+1785 info linkStuff sequelize@6.5.0
+1786 silly linkStuff sequelize@6.5.0 has /home/akclark/source/repos/TimeTrackerAPI/node_modules as its parent node_modules
+1787 verbose linkBins sequelize@6.5.0
+1788 verbose linkMans sequelize@6.5.0
+1789 silly build sequelize-cli@6.2.0
+1790 info linkStuff sequelize-cli@6.2.0
+1791 silly linkStuff sequelize-cli@6.2.0 has /home/akclark/source/repos/TimeTrackerAPI/node_modules as its parent node_modules
+1792 verbose linkBins sequelize-cli@6.2.0
+1793 verbose link bins [ { sequelize: 'lib/sequelize', 'sequelize-cli': 'lib/sequelize' },
+1793 verbose link bins   '/home/akclark/source/repos/TimeTrackerAPI/node_modules/.bin',
+1793 verbose link bins   false ]
+1794 verbose linkMans sequelize-cli@6.2.0
+1795 silly doSerial global-link 0
+1796 silly doParallel update-linked 0
+1797 silly doSerial install 18
+1798 silly install body-parser@1.19.0 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/body-parser-ccf8467d
+1799 info lifecycle body-parser@1.19.0~install: body-parser@1.19.0
+1800 silly lifecycle body-parser@1.19.0~install: no script for install, continuing
+1801 silly install core-util-is@1.0.2 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/core-util-is-7801ace6
+1802 info lifecycle core-util-is@1.0.2~install: core-util-is@1.0.2
+1803 silly lifecycle core-util-is@1.0.2~install: no script for install, continuing
+1804 silly install file-uri-to-path@1.0.0 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/file-uri-to-path-1f9e0d9d
+1805 info lifecycle file-uri-to-path@1.0.0~install: file-uri-to-path@1.0.0
+1806 silly lifecycle file-uri-to-path@1.0.0~install: no script for install, continuing
+1807 silly install bindings@1.5.0 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/bindings-61666fd3
+1808 info lifecycle bindings@1.5.0~install: bindings@1.5.0
+1809 silly lifecycle bindings@1.5.0~install: no script for install, continuing
+1810 silly install isarray@0.0.1 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/isarray-2ff6bb7f
+1811 info lifecycle isarray@0.0.1~install: isarray@0.0.1
+1812 silly lifecycle isarray@0.0.1~install: no script for install, continuing
+1813 silly install nan@2.14.2 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/nan-326af0f2
+1814 info lifecycle nan@2.14.2~install: nan@2.14.2
+1815 silly lifecycle nan@2.14.2~install: no script for install, continuing
+1816 silly install libpq@1.8.9 /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging/libpq-90620056
+1817 info lifecycle libpq@1.8.9~install: libpq@1.8.9
+1818 verbose lifecycle libpq@1.8.9~install: unsafe-perm in lifecycle false
+1819 verbose lifecycle libpq@1.8.9~install: PATH: /usr/share/npm/bin/node-gyp-bin:/home/akclark/source/repos/TimeTrackerAPI/node_modules/libpq/node_modules/.bin:/home/akclark/source/repos/TimeTrackerAPI/node_modules/.bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+1820 verbose lifecycle libpq@1.8.9~install: CWD: /home/akclark/source/repos/TimeTrackerAPI/node_modules/libpq
+1821 silly lifecycle libpq@1.8.9~install: Args: [ '-c', 'node-gyp rebuild' ]
+1822 silly lifecycle libpq@1.8.9~install: Returned: code: 1  signal: null
+1823 info lifecycle libpq@1.8.9~install: Failed to exec install script
+1824 verbose unlock done using /home/akclark/.npm/_locks/staging-9b39af3e0fb6c607.lock for /home/akclark/source/repos/TimeTrackerAPI/node_modules/.staging
+1825 silly rollbackFailedOptional Starting
+1826 silly rollbackFailedOptional Finishing
+1827 silly runTopLevelLifecycles Starting
+1828 silly runTopLevelLifecycles Finishing
+1829 silly install printInstalled
+1830 warn TimeTrackerAPI@1.0.0 No repository field.
+1831 warn TimeTrackerAPI@1.0.0 license should be a valid SPDX license expression
+1832 verbose stack Error: libpq@1.8.9 install: `node-gyp rebuild`
+1832 verbose stack Exit status 1
+1832 verbose stack     at EventEmitter.<anonymous> (/usr/share/npm/lib/utils/lifecycle.js:232:16)
+1832 verbose stack     at emitTwo (events.js:126:13)
+1832 verbose stack     at EventEmitter.emit (events.js:214:7)
+1832 verbose stack     at ChildProcess.<anonymous> (/usr/share/npm/lib/utils/spawn.js:24:14)
+1832 verbose stack     at emitTwo (events.js:126:13)
+1832 verbose stack     at ChildProcess.emit (events.js:214:7)
+1832 verbose stack     at maybeClose (internal/child_process.js:925:16)
+1832 verbose stack     at Process.ChildProcess._handle.onexit (internal/child_process.js:209:5)
+1833 verbose pkgid libpq@1.8.9
+1834 verbose cwd /home/akclark/source/repos/TimeTrackerAPI
+1835 error Linux 4.15.0-128-generic
+1836 error argv "/usr/bin/node" "/usr/bin/npm" "install" "pg-native"
+1837 error node v8.10.0
+1838 error npm  v3.5.2
+1839 error code ELIFECYCLE
+1840 error libpq@1.8.9 install: `node-gyp rebuild`
+1840 error Exit status 1
+1841 error Failed at the libpq@1.8.9 install script 'node-gyp rebuild'.
+1841 error Make sure you have the latest version of node.js and npm installed.
+1841 error If you do, this is most likely a problem with the libpq package,
+1841 error not with npm itself.
+1841 error Tell the author that this fails on your system:
+1841 error     node-gyp rebuild
+1841 error You can get information on how to open an issue for this project with:
+1841 error     npm bugs libpq
+1841 error Or if that isn't available, you can get their info via:
+1841 error     npm owner ls libpq
+1841 error There is likely additional logging output above.
+1842 verbose exit [ 1, true ]
