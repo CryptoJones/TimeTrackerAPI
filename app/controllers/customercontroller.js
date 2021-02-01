@@ -152,3 +152,11 @@ async function GetCustomerCompanyId(customerId) {
     }
     return -1;
 }
+
+async function CompaniesMatch(int1, int2){
+    if (int1 === int2){
+        return true;
+    }
+
+    return false;
+}

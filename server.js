@@ -1,4 +1,5 @@
 const express = require('express');
+const asyncify = require('express-asyncify');
 var app = asyncify(express());
 
 var bodyParser = require('body-parser');
