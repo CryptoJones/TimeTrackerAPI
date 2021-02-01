@@ -10,7 +10,7 @@ Endpoints Completed
 
 *Make sure to use the http header 'authKey' with the ApiKey
 ![example image](https://github.com/CryptoJones/TimeTrackerAPI/blob/master/setup/postman_example.PNG?raw=true)
-#(authKey example using PostMan)
+(authKey example using PostMan)
 
 #
 
