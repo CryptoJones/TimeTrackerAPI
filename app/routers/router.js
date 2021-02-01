@@ -1,6 +1,5 @@
 const express = require('express');
-const asyncify = require('express-asyncify')
-let router = asyncify(express.Router());
+let router = express.Router();
  
 const customer = require('../controllers/customercontroller.js');
 

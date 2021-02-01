@@ -7,8 +7,8 @@ exports.getCustomerById = async (req, res) => {
     // find all Customer information from
     var authKey = req.get('authKey');
     let customerId = req.params.id;
-    
-    if (!authKey){
+
+    if (!authKey) {
         res.status(403).json({
             message: "Authorization key not sent."
         });
@@ -18,56 +18,54 @@ exports.getCustomerById = async (req, res) => {
     var isAuthKeyMasterKey = await IsMaster(authKey)
     if (isAuthKeyMasterKey) {
         Customer.findByPk(customerId)
-        .then(customer => {
-            res.status(200).json({
-                message: "Successfully retrieved the customer with CustomerId " + customerId,
-                customers: customer
-            });
-            return;
-        })
-        .catch(error => {
-            // log on console
-            console.log(error);
+            .then(customer => {
+                res.status(200).json({
+                    message: "Successfully retrieved the customer with CustomerId " + customerId,
+                    customers: customer
+                });
+                return;
+            })
+            .catch(error => {
+                // log on console
+                console.log(error);
 
-            res.status(500).json({
-                message: "Error!",
-                error: error
+                res.status(500).json({
+                    message: "Error!",
+                    error: error
+                });
+                return;
             });
-            return;
-        });
     }
 
     var custCompanyId = await GetCustomerCompanyId(customerId);
     var companyIdReturned = await GetCompanyId(authKey);
     var companiesMatch = await CompaniesMatch(custCompanyId, companyIdReturned);
 
-    if (companiesMatch){
+    if (companiesMatch) {
         Customer.findByPk(customerId)
-        .then(customer => {
-            res.status(200).json({
-                message: "Successfully retrieved the customer with CustomerId " + customerId,
-                customers: customer
-            });
-            return;
-        })
-        .catch(error => {
-            // log on console
-            console.log(error);
+            .then(customer => {
+                res.status(200).json({
+                    message: "Successfully retrieved the customer with CustomerId " + customerId,
+                    customers: customer
+                });
+                return;
+            })
+            .catch(error => {
+                // log on console
+                console.log(error);
 
-            res.status(500).json({
-                message: "Error!",
-                error: error
+                res.status(500).json({
+                    message: "Error!",
+                    error: error
+                });
+                return;
             });
-            return;
+    } else {
+        res.status(403).json({
+            message: "Invalid Authorization Key."
         });
-    } 
-
-    res.status(403).json({
-        message: "Invalid Authorization Key."
-    });
-    return;
-
-
+        return;
+    }
 }
 
 exports.getAllByCompanyId = (req, res) => {
@@ -153,8 +151,8 @@ async function GetCustomerCompanyId(customerId) {
     return -1;
 }
 
-async function CompaniesMatch(int1, int2){
-    if (int1 === int2){
+async function CompaniesMatch(int1, int2) {
+    if (int1 === int2) {
         return true;
     }
 
