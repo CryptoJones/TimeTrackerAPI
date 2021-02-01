@@ -8,6 +8,8 @@ Endpoints Completed
  * GET /v1/customer/#
  * GET /v1/customer/bycompany/#
 
+*Make sure to use the http header 'authKey' with the ApiKey (example in image below)
+![example image](https://github.com/CryptoJones/TimeTrackerAPI/blob/master/setup/postman_example.PNG?raw=true)
 #
 
 # QuickStart (Ubuntu 20.04 LTS)
