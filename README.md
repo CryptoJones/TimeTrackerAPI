@@ -8,8 +8,10 @@ Endpoints Completed
  * GET /v1/customer/#
  * GET /v1/customer/bycompany/#
 
-*Make sure to use the http header 'authKey' with the ApiKey (example in image below)
+*Make sure to use the http header 'authKey' with the ApiKey
 ![example image](https://github.com/CryptoJones/TimeTrackerAPI/blob/master/setup/postman_example.PNG?raw=true)
+#(authKey example using PostMan)
+
 #
 
 # QuickStart (Ubuntu 20.04 LTS)
@@ -34,7 +36,7 @@ postgres=# `ALTER USER timetracker WITH PASSWORD 'Password1';`
 
 postgres=# `\q`
 
-postgres@localhost:~$ `psql -f /home/ubuntu/TimeTrackerAPI/db/TimeTracker.sql -d timetracker`
+postgres@localhost:~$ `psql -f /home/ubuntu/TimeTrackerAPI/setup/TimeTracker.sql -d timetracker`
 
 postgres@localhost:~$ `exit`
 
