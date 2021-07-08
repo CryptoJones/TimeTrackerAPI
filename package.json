@@ -18,6 +18,7 @@
     "express-asyncify": "^1.0.1",
     "express-promise-router": "^4.0.1",
     "pg": "^8.6.0",
+    "pg-hstore": "^2.3.4",
     "pg-hstore": "^2.3.3",
     "sequelize": "^6.6.5",
     "sequelize-cli": "^6.2.0"
