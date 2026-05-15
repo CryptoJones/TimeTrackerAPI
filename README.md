@@ -93,4 +93,4 @@ production). See `.env.example` for the canonical reference.
 
 Apache License 2.0. See [LICENSE](LICENSE).
 
-Proudly Made in Nebraska. Go Big Red! 🌽 https://xkcd.com/1654/
+Proudly Made in Nebraska. Go Big Red! 🌽 https://xkcd.com/2347/
