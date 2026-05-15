@@ -46,27 +46,14 @@ describe('GET /v1/customer/bycompany/:id', () => {
         expect(res.status).not.toBe(404);
     });
 
-    // -------------------------------------------------------------------
-    // REGRESSION PIN — issue #3
-    //
-    // https://github.com/CryptoJones/TimeTrackerAPI/issues/3
-    //
-    // Today, `GET /v1/customer/bycompany/:id` performs ZERO authentication.
-    // `getAllByCompanyId` never checks the authKey header before issuing
-    // the database query — so requests without authKey reach the DB layer
-    // (and currently produce either a 200 with whatever the DB returns
-    // or a 500 if the DB is unreachable). Neither is the correct 403.
-    //
-    // This test asserts the CORRECT future behavior (403 when authKey
-    // missing) and uses `test.fails` so the suite stays green while #3
-    // is open. When #3 is fixed (the controller learns to short-circuit
-    // on missing authKey, mirroring `getCustomerById`), this test will
-    // start passing — at which point vitest will fail the `test.fails`
-    // wrapper, prompting whoever fixed the bug to flip it to plain
-    // `test(...)`.
-    // -------------------------------------------------------------------
-    test.fails('returns 403 when authKey is missing (regression for #3)', async () => {
+    // Regression for #3. Previously this endpoint had no auth check and
+    // returned customer data (or 500) on requests without authKey. Fixed
+    // in the same PR that flipped this from `test.fails` to `test`.
+    test('returns 403 when authKey is missing (regression for #3)', async () => {
         const res = await request(app).get('/v1/customer/bycompany/1');
         expect(res.status).toBe(403);
+        expect(res.body).toMatchObject({
+            message: expect.stringMatching(/Authorization key not sent/i),
+        });
     });
 });

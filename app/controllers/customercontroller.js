@@ -68,28 +68,46 @@ exports.getCustomerById = async (req, res) => {
     }
 }
 
-exports.getAllByCompanyId = (req, res) => {
-    // find all Customer information from company id    
-    Customer.findAll({
-        where: {
-            custCompId: req.params.id
-        }
-    }).then(customerInfo => {
-        res.status(200).json({
-            message: "Successfully retrieved customers with CompanyId " + req.params.id,
-            customers: customerInfo
-        });
-    })
-        .catch(error => {
-            // log on console
-            console.log(error);
+exports.getAllByCompanyId = async (req, res) => {
+    // Auth contract for this endpoint (closes #3):
+    //   1. authKey header must be present                       -> 403 if missing
+    //   2. authKey may be a master key (sees all companies)     -> proceed
+    //   3. otherwise authKey's company must match :id           -> proceed
+    //                                                           -> 403 if not
+    const authKey = req.get('authKey');
+    const companyId = req.params.id;
 
-            res.status(500).json({
-                message: "Error!",
-                error: error
+    if (!authKey) {
+        res.status(403).json({ message: "Authorization key not sent." });
+        return;
+    }
+
+    const isAuthKeyMasterKey = await IsMaster(authKey);
+    if (!isAuthKeyMasterKey) {
+        const authKeyCompanyId = await GetCompanyId(authKey);
+        // Use loose equality only to permit numeric string ↔ integer comparison
+        // (req.params.id arrives as a string; akCompanyId comes back as an INT
+        // from Sequelize). Both sides have already been narrowed to numerics.
+        if (authKeyCompanyId === -1 || String(authKeyCompanyId) !== String(companyId)) {
+            res.status(403).json({ message: "Invalid Authorization Key." });
+            return;
+        }
+    }
+
+    Customer.findAll({
+        where: { custCompId: companyId }
+    })
+        .then(customerInfo => {
+            res.status(200).json({
+                message: "Successfully retrieved customers with CompanyId " + companyId,
+                customers: customerInfo
             });
+        })
+        .catch(error => {
+            console.log(error);
+            res.status(500).json({ message: "Error!", error: error });
         });
-}
+};
 
 async function IsMaster(authKeyString) {
     try {
