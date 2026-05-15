@@ -1,45 +1,96 @@
 # TimeTrackerAPI
 
-OpenSource re-write of Atbash Services' TimeTrackerAPI on NodeJS / PostgreSQL
+Open-source rewrite of Atbash Services' TimeTrackerAPI on **Node.js + PostgreSQL**.
 
-Working example at [http://node.timetrackerapi.com](http://node.timetrackerapi.com)
+Working example at [node.timetrackerapi.com](http://node.timetrackerapi.com).
 
-Endpoints Completed
- * GET /v1/customer/#
- * GET /v1/customer/bycompany/#
+## Endpoints
 
-**Make sure to use the http header 'authKey' with the ApiKey**
+- `GET /v1/customer/:id`
+- `GET /v1/customer/bycompany/:id`
+
+Every request must include the API key in the `authKey` HTTP header.
+
 ![example image](https://github.com/CryptoJones/TimeTrackerAPI/blob/master/setup/postman_example.PNG?raw=true)
-(authKey example using PostMan)
 
-#
+*(authKey example using Postman)*
 
-# QuickStart (Ubuntu 20.04 LTS)
+---
 
-ubuntu@localhost:~$ `git clone https://github.com/CryptoJones/TimeTrackerAPI.git`
+## Requirements
 
-ubuntu@localhost:~$ `sudo apt-get update`
+- **Node.js 18+** (tested on 20 and 22)
+- **PostgreSQL 14+**
+- A modern Linux distribution (any currently supported LTS — Ubuntu 22.04 / 24.04, Debian 12, RHEL 9, etc.)
 
-ubuntu@localhost:~$ `sudo apt-get install npm postgresql postgresql-client-common -y`
+---
 
-ubuntu@localhost:~$ `sudo npm install --save express cors body-parser pg pg-hstore sequelize`
+## Quick start
 
-ubuntu@localhost:~$ `sudo su - postgres`
+```bash
+# 1. Clone
+git clone https://github.com/CryptoJones/TimeTrackerAPI.git
+cd TimeTrackerAPI
 
-postgres@localhost:~$ `psql`
+# 2. Install dependencies (no sudo)
+npm install
 
-postgres=# `CREATE USER timetracker SUPERUSER;`
+# 3. Provision the database
+sudo -u postgres psql <<'SQL'
+CREATE USER timetracker WITH PASSWORD 'change-me-strong-password';
+CREATE DATABASE timetracker WITH OWNER timetracker;
+SQL
+sudo -u postgres psql -d timetracker -f setup/TimeTracker.sql
 
-postgres=# `CREATE DATABASE TimeTracker WITH OWNER timetracker;`
+# 4. Configure environment
+cp .env.example .env
+$EDITOR .env       # set DB_PASSWORD, optionally PORT / CORS_ORIGIN
 
-postgres=# `ALTER USER timetracker WITH PASSWORD 'Password1';`
+# 5. Run
+npm start
+```
 
-postgres=# `\q`
+The server listens on `http://0.0.0.0:3000` by default. No root required.
 
-postgres@localhost:~$ `psql -f /home/ubuntu/TimeTrackerAPI/setup/TimeTracker.sql -d timetracker`
+---
 
-postgres@localhost:~$ `exit`
+## Environment variables
 
-ubuntu@localhost:~$ `cd TimeTrackerAPI`
+All configuration lives in environment variables (loaded from `.env`
+locally via `dotenv`, or set directly by your process manager in
+production). See `.env.example` for the canonical reference.
 
-ubuntu@localhost:~/TimeTrackerAPI$ `sudo node server.js`
+| Variable | Default | Purpose |
+|---|---|---|
+| `PORT` | `3000` | HTTP listen port. Use a non-privileged port (>1024). |
+| `HOST` | `0.0.0.0` | Bind address. `127.0.0.1` for localhost-only. |
+| `CORS_ORIGIN` | (unset → disabled) | Comma-separated list of allowed origins, e.g. `https://app.example.com,https://admin.example.com`. Leave unset to disable cross-origin requests entirely. |
+| `DB_HOST` | `localhost` | PostgreSQL host. |
+| `DB_PORT` | `5432` | PostgreSQL port. |
+| `DB_NAME` | `timetracker` | Database name. |
+| `DB_USER` | `timetracker` | Database user (must have access to the `dbo` schema). |
+| `DB_PASSWORD` | (empty) | Database password. **Required.** Setting it empty will cause connection failures and a startup warning. |
+
+`.env` is gitignored. Never commit a populated `.env`.
+
+---
+
+## Security notes
+
+- **Do not run this service as root.** The default port (`3000`) is
+  non-privileged on purpose. If you need to expose the API on `:443`,
+  put nginx, Caddy, or another reverse proxy in front and terminate TLS
+  there.
+- **Rotate the `authKey` regularly** and limit which users have access
+  to the `apikey` / `apimaster` tables.
+- **Use a strong, unique `DB_PASSWORD`** and restrict the database user
+  to the minimum required privileges — `SUPERUSER` is convenient for
+  local development but should not be the production grant.
+
+---
+
+## License
+
+Apache License 2.0. See [LICENSE](LICENSE).
+
+Proudly Made in Nebraska. Go Big Red! 🌽 https://xkcd.com/1654/
