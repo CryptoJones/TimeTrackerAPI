@@ -19,6 +19,8 @@ Working example at [node.timetrackerapi.com](http://node.timetrackerapi.com).
 | Endpoint                            | Auth required | Description                                  |
 |-------------------------------------|---------------|----------------------------------------------|
 | `GET /healthz`                      | no            | Liveness + DB-readiness probe (returns `{status, db, uptime_s, version, elapsed_ms}`; 200 ok / 503 degraded). |
+| `GET /docs`                         | no            | Interactive Swagger UI for the full API. |
+| `GET /openapi.json`                 | no            | Raw OpenAPI 3.0 spec (machine-readable). |
 | `GET /v1/customer/:id`              | yes (`authKey`) | Single customer lookup. Master key sees all; non-master only sees customers in its own company. |
 | `GET /v1/customer/bycompany/:id`    | yes (`authKey`) | Customers in a company (paginated). Master sees any; non-master only its own. Query params: `limit` (default 100, max 500), `offset` (default 0). Archived customers (`custArch = true`) are filtered out. |
 | `POST /v1/customer`                 | yes (`authKey`) | Create a customer. Master key may target any `custCompId`; non-master keys can only create within their own company (and `custCompId` defaults to that). Returns 201 + the created customer. |

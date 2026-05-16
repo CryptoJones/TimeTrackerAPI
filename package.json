@@ -30,7 +30,8 @@
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
     "sequelize": "^6.6.5",
-    "sequelize-cli": "^6.2.0"
+    "sequelize-cli": "^6.2.0",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "supertest": "^7.2.2",
