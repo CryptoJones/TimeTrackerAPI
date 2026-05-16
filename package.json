@@ -9,11 +9,17 @@
     "postgresql",
     "TimeTracker"
   ],
+  "scripts": {
+    "start": "node server.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
   "author": "https://github.com/CryptoJones",
-  "license": "GPLv3",
+  "license": "Apache-2.0",
   "dependencies": {
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
     "express": "^4.21.1",
     "express-asyncify": "^1.0.1",
     "express-promise-router": "^4.0.1",
@@ -21,5 +27,9 @@
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.6.5",
     "sequelize-cli": "^6.2.0"
+  },
+  "devDependencies": {
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.6"
   }
 }
