@@ -11,5 +11,12 @@ export default {
         environment: 'node',
         globals: false,
         reporters: ['default'],
+        // Default logger to silent during the test suite so error-path
+        // tests (which deliberately trigger DB ECONNREFUSED) don't drown
+        // the console output. Individual tests that want to assert on
+        // logger output can re-enable per-test.
+        env: {
+            LOG_LEVEL: 'silent',
+        },
     },
 };

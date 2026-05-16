@@ -4,6 +4,7 @@
 
 const { sequelize } = require('../config/db.config.js');
 const db = require('../config/db.config.js');
+const log = require('../config/logger.js');
 const Customer = db.Customer;
 
 /**
@@ -34,7 +35,7 @@ exports.getCustomerById = async (req, res) => {
     try {
         isAuthKeyMasterKey = await IsMaster(authKey);
     } catch (error) {
-        console.error('IsMaster failed:', error);
+        log.error({ err: error }, 'IsMaster failed');
         return res.status(500).json({ message: "Error!", error: String(error) });
     }
 
@@ -47,7 +48,7 @@ exports.getCustomerById = async (req, res) => {
         custCompanyId = await GetCustomerCompanyId(customerId);
         authKeyCompanyId = await GetCompanyId(authKey);
     } catch (error) {
-        console.error('Company lookup failed:', error);
+        log.error({ err: error }, 'Company lookup failed');
         return res.status(500).json({ message: "Error!", error: String(error) });
     }
 
@@ -79,7 +80,7 @@ exports.getAllByCompanyId = async (req, res) => {
     try {
         isAuthKeyMasterKey = await IsMaster(authKey);
     } catch (error) {
-        console.error('IsMaster failed:', error);
+        log.error({ err: error }, 'IsMaster failed');
         return res.status(500).json({ message: "Error!", error: String(error) });
     }
 
@@ -88,7 +89,7 @@ exports.getAllByCompanyId = async (req, res) => {
         try {
             authKeyCompanyId = await GetCompanyId(authKey);
         } catch (error) {
-            console.error('GetCompanyId failed:', error);
+            log.error({ err: error }, 'GetCompanyId failed');
             return res.status(500).json({ message: "Error!", error: String(error) });
         }
         // req.params.id arrives as a string; authKeyCompanyId comes back
@@ -105,7 +106,7 @@ exports.getAllByCompanyId = async (req, res) => {
             customers: customers,
         });
     } catch (error) {
-        console.error('Customer.findAll failed:', error);
+        log.error({ err: error }, 'Customer.findAll failed');
         return res.status(500).json({ message: "Error!", error: String(error) });
     }
 };
@@ -120,7 +121,7 @@ async function findAndRespond(customerId, res) {
             customers: customer,
         });
     } catch (error) {
-        console.error('Customer.findByPk failed:', error);
+        log.error({ err: error }, 'Customer.findByPk failed');
         return res.status(500).json({ message: "Error!", error: String(error) });
     }
 }
@@ -145,7 +146,7 @@ async function IsMaster(authKeyString) {
         const key = masterResult[0].amId;
         return typeof key === 'number' && key > 0;
     } catch (error) {
-        console.error('IsMaster query failed:', error);
+        log.error({ err: error }, 'IsMaster query failed');
         return false;
     }
 }
@@ -172,7 +173,7 @@ async function GetCompanyId(authKeyString) {
         }
         return -1;
     } catch (error) {
-        console.error('GetCompanyId query failed:', error);
+        log.error({ err: error }, 'GetCompanyId query failed');
         return -1;
     }
 }
@@ -202,7 +203,7 @@ async function GetCustomerCompanyId(customerId) {
         }
         return -1;
     } catch (error) {
-        console.error('GetCustomerCompanyId query failed:', error);
+        log.error({ err: error }, 'GetCustomerCompanyId query failed');
         return -1;
     }
 }

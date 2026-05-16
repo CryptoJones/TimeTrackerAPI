@@ -8,11 +8,39 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const pinoHttp = require('pino-http');
 
 const db = require('./app/config/db.config.js');
+const log = require('./app/config/logger.js');
 const router = require('./app/routers/router.js');
 
 const app = express();
+
+// Structured request logging (pino-http). One JSON line per request
+// with method, path, status, response time, and the per-request
+// child logger available as req.log inside controllers.
+// Healthz probes are quieted to `silent` to avoid drowning the log
+// stream — orchestrator probes hit it on tight intervals and noisy
+// success-rows for them are pure noise.
+app.use(pinoHttp({
+    logger: log,
+    customLogLevel: (req, res, err) => {
+        if (err || res.statusCode >= 500) return 'error';
+        if (res.statusCode >= 400) return 'warn';
+        if (req.url === '/healthz') return 'silent';
+        return 'info';
+    },
+    autoLogging: { ignore: () => false },
+    serializers: {
+        req: (req) => ({
+            method: req.method,
+            url: req.url,
+            remoteAddress: req.remoteAddress,
+            // headers intentionally omitted — see logger.js redact paths
+            // for the authKey defense-in-depth.
+        }),
+    },
+}));
 
 // Trust proxy headers when running behind nginx/caddy/cloudflare so
 // rate-limit keys on the real client IP instead of the proxy IP.
@@ -85,5 +113,5 @@ const host = process.env.HOST || '0.0.0.0';
 
 const server = app.listen(port, host, () => {
     const addr = server.address();
-    console.log(`Server is listening at http://${addr.address}:${addr.port}`);
+    log.info({ host: addr.address, port: addr.port }, 'Server listening');
 });
