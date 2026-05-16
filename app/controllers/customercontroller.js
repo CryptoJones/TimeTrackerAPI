@@ -60,6 +60,111 @@ exports.getCustomerById = async (req, res) => {
 };
 
 /**
+ * POST /v1/customer
+ *
+ * Create a new customer. Auth contract:
+ *   1. authKey header must be present                       -> 403 if missing
+ *   2. authKey may be a master key (can create for any company) -> proceed
+ *   3. otherwise authKey's company must match body.custCompId
+ *      (or body.custCompId may be omitted, in which case it defaults
+ *      to the authKey's company)                            -> proceed
+ *                                                           -> 403 if not
+ *
+ * Body shape (all fields optional except where noted):
+ *   {
+ *     "custCompanyName": string,
+ *     "custFName": string,
+ *     "custLName": string,
+ *     "custAddress1": string,
+ *     "custAddress2": string,
+ *     "custCity": string,
+ *     "custState": string,
+ *     "custZip": string,
+ *     "custPhone": string,
+ *     "custEmail": string,
+ *     "custCompId": int   <- required for master keys; defaults to
+ *                            the authKey's company for non-master keys
+ *   }
+ *
+ * Returns 201 + the created customer on success.
+ */
+exports.createCustomer = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+
+    let isAuthKeyMasterKey;
+    try {
+        isAuthKeyMasterKey = await IsMaster(authKey);
+    } catch (error) {
+        log.error({ err: error }, 'IsMaster failed');
+        return res.status(500).json({ message: "Error!", error: String(error) });
+    }
+
+    // Whitelist of model fields we accept. Anything else in the body
+    // is silently dropped — protects against mass-assignment style
+    // attacks where a caller posts e.g. `{"custId": 999, ...}` to
+    // forge an id.
+    const ALLOWED_FIELDS = [
+        'custCompanyName', 'custFName', 'custLName',
+        'custAddress1', 'custAddress2',
+        'custCity', 'custState', 'custZip',
+        'custPhone', 'custEmail', 'custCompId',
+    ];
+    const body = req.body || {};
+    const payload = {};
+    for (const f of ALLOWED_FIELDS) {
+        if (body[f] !== undefined) {
+            payload[f] = body[f];
+        }
+    }
+
+    // Resolve the company id with appropriate auth scoping.
+    if (!isAuthKeyMasterKey) {
+        let authKeyCompanyId;
+        try {
+            authKeyCompanyId = await GetCompanyId(authKey);
+        } catch (error) {
+            log.error({ err: error }, 'GetCompanyId failed');
+            return res.status(500).json({ message: "Error!", error: String(error) });
+        }
+        if (authKeyCompanyId === -1) {
+            return res.status(403).json({ message: "Invalid Authorization Key." });
+        }
+        if (payload.custCompId !== undefined && Number(payload.custCompId) !== authKeyCompanyId) {
+            return res.status(403).json({
+                message: "Cannot create a customer for a company you do not belong to.",
+            });
+        }
+        // Default the company to the authKey's owning company.
+        payload.custCompId = authKeyCompanyId;
+    } else {
+        // Master keys MUST specify which company the new customer
+        // belongs to — there's no obvious default.
+        if (payload.custCompId === undefined || Number(payload.custCompId) <= 0) {
+            return res.status(400).json({
+                message: "Master-key requests must specify custCompId.",
+            });
+        }
+    }
+
+    // Customers are not archived on creation.
+    payload.custArch = false;
+
+    try {
+        const created = await Customer.create(payload);
+        return res.status(201).json({
+            message: "Customer created.",
+            customer: created,
+        });
+    } catch (error) {
+        log.error({ err: error }, 'Customer.create failed');
+        return res.status(500).json({ message: "Error!", error: String(error) });
+    }
+};
+
+/**
  * GET /v1/customer/bycompany/:id
  *
  * Auth contract for this endpoint (closes #3):

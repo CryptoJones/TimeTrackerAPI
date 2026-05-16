@@ -13,5 +13,6 @@ router.get('/healthz', health.healthz);
 // v1 routes.
 router.get('/v1/customer/:id', customer.getCustomerById);
 router.get('/v1/customer/bycompany/:id', customer.getAllByCompanyId);
+router.post('/v1/customer', customer.createCustomer);
 
 module.exports = router;
