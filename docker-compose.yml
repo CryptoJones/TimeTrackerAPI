@@ -1,0 +1,87 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Aaron K. Clark
+#
+# One-line spin-up for local dev or a single-node deploy.
+# Usage:
+#   cp .env.example .env  (then set DB_PASSWORD)
+#   docker compose up --build
+#
+# The api service waits for the postgres healthcheck to pass before
+# starting, then bootstraps the schema by running both SQL files via
+# the `setup` one-shot service.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-timetracker}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in .env}
+      POSTGRES_DB: ${DB_NAME:-timetracker}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-timetracker} -d ${DB_NAME:-timetracker}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    # Don't expose 5432 to the host by default — the api service
+    # reaches postgres via the compose network. Operators who need
+    # local psql can `docker compose exec postgres psql ...`.
+
+  # One-shot schema bootstrap. Runs after postgres is healthy, applies
+  # both SQL files, then exits 0 so the api service can start.
+  setup:
+    image: postgres:16-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGUSER: ${DB_USERNAME:-timetracker}
+      PGPASSWORD: ${DB_PASSWORD}
+      PGDATABASE: ${DB_NAME:-timetracker}
+    volumes:
+      - ./setup:/setup:ro
+    command: >
+      sh -c "
+        psql -v ON_ERROR_STOP=1 -f /setup/TimeTracker.sql &&
+        psql -v ON_ERROR_STOP=1 -f /setup/TimeEntry.sql
+      "
+    restart: "no"
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      setup:
+        condition: service_completed_successfully
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-timetracker}
+      DB_USERNAME: ${DB_USERNAME:-timetracker}
+      DB_PASSWORD: ${DB_PASSWORD}
+      PORT: 3000
+      HOST: 0.0.0.0
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      TRUST_PROXY: ${TRUST_PROXY:-false}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
+    ports:
+      - "${HOST_PORT:-3000}:3000"
+    healthcheck:
+      # Use the Dockerfile-level healthcheck (wget /healthz). Compose
+      # re-declares it here only so `docker compose ps` shows the
+      # readiness state cleanly.
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:3000/healthz | grep -q '\"status\":\"ok\"' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  postgres-data:

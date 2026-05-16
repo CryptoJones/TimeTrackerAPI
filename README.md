@@ -51,6 +51,22 @@ monitors) without sharing a credential.
 
 ## Quick start
 
+### Docker (one-line)
+
+```bash
+git clone https://github.com/CryptoJones/TimeTrackerAPI.git
+cd TimeTrackerAPI
+cp .env.example .env
+# edit .env: at minimum set DB_PASSWORD
+docker compose up --build
+```
+
+This brings up postgres + the schema bootstrap (both SQL files) + the
+API on port 3000. `GET http://localhost:3000/healthz` should return
+`{"status":"ok",...}` within ~15 seconds.
+
+### Bare-metal
+
 ```bash
 # 1. Clone
 git clone https://github.com/CryptoJones/TimeTrackerAPI.git

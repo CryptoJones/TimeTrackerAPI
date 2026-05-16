@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Aaron K. Clark
+
+# Dependency directories (we install fresh inside the build).
+node_modules
+
+# Logs.
+*.log
+npm-debug.log*
+
+# Test artifacts.
+coverage
+.nyc_output
+.vitest
+
+# Editor / OS junk.
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Git metadata isn't needed in the runtime image.
+.git
+.gitignore
+.gitattributes
+
+# CI configs aren't needed at runtime.
+.github
+.woodpecker.yml
+
+# Env files — secrets should be passed via -e flags or compose, never
+# baked into the image.
+.env
+.env.*
+!.env.example
+
+# Local Docker artifacts.
+Dockerfile.local
+docker-compose.override.yml
