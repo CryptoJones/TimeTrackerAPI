@@ -20,7 +20,7 @@ Working example at [node.timetrackerapi.com](http://node.timetrackerapi.com).
 |-------------------------------------|---------------|----------------------------------------------|
 | `GET /healthz`                      | no            | Liveness + DB-readiness probe (returns `{status, db, uptime_s, version, elapsed_ms}`; 200 ok / 503 degraded). |
 | `GET /v1/customer/:id`              | yes (`authKey`) | Single customer lookup. Master key sees all; non-master only sees customers in its own company. |
-| `GET /v1/customer/bycompany/:id`    | yes (`authKey`) | All customers in a company. Master sees any; non-master only its own. |
+| `GET /v1/customer/bycompany/:id`    | yes (`authKey`) | Customers in a company (paginated). Master sees any; non-master only its own. Query params: `limit` (default 100, max 500), `offset` (default 0). Archived customers (`custArch = true`) are filtered out. |
 | `POST /v1/customer`                 | yes (`authKey`) | Create a customer. Master key may target any `custCompId`; non-master keys can only create within their own company (and `custCompId` defaults to that). Returns 201 + the created customer. |
 | `POST /v1/timeentry`                | yes (`authKey`) | Create a time entry. Body: `teCustId` (required), `teStartedAt` (required, ISO 8601), `teEndedAt` (optional — in-flight entries allowed), `teDescription`, `teBillable` (default true). `teMinutes` is computed server-side on close. |
 | `GET /v1/timeentry/:id`             | yes (`authKey`) | Single time entry lookup. Company-scoped. Archived (soft-deleted) entries return 404. |

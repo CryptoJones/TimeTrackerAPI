@@ -17,6 +17,7 @@ vi.mock('../../app/config/db.config.js', () => ({
     Customer: {
         findByPk: vi.fn().mockResolvedValue(null),
         findAll: vi.fn().mockResolvedValue([]),
+        findAndCountAll: vi.fn().mockResolvedValue({ count: 0, rows: [] }),
         create: vi.fn().mockResolvedValue({ custId: 1 }),
     },
     ApiKey: {},

@@ -204,14 +204,40 @@ exports.getAllByCompanyId = async (req, res) => {
         }
     }
 
+    // Pagination — opt-in via ?limit and ?offset query params. Cap at
+    // 500 to keep page sizes sane; default 100 to match the time-entry
+    // list endpoint. limit=0 falls back to the default rather than
+    // returning the literal zero-row "page" (which is rarely useful).
+    const requestedLimit = parseInt(req.query.limit, 10);
+    const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
+        ? Math.min(requestedLimit, 500)
+        : 100;
+    const requestedOffset = parseInt(req.query.offset, 10);
+    const offset = Number.isInteger(requestedOffset) && requestedOffset >= 0
+        ? requestedOffset
+        : 0;
+
+    // Soft-deleted customers are not returned. Older clients that
+    // weren't checking custArch already filter manually; this just
+    // makes the server's behavior match the documented contract.
+    const where = { custCompId: companyId, custArch: false };
+
     try {
-        const customers = await Customer.findAll({ where: { custCompId: companyId } });
+        const { count, rows } = await Customer.findAndCountAll({
+            where,
+            limit,
+            offset,
+            order: [['custId', 'ASC']],
+        });
         return res.status(200).json({
             message: "Successfully retrieved customers with CompanyId " + companyId,
-            customers: customers,
+            count,
+            limit,
+            offset,
+            customers: rows,
         });
     } catch (error) {
-        log.error({ err: error }, 'Customer.findAll failed');
+        log.error({ err: error }, 'Customer.findAndCountAll failed');
         return res.status(500).json({ message: "Error!", error: String(error) });
     }
 };
