@@ -83,6 +83,9 @@ SQL
 sudo -u postgres psql -d timetracker -f setup/TimeTracker.sql
 sudo -u postgres psql -d timetracker -f setup/TimeEntry.sql
 
+# Record the baseline as the migration starting point
+npm run migrate
+
 # 4. Configure environment
 cp .env.example .env
 $EDITOR .env       # set DB_PASSWORD, optionally PORT / CORS_ORIGIN
@@ -115,6 +118,22 @@ production). See `.env.example` for the canonical reference.
 `.env` is gitignored. Never commit a populated `.env`.
 
 ---
+
+## Database migrations
+
+Schema changes after the baseline `setup/*.sql` files use
+`sequelize-cli` migrations under [`app/migrations/`](app/migrations/).
+
+```bash
+npm run migrate          # apply all pending migrations
+npm run migrate:undo     # roll back the most recent one
+npm run migrate:status   # show what has and hasn't been applied
+npm run migrate:generate add-new-column   # scaffold a new migration
+```
+
+See [`app/migrations/README.md`](app/migrations/README.md) for the
+authoring conventions (schema-qualify `dbo`, always provide a `down`,
+no model references in migration code, etc.).
 
 ## Security notes
 

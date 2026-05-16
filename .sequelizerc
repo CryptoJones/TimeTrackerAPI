@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Aaron K. Clark
+//
+// sequelize-cli is configured here so generated and applied
+// migrations land where the rest of the app expects them.
+
+const path = require('path');
+
+module.exports = {
+    config:        path.resolve('app', 'config', 'sequelize-cli.config.js'),
+    'models-path': path.resolve('app', 'models'),
+    'migrations-path': path.resolve('app', 'migrations'),
+    'seeders-path':    path.resolve('app', 'seeders'),
+};
