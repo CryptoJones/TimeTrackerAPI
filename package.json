@@ -2,7 +2,7 @@
   "name": "TimeTrackerAPI",
   "version": "1.0.0",
   "description": "Nodejs version of TimeTrackerAPI",
-  "main": "index.js",
+  "main": "server.js",
   "keywords": [
     "nodejs",
     "crud",
@@ -19,7 +19,6 @@
     "express-promise-router": "^4.0.1",
     "pg": "^8.6.0",
     "pg-hstore": "^2.3.4",
-    "pg-hstore": "^2.3.3",
     "sequelize": "^6.6.5",
     "sequelize-cli": "^6.2.0"
   }
