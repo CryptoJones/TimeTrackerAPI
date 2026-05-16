@@ -16,6 +16,16 @@ const { errorHandler, notFound } = require('./app/middleware/error-handler.js');
 
 const app = express();
 
+// Defense-in-depth: helmet already strips X-Powered-By, but this
+// disables it at the express level too in case a future middleware
+// re-adds it (e.g. a buggy plugin doing `res.setHeader`).
+app.disable('x-powered-by');
+
+// ETag generation isn't useful for an authKey-scoped JSON API where
+// every response is per-user — clients can't safely cache, and the
+// hash computation costs CPU for nothing. Disable it explicitly.
+app.set('etag', false);
+
 // Structured request logging (pino-http). One JSON line per request
 // with method, path, status, response time, and the per-request
 // child logger available as req.log inside controllers.
@@ -31,6 +41,19 @@ app.use(pinoHttp({
         return 'info';
     },
     autoLogging: { ignore: () => false },
+    // Trust an incoming X-Request-Id header if present (so a reverse
+    // proxy / mesh can propagate trace context), otherwise generate
+    // a fresh one. The id lands on req.id, is echoed back on the
+    // X-Request-Id response header, and is included in every log
+    // line via pino-http's reqId binding.
+    genReqId: (req, res) => {
+        const incoming = req.headers['x-request-id'];
+        const reqId = (typeof incoming === 'string' && incoming.length > 0 && incoming.length <= 128)
+            ? incoming
+            : require('crypto').randomUUID();
+        res.setHeader('X-Request-Id', reqId);
+        return reqId;
+    },
     serializers: {
         req: (req) => ({
             method: req.method,
