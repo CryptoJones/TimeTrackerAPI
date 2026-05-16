@@ -143,3 +143,62 @@ const server = app.listen(port, host, () => {
     const addr = server.address();
     log.info({ host: addr.address, port: addr.port }, 'Server listening');
 });
+
+// ---- graceful shutdown ----
+//
+// SIGTERM is what `docker stop`, `systemctl stop`, and Kubernetes
+// pod-eviction all send. The default behavior is to drop in-flight
+// requests + leak pg pool connections. Trap it and drain instead.
+//
+// Sequence:
+//   1. server.close() — stops accepting new connections, lets the
+//      ones already in flight finish (Node ≥18 honors keep-alive
+//      headers and waits for the body).
+//   2. db.sequelize.close() — drains the pg pool cleanly.
+//   3. process.exit(0).
+//
+// If anything in the drain hangs longer than SHUTDOWN_TIMEOUT_MS
+// (default 25s — under most orchestrators' 30s SIGTERM→SIGKILL
+// window), we force-exit with code 1. SIGINT (Ctrl-C in dev) follows
+// the same path so dev shutdowns aren't dirty either.
+
+const shutdownTimeoutMs = parseInt(process.env.SHUTDOWN_TIMEOUT_MS, 10) || 25_000;
+let shuttingDown = false;
+
+async function shutdown(signal) {
+    if (shuttingDown) {
+        return;
+    }
+    shuttingDown = true;
+    log.info({ signal }, 'received shutdown signal, draining');
+
+    // Force-exit if drain hangs.
+    const killer = setTimeout(() => {
+        log.error({ signal, timeoutMs: shutdownTimeoutMs }, 'drain timeout, force-exiting');
+        process.exit(1);
+    }, shutdownTimeoutMs);
+    killer.unref();
+
+    try {
+        // Stop accepting new connections.
+        await new Promise((resolve, reject) => {
+            server.close((err) => (err ? reject(err) : resolve()));
+        });
+        log.info('http server closed');
+    } catch (err) {
+        log.error({ err }, 'error closing http server');
+    }
+
+    try {
+        await db.sequelize.close();
+        log.info('db pool closed');
+    } catch (err) {
+        log.error({ err }, 'error closing db pool');
+    }
+
+    log.info('shutdown complete');
+    process.exit(0);
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT',  () => shutdown('SIGINT'));
