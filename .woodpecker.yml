@@ -1,0 +1,16 @@
+when:
+  - event: [push, pull_request]
+    branch: [master, main]
+
+steps:
+  test-node-20:
+    image: node:20-slim
+    commands:
+      - npm ci
+      - npm test
+
+  test-node-22:
+    image: node:22-slim
+    commands:
+      - npm ci
+      - npm test
