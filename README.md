@@ -16,10 +16,16 @@ Working example at [node.timetrackerapi.com](http://node.timetrackerapi.com).
 
 ## Endpoints
 
-- `GET /v1/customer/:id`
-- `GET /v1/customer/bycompany/:id`
+| Endpoint                            | Auth required | Description                                  |
+|-------------------------------------|---------------|----------------------------------------------|
+| `GET /healthz`                      | no            | Liveness + DB-readiness probe (returns `{status, db, uptime_s, version, elapsed_ms}`; 200 ok / 503 degraded). |
+| `GET /v1/customer/:id`              | yes (`authKey`) | Single customer lookup. Master key sees all; non-master only sees customers in its own company. |
+| `GET /v1/customer/bycompany/:id`    | yes (`authKey`) | All customers in a company. Master sees any; non-master only its own. |
 
-Every request must include the API key in the `authKey` HTTP header.
+Every v1 request must include the API key in the `authKey` HTTP header.
+The `/healthz` endpoint is intentionally unauthenticated so it can be
+hit by orchestrators (Docker `HEALTHCHECK`, Kubernetes liveness, uptime
+monitors) without sharing a credential.
 
 ![example image](https://github.com/CryptoJones/TimeTrackerAPI/blob/master/setup/postman_example.PNG?raw=true)
 
