@@ -2,51 +2,16 @@
 // Copyright 2026 Aaron K. Clark
 "use strict";
 
-const { sequelize } = require('../config/db.config.js');
 const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
+const auth = require('../middleware/auth.js');
 const TimeEntry = db.TimeEntry;
 
-/**
- * Auth helpers are intentionally duplicated from customercontroller.js
- * rather than extracted into a shared module. The duplication is
- * minor (about 40 lines) and the alternative — a shared auth module
- * — would couple the time-entry endpoints to whatever ad-hoc shape
- * the customer endpoints' helpers grow into. Once the auth helpers
- * stabilize across both controllers, we can promote them to
- * app/middleware/auth.js as a single source of truth.
- */
-
-async function IsMaster(authKeyString) {
-    if (!authKeyString || authKeyString.length === 0) return false;
-    try {
-        const r = await db.sequelize.query(
-            'SELECT * FROM "dbo"."ApiMaster" WHERE "amKEY" = ? AND "ApiMaster"."amArchive" = false;',
-            { replacements: [authKeyString], type: sequelize.QueryTypes.SELECT },
-        );
-        if (!r || r.length === 0) return false;
-        return typeof r[0].amId === 'number' && r[0].amId > 0;
-    } catch (error) {
-        log.error({ err: error }, 'IsMaster query failed');
-        return false;
-    }
-}
-
-async function GetCompanyId(authKeyString) {
-    if (!authKeyString || authKeyString.length === 0) return -1;
-    try {
-        const r = await db.sequelize.query(
-            'SELECT * FROM "dbo"."ApiKey" WHERE "akKEY" = ? AND "ApiKey"."akArchive" = false;',
-            { replacements: [authKeyString], type: sequelize.QueryTypes.SELECT },
-        );
-        if (!r || r.length === 0) return -1;
-        const cid = r[0].akCompanyId;
-        return typeof cid === 'number' && cid > 0 ? cid : -1;
-    } catch (error) {
-        log.error({ err: error }, 'GetCompanyId query failed');
-        return -1;
-    }
-}
+// Auth helpers used to live inline here — they now share a single
+// source of truth in app/middleware/auth.js. PascalCase aliases
+// preserve the existing call sites in the controller body.
+const IsMaster = auth.isMaster;
+const GetCompanyId = auth.getCompanyId;
 
 const ALLOWED_FIELDS_CREATE = [
     'teCustId', 'teDescription', 'teStartedAt', 'teEndedAt',

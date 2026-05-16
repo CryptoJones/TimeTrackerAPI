@@ -5,7 +5,16 @@
 const { sequelize } = require('../config/db.config.js');
 const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
+const auth = require('../middleware/auth.js');
 const Customer = db.Customer;
+
+// IsMaster / GetCompanyId previously lived inline in this file and
+// were duplicated verbatim in timeentrycontroller.js. They moved to
+// app/middleware/auth.js — these aliases preserve the existing
+// PascalCase names used inside this controller body without churning
+// every call site.
+const IsMaster = auth.isMaster;
+const GetCompanyId = auth.getCompanyId;
 
 /**
  * GET /v1/customer/:id
@@ -254,58 +263,6 @@ async function findAndRespond(customerId, res) {
     } catch (error) {
         log.error({ err: error }, 'Customer.findByPk failed');
         return res.status(500).json({ message: "Error!", error: String(error) });
-    }
-}
-
-/**
- * Return true iff the given authKey matches an unarchived row in
- * "dbo"."ApiMaster". Empty / missing keys return false without
- * dereferencing the empty result array (which would throw).
- */
-async function IsMaster(authKeyString) {
-    if (!authKeyString || authKeyString.length === 0) {
-        return false;
-    }
-    try {
-        const masterResult = await db.sequelize.query(
-            'SELECT * FROM "dbo"."ApiMaster" WHERE "amKEY" = ? AND "ApiMaster"."amArchive" = false;',
-            { replacements: [authKeyString], type: sequelize.QueryTypes.SELECT },
-        );
-        if (!masterResult || masterResult.length === 0) {
-            return false;
-        }
-        const key = masterResult[0].amId;
-        return typeof key === 'number' && key > 0;
-    } catch (error) {
-        log.error({ err: error }, 'IsMaster query failed');
-        return false;
-    }
-}
-
-/**
- * Resolve an authKey to its owning company id, or -1 if not found.
- * Empty / missing keys return -1 without dereferencing an empty array.
- */
-async function GetCompanyId(authKeyString) {
-    if (!authKeyString || authKeyString.length === 0) {
-        return -1;
-    }
-    try {
-        const apiKeyResult = await db.sequelize.query(
-            'SELECT * FROM "dbo"."ApiKey" WHERE "akKEY" = ? AND "ApiKey"."akArchive" = false;',
-            { replacements: [authKeyString], type: sequelize.QueryTypes.SELECT },
-        );
-        if (!apiKeyResult || apiKeyResult.length === 0) {
-            return -1;
-        }
-        const companyId = apiKeyResult[0].akCompanyId;
-        if (typeof companyId === 'number' && companyId > 0) {
-            return companyId;
-        }
-        return -1;
-    } catch (error) {
-        log.error({ err: error }, 'GetCompanyId query failed');
-        return -1;
     }
 }
 
