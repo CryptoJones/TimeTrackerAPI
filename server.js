@@ -12,6 +12,7 @@ const pinoHttp = require('pino-http');
 const db = require('./app/config/db.config.js');
 const log = require('./app/config/logger.js');
 const router = require('./app/routers/router.js');
+const { errorHandler, notFound } = require('./app/middleware/error-handler.js');
 
 const app = express();
 
@@ -104,6 +105,11 @@ if (rateLimitMax !== 0) {
 }
 
 app.use('/', router);
+
+// 404 fallthrough + global error handler. Order matters — these
+// must be last so they catch what the router didn't.
+app.use(notFound);
+app.use(errorHandler);
 
 // Listen port — env-configurable. Defaults to 3000 so the API can be
 // started by a non-root user. Bind to 0.0.0.0 for container friendliness.
