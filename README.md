@@ -22,6 +22,11 @@ Working example at [node.timetrackerapi.com](http://node.timetrackerapi.com).
 | `GET /v1/customer/:id`              | yes (`authKey`) | Single customer lookup. Master key sees all; non-master only sees customers in its own company. |
 | `GET /v1/customer/bycompany/:id`    | yes (`authKey`) | All customers in a company. Master sees any; non-master only its own. |
 | `POST /v1/customer`                 | yes (`authKey`) | Create a customer. Master key may target any `custCompId`; non-master keys can only create within their own company (and `custCompId` defaults to that). Returns 201 + the created customer. |
+| `POST /v1/timeentry`                | yes (`authKey`) | Create a time entry. Body: `teCustId` (required), `teStartedAt` (required, ISO 8601), `teEndedAt` (optional — in-flight entries allowed), `teDescription`, `teBillable` (default true). `teMinutes` is computed server-side on close. |
+| `GET /v1/timeentry/:id`             | yes (`authKey`) | Single time entry lookup. Company-scoped. Archived (soft-deleted) entries return 404. |
+| `GET /v1/timeentry/bycompany/:id`   | yes (`authKey`) | List time entries for a company. Query params: `customerId` (filter), `from` / `to` (ISO 8601 date range on `teStartedAt`), `limit` (default 100, max 500). Ordered most-recent first. |
+| `PATCH /v1/timeentry/:id`           | yes (`authKey`) | Partial update. Updatable: `teDescription`, `teStartedAt`, `teEndedAt`, `teBillable`. `teMinutes` is recomputed on bound change. |
+| `DELETE /v1/timeentry/:id`          | yes (`authKey`) | Soft-delete (sets `teArch = true`). Entries are never physically removed via the API. |
 
 Every v1 request must include the API key in the `authKey` HTTP header.
 The `/healthz` endpoint is intentionally unauthenticated so it can be
@@ -58,6 +63,7 @@ CREATE USER timetracker WITH PASSWORD 'change-me-strong-password';
 CREATE DATABASE timetracker WITH OWNER timetracker;
 SQL
 sudo -u postgres psql -d timetracker -f setup/TimeTracker.sql
+sudo -u postgres psql -d timetracker -f setup/TimeEntry.sql
 
 # 4. Configure environment
 cp .env.example .env

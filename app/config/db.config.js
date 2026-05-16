@@ -22,5 +22,6 @@ db.sequelize = sequelize;
 db.Customer = require('../models/customer.model.js')(sequelize, Sequelize);
 db.ApiMaster = require('../models/apimaster.model.js')(sequelize, Sequelize);
 db.ApiKey = require('../models/apikey.model.js')(sequelize, Sequelize);
+db.TimeEntry = require('../models/timeentry.model.js')(sequelize, Sequelize);
 
 module.exports = db;
