@@ -4,7 +4,6 @@
 require('dotenv').config();
 
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -79,7 +78,7 @@ app.use(cors({
     optionsSuccessStatus: 200,
 }));
 
-app.use(bodyParser.json());
+app.use(express.json());
 
 // Rate limit the v1 surface to defend against authKey brute-force.
 // Defaults: 100 requests / 15-minute window per IP. Operators can

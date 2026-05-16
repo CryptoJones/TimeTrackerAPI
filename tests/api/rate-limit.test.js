@@ -7,7 +7,7 @@
 import { describe, test, expect, vi, beforeAll } from 'vitest';
 import request from 'supertest';
 import express from 'express';
-import bodyParser from 'body-parser';
+// body-parser dropped; express has it built-in since 4.16
 import rateLimit from 'express-rate-limit';
 
 vi.mock('../../app/config/db.config.js', () => ({
@@ -27,7 +27,7 @@ beforeAll(async () => {
     const router = (await import('../../app/routers/router.js')).default
         || require('../../app/routers/router.js');
     app = express();
-    app.use(bodyParser.json());
+    app.use(express.json());
     // Aggressively low limit so we trip it inside the test window.
     const limiter = rateLimit({
         windowMs: 60 * 1000,
