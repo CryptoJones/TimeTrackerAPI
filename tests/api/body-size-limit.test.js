@@ -22,6 +22,11 @@ beforeAll(async () => {
     const router = (await import('../../app/routers/router.js')).default
         || require('../../app/routers/router.js');
     // Use a tiny 1kb limit so we can trip it without sending megabytes.
+    // This is the same shape server.js uses — `express.json({limit})`
+    // — just with a smaller cap for test ergonomics. Doesn't exercise
+    // server.js's JSON_BODY_LIMIT env hook directly (test-time env
+    // mutation is fragile under vitest's ESM module cache), but does
+    // cover the underlying parser behavior that server.js relies on.
     app = express();
     app.use(express.json({ limit: '1kb' }));
     app.use('/', router);
