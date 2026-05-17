@@ -171,6 +171,17 @@ const versionInfoSchema = {
     },
 };
 
+const inventoryTransactionSchema = {
+    type: 'object',
+    properties: {
+        invtId: { type: 'integer', readOnly: true },
+        invtCompanyId: { type: 'integer' },
+        invtDirection: { type: 'integer', enum: [0, 1], description: '0 = inbound (received), 1 = outbound (consumed)' },
+        invtInitId: { type: 'integer', description: 'Inventory item this transaction affects (FK → InventoryItem.invitId)' },
+        invtArch: { type: 'boolean', readOnly: true },
+    },
+};
+
 const purchaseOrderHeaderSchema = {
     type: 'object',
     properties: {
@@ -272,6 +283,7 @@ const spec = {
             PurchaseOrderVendor: purchaseOrderVendorSchema,
             PurchaseOrderHeader: purchaseOrderHeaderSchema,
             PurchaseOrderLine: purchaseOrderLineSchema,
+            InventoryTransaction: inventoryTransactionSchema,
             Error: errorResponse,
         },
     },
@@ -779,6 +791,26 @@ const spec = {
                     { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
                 ],
                 responses: { 200: { description: 'OK' }, 400: { description: 'Invalid header id' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/inventorytransaction': {
+            post: { summary: 'Create an inventory transaction', security: [{ authKey: [] }], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/InventoryTransaction' } } } }, responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } } },
+        },
+        '/v1/inventorytransaction/{id}': {
+            get: { summary: 'Get one inventory transaction', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+            patch: { summary: 'Partial update of an inventory transaction (unusual — reversing entries are the production pattern)', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/InventoryTransaction' } } } }, responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+            delete: { summary: 'Soft-delete an inventory transaction', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+        },
+        '/v1/inventorytransaction/bycompany/{id}': {
+            get: {
+                summary: 'List inventory transactions in a company (paginated, newest first)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer', default: 100, maximum: 500 } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+                ],
+                responses: { 200: { description: 'OK' }, 400: { description: 'Invalid company id' }, 403: { description: 'Auth failure' } },
             },
         },
     },

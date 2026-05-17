@@ -36,5 +36,6 @@ db.VersionInfo = require('../models/versioninfo.model.js')(sequelize, Sequelize)
 db.PurchaseOrderVendor = require('../models/purchaseordervendor.model.js')(sequelize, Sequelize);
 db.PurchaseOrderHeader = require('../models/purchaseorderheader.model.js')(sequelize, Sequelize);
 db.PurchaseOrderLine = require('../models/purchaseorderline.model.js')(sequelize, Sequelize);
+db.InventoryTransaction = require('../models/inventorytransaction.model.js')(sequelize, Sequelize);
 
 module.exports = db;
