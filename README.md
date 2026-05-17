@@ -29,6 +29,16 @@ Working example at [node.timetrackerapi.com](http://node.timetrackerapi.com).
 | `GET /v1/timeentry/bycompany/:id`   | yes (`authKey`) | List time entries for a company. Query params: `customerId` (filter), `from` / `to` (ISO 8601 date range on `teStartedAt`), `limit` (default 100, max 500). Ordered most-recent first. |
 | `PATCH /v1/timeentry/:id`           | yes (`authKey`) | Partial update. Updatable: `teDescription`, `teStartedAt`, `teEndedAt`, `teBillable`. `teMinutes` is recomputed on bound change. |
 | `DELETE /v1/timeentry/:id`          | yes (`authKey`) | Soft-delete (sets `teArch = true`). Entries are never physically removed via the API. |
+| `* /v1/worker/*`                    | yes (`authKey`) | Full CRUD for Workers (`workerId`, `workerFName`, `workerLName`, `workerTitle`, `workerDefaultBillType`, `workerCompId`, `workerArch`). Direct company scoping via `workerCompId`. Endpoints: `POST /v1/worker`, `GET /v1/worker/:id`, `GET /v1/worker/bycompany/:id`, `PATCH /v1/worker/:id`, `DELETE /v1/worker/:id`. |
+| `* /v1/billingtype/*`               | yes (`authKey`) | Full CRUD for BillingTypes (hourly rates a Worker can default to). Same shape as Worker. |
+| `* /v1/inventoryitem/*`             | yes (`authKey`) | Full CRUD for InventoryItems. Same shape as Worker. |
+| `* /v1/company/*`                   | yes (`authKey`) | Companies. Master keys only for `POST /v1/company`, `DELETE /v1/company/:id`, and `GET /v1/company` (list); non-master keys may `GET /v1/company/:id` and `PATCH /v1/company/:id` for their own row only. |
+| `* /v1/job/*`                       | yes (`authKey`) | Jobs (customer-scoped via `jobCustId` → `custCompId`). Endpoints: `POST`, `GET /:id`, `GET /bycustomer/:id`, `PATCH /:id`, `DELETE /:id`. |
+| `* /v1/invoice/*`                   | yes (`authKey`) | Invoices (customer-scoped). Same shape as Job. |
+| `* /v1/customerpayment/*`           | yes (`authKey`) | Customer payments (customer-scoped). `GET /bycustomer/:id` lists newest first. |
+| `* /v1/invoicejob/*`                | yes (`authKey`) | Invoice line items (job-scoped via `injbJobId` → Job → Customer.custCompId). `GET /byinvoice/:id` lists per invoice. |
+| `* /v1/productentry/*`              | yes (`authKey`) | Product entries consumed on a Job (job-scoped). `GET /byjob/:id` lists per job. |
+| `* /v1/versioninfo/*`               | yes (`authKey`) | Schema/build version records. Reads open to any `authKey`; mutations require a master key. `DELETE` is a hard destroy (no archive column on this table). |
 
 Every v1 request must include the API key in the `authKey` HTTP header.
 The `/healthz` endpoint is intentionally unauthenticated so it can be
