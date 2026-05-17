@@ -39,6 +39,10 @@ Working example at [node.timetrackerapi.com](http://node.timetrackerapi.com).
 | `* /v1/invoicejob/*`                | yes (`authKey`) | Invoice line items (job-scoped via `injbJobId` → Job → Customer.custCompId). `GET /byinvoice/:id` lists per invoice. |
 | `* /v1/productentry/*`              | yes (`authKey`) | Product entries consumed on a Job (job-scoped). `GET /byjob/:id` lists per job. |
 | `* /v1/versioninfo/*`               | yes (`authKey`) | Schema/build version records. Reads open to any `authKey`; mutations require a master key. `DELETE` is a hard destroy (no archive column on this table). |
+| `* /v1/purchaseordervendor/*`       | yes (`authKey`) | Vendors that POs are issued to. Direct company scoping via `povCompId`. Standard CRUD + `bycompany`. |
+| `* /v1/purchaseorderheader/*`       | yes (`authKey`) | Purchase orders. Vendor-scoped — auth resolves via `pohPovId → vendor.povCompId`. `GET /byvendor/:id` lists POs for a vendor, newest first. |
+| `* /v1/purchaseorderline/*`         | yes (`authKey`) | PO line items. Header-scoped via `polpoh → header → vendor → company`. `GET /byheader/:id` lists line items on a PO. |
+| `* /v1/inventorytransaction/*`      | yes (`authKey`) | Inventory movement log. Direct company scoping via `invtCompanyId`. `invtDirection` is `0` (inbound) or `1` (outbound). PATCH/DELETE exposed for surface parity; audit-grade deployments may want to disable them at the proxy. |
 
 Every v1 request must include the API key in the `authKey` HTTP header.
 The `/healthz` endpoint is intentionally unauthenticated so it can be

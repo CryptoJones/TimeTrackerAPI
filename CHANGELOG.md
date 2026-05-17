@@ -8,6 +8,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **PurchaseOrder + Inventory API surface** (#49, PRs #50, #51, #52):
+  Full CRUD endpoints for the four tables added by the
+  20260517000000 migration —
+  - `PurchaseOrderVendor` — direct compId scoping
+  - `PurchaseOrderHeader` — vendor-scoped via new
+    `auth.getCompanyIdByPovId()` helper
+  - `PurchaseOrderLine` — header-scoped via new
+    `auth.getCompanyIdByPohId()` helper (two-hop FK walk through
+    header → vendor)
+  - `InventoryTransaction` — direct compId scoping; `invtDirection`
+    constrained to 0 (inbound) or 1 (outbound) at the zod boundary
+- `JSON_BODY_LIMIT` env override for `express.json()` body cap
+  (#45, PRs #46 and #47). Default 100kb matches the express
+  built-in; operators can raise it (`JSON_BODY_LIMIT=512kb`) for
+  endpoints that legitimately accept larger payloads.
+
+### Changed
+- `npm audit fix` cleared 10 transitive-dep vulnerabilities
+  (dottie, moment, moment-timezone, path-to-regexp, qs, underscore,
+  validator). Direct deps bumped to latest patch within current
+  majors: express 4.21.1 → 4.22.2, pg 8.6.0 → 8.20.0,
+  express-promise-router 4.0.1 → 4.1.1, sequelize 6.6.5 → 6.37.8.
+  (PR #48; closes Snyk-backlog tracker #30; supersedes / closes
+  11 stale Snyk PRs.)
+
+### Added (earlier in this [Unreleased] window)
 - **API surface expansion** (#38, PR #39): full CRUD for ten entities
   that were in `setup/TimeTracker.sql` but lacked endpoints — Worker,
   Company, BillingType, InventoryItem, Job, Invoice, CustomerPayment,
@@ -50,7 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   keeps `LICENSE` (Apache-2.0 §4(c) requires it accompany derivative
   works, including container images).
 
-### Added (earlier in [Unreleased] window)
+### Added (still earlier in this [Unreleased] window)
 - Codeberg mirror at https://codeberg.org/CryptoJones/TimeTrackerAPI;
   README now carries badges for both forges.
 - `GET /healthz` liveness + DB-readiness probe. No auth. Returns
