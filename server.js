@@ -102,7 +102,19 @@ app.use(cors({
     optionsSuccessStatus: 200,
 }));
 
-app.use(express.json());
+// Body size limit. The default in express.json() is 100kb; we make
+// it explicit + env-tunable. Capping the body size is a basic
+// defense against memory-exhaustion DoS — even an unauthenticated
+// caller can otherwise force the server to buffer arbitrarily
+// large JSON strings before the parser can reject them.
+//
+// 100kb is comfortably above any expected payload here (the largest
+// real body is a TimeEntry create with a teDescription, capped at
+// 10000 chars in the zod schema). Operators with unusual needs can
+// override via JSON_BODY_LIMIT=512kb (etc.).
+app.use(express.json({
+    limit: process.env.JSON_BODY_LIMIT || '100kb',
+}));
 
 // Rate limit the v1 surface to defend against authKey brute-force.
 // Defaults: 100 requests / 15-minute window per IP. Operators can
