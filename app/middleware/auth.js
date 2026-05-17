@@ -63,6 +63,58 @@ async function getCompanyId(authKey) {
 }
 
 /**
+ * Resolve a customer id to its owning company id.
+ *
+ * Used by entities that don't have their own *CompId column and instead
+ * scope auth through their Customer relation (Job, Invoice,
+ * CustomerPayment). Returns -1 on missing / archived / lookup failure
+ * so callers can use the same `=== -1` sentinel as getCompanyId().
+ */
+async function getCompanyIdByCustomerId(customerId) {
+    const idStr = customerId == null ? '' : String(customerId);
+    if (idStr.length === 0 || idStr === '0') return -1;
+    try {
+        const r = await db.sequelize.query(
+            'SELECT "custCompId" FROM "dbo"."Customer" WHERE "custId" = ? AND "custArch" = false;',
+            { replacements: [customerId], type: sequelize.QueryTypes.SELECT },
+        );
+        if (!r || r.length === 0) return -1;
+        const cid = r[0].custCompId;
+        return typeof cid === 'number' && cid > 0 ? cid : -1;
+    } catch (error) {
+        log.error({ err: error }, 'auth.getCompanyIdByCustomerId query failed');
+        return -1;
+    }
+}
+
+/**
+ * Resolve a job id to its owning company id.
+ *
+ * Job has no direct *CompId — it scopes through Customer
+ * (Job.jobCustId → Customer.custCompId). Used by InvoiceJob and
+ * ProductEntry whose own FKs point into Job.
+ */
+async function getCompanyIdByJobId(jobId) {
+    const idStr = jobId == null ? '' : String(jobId);
+    if (idStr.length === 0 || idStr === '0') return -1;
+    try {
+        const r = await db.sequelize.query(
+            `SELECT c."custCompId"
+             FROM "dbo"."Job" j
+             JOIN "dbo"."Customer" c ON c."custId" = j."jobCustId"
+             WHERE j."jobId" = ? AND j."jobArch" = false AND c."custArch" = false;`,
+            { replacements: [jobId], type: sequelize.QueryTypes.SELECT },
+        );
+        if (!r || r.length === 0) return -1;
+        const cid = r[0].custCompId;
+        return typeof cid === 'number' && cid > 0 ? cid : -1;
+    } catch (error) {
+        log.error({ err: error }, 'auth.getCompanyIdByJobId query failed');
+        return -1;
+    }
+}
+
+/**
  * Express middleware: ensures the authKey header is present and
  * stashes it on req.authKey. Does NOT validate the key against the
  * database — leaves that to controllers that may have different
@@ -114,6 +166,8 @@ async function resolveAuth(req, res, next) {
 module.exports = {
     isMaster,
     getCompanyId,
+    getCompanyIdByCustomerId,
+    getCompanyIdByJobId,
     requireAuthKey,
     resolveAuth,
 };

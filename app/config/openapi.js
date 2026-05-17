@@ -53,6 +53,124 @@ const customerSchema = {
     },
 };
 
+const workerSchema = {
+    type: 'object',
+    properties: {
+        workerId: { type: 'integer', readOnly: true },
+        workerFName: { type: 'string' },
+        workerLName: { type: 'string' },
+        workerTitle: { type: 'string' },
+        workerDefaultBillType: { type: 'integer' },
+        workerCompId: { type: 'integer' },
+        workerArch: { type: 'boolean', readOnly: true },
+    },
+};
+
+const billingTypeSchema = {
+    type: 'object',
+    properties: {
+        btId: { type: 'integer', readOnly: true },
+        btName: { type: 'string' },
+        btHourlyRate: { type: 'number' },
+        btCompId: { type: 'integer' },
+        btArch: { type: 'boolean', readOnly: true },
+    },
+};
+
+const inventoryItemSchema = {
+    type: 'object',
+    properties: {
+        invitId: { type: 'integer', readOnly: true },
+        invitDescription: { type: 'string' },
+        invitQty: { type: 'number' },
+        invitCompId: { type: 'integer' },
+        invitArch: { type: 'boolean', readOnly: true },
+    },
+};
+
+const companySchema = {
+    type: 'object',
+    properties: {
+        compId: { type: 'integer', readOnly: true },
+        compName: { type: 'string' },
+        compAddress1: { type: 'string' },
+        compAddress2: { type: 'string' },
+        compCity: { type: 'string' },
+        compState: { type: 'string', maxLength: 2 },
+        compZip: { type: 'string' },
+        compPhone: { type: 'string' },
+        compEmail: { type: 'string', format: 'email' },
+        compArch: { type: 'boolean', readOnly: true },
+    },
+};
+
+const jobSchema = {
+    type: 'object',
+    properties: {
+        jobId: { type: 'integer', readOnly: true },
+        jobCustId: { type: 'integer' },
+        jobDesc: { type: 'string' },
+        jobInvoiced: { type: 'boolean' },
+        jobArch: { type: 'boolean', readOnly: true },
+    },
+};
+
+const invoiceSchema = {
+    type: 'object',
+    properties: {
+        invId: { type: 'integer', readOnly: true },
+        invCustId: { type: 'integer' },
+        invDate: { type: 'string', format: 'date' },
+        invDueDate: { type: 'string', format: 'date' },
+        invPaid: { type: 'boolean' },
+        invArch: { type: 'boolean', readOnly: true },
+    },
+};
+
+const customerPaymentSchema = {
+    type: 'object',
+    properties: {
+        cpayId: { type: 'integer', readOnly: true },
+        cpayCustId: { type: 'integer' },
+        cpayDescription: { type: 'string' },
+        cpayDate: { type: 'string', format: 'date' },
+        cpayAmount: { type: 'number' },
+        cpayArch: { type: 'boolean', readOnly: true },
+    },
+};
+
+const invoiceJobSchema = {
+    type: 'object',
+    properties: {
+        injbId: { type: 'integer', readOnly: true },
+        injbInvId: { type: 'integer' },
+        injbJobId: { type: 'integer' },
+        injbAmount: { type: 'number' },
+        injbArch: { type: 'boolean', readOnly: true },
+    },
+};
+
+const productEntrySchema = {
+    type: 'object',
+    properties: {
+        pentId: { type: 'integer', readOnly: true },
+        pentQty: { type: 'integer' },
+        pentJobId: { type: 'integer' },
+        pentInvtId: { type: 'integer' },
+        pentTaxable: { type: 'boolean', nullable: true },
+        penArch: { type: 'boolean', readOnly: true },
+    },
+};
+
+const versionInfoSchema = {
+    type: 'object',
+    properties: {
+        viId: { type: 'integer', readOnly: true },
+        viVersion: { type: 'string' },
+        viDate: { type: 'string', format: 'date-time' },
+    },
+};
+
 const timeEntrySchema = {
     type: 'object',
     properties: {
@@ -92,6 +210,16 @@ const spec = {
         schemas: {
             Customer: customerSchema,
             TimeEntry: timeEntrySchema,
+            Worker: workerSchema,
+            BillingType: billingTypeSchema,
+            InventoryItem: inventoryItemSchema,
+            Company: companySchema,
+            Job: jobSchema,
+            Invoice: invoiceSchema,
+            CustomerPayment: customerPaymentSchema,
+            InvoiceJob: invoiceJobSchema,
+            ProductEntry: productEntrySchema,
+            VersionInfo: versionInfoSchema,
             Error: errorResponse,
         },
     },
@@ -218,6 +346,323 @@ const spec = {
                 ],
                 responses: { 200: { description: 'OK' }, 400: { description: 'Invalid company id' }, 403: { description: 'Auth failure' } },
             },
+        },
+        '/v1/worker': {
+            post: {
+                summary: 'Create a worker',
+                security: [{ authKey: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': { schema: { $ref: '#/components/schemas/Worker' } },
+                    },
+                },
+                responses: {
+                    201: { description: 'Created', content: { 'application/json': { schema: { $ref: '#/components/schemas/Worker' } } } },
+                    400: { description: 'Bad request' },
+                    403: { description: 'Missing or invalid authKey' },
+                },
+            },
+        },
+        '/v1/worker/{id}': {
+            get: {
+                summary: 'Get one worker',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } },
+            },
+            patch: {
+                summary: 'Partial update of a worker',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/Worker' } } } },
+                responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } },
+            },
+            delete: {
+                summary: 'Soft-delete a worker',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/worker/bycompany/{id}': {
+            get: {
+                summary: 'List workers in a company (paginated)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer', default: 100, maximum: 500 } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+                ],
+                responses: { 200: { description: 'OK' }, 400: { description: 'Invalid company id' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/billingtype': {
+            post: {
+                summary: 'Create a billing type',
+                security: [{ authKey: [] }],
+                requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/BillingType' } } } },
+                responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/billingtype/{id}': {
+            get: {
+                summary: 'Get one billing type',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } },
+            },
+            patch: {
+                summary: 'Partial update of a billing type',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/BillingType' } } } },
+                responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } },
+            },
+            delete: {
+                summary: 'Soft-delete a billing type',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/billingtype/bycompany/{id}': {
+            get: {
+                summary: 'List billing types in a company (paginated)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer', default: 100, maximum: 500 } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+                ],
+                responses: { 200: { description: 'OK' }, 400: { description: 'Invalid company id' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/inventoryitem': {
+            post: {
+                summary: 'Create an inventory item',
+                security: [{ authKey: [] }],
+                requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/InventoryItem' } } } },
+                responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/inventoryitem/{id}': {
+            get: {
+                summary: 'Get one inventory item',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } },
+            },
+            patch: {
+                summary: 'Partial update of an inventory item',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/InventoryItem' } } } },
+                responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } },
+            },
+            delete: {
+                summary: 'Soft-delete an inventory item',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/inventoryitem/bycompany/{id}': {
+            get: {
+                summary: 'List inventory items in a company (paginated)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer', default: 100, maximum: 500 } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+                ],
+                responses: { 200: { description: 'OK' }, 400: { description: 'Invalid company id' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/company': {
+            post: {
+                summary: 'Create a company (master keys only)',
+                security: [{ authKey: [] }],
+                requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/Company' } } } },
+                responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Non-master key' } },
+            },
+            get: {
+                summary: 'List all companies (master keys only, paginated)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'limit', in: 'query', schema: { type: 'integer', default: 100, maximum: 500 } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+                ],
+                responses: { 200: { description: 'OK' }, 403: { description: 'Non-master key' } },
+            },
+        },
+        '/v1/company/{id}': {
+            get: {
+                summary: 'Get one company (master: any; non-master: own only)',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } },
+            },
+            patch: {
+                summary: 'Partial update of a company (master: any; non-master: own only)',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/Company' } } } },
+                responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } },
+            },
+            delete: {
+                summary: 'Soft-delete a company (master keys only)',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Non-master key' } },
+            },
+        },
+        '/v1/job': {
+            post: {
+                summary: 'Create a job',
+                security: [{ authKey: [] }],
+                requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/Job' } } } },
+                responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/job/{id}': {
+            get: { summary: 'Get one job', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+            patch: { summary: 'Partial update of a job', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/Job' } } } }, responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+            delete: { summary: 'Soft-delete a job', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+        },
+        '/v1/job/bycustomer/{id}': {
+            get: {
+                summary: 'List jobs for a customer (paginated)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer', default: 100, maximum: 500 } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+                ],
+                responses: { 200: { description: 'OK' }, 400: { description: 'Invalid customer id' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/invoice': {
+            post: {
+                summary: 'Create an invoice',
+                security: [{ authKey: [] }],
+                requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/Invoice' } } } },
+                responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/invoice/{id}': {
+            get: { summary: 'Get one invoice', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+            patch: { summary: 'Partial update of an invoice', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/Invoice' } } } }, responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+            delete: { summary: 'Soft-delete an invoice', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+        },
+        '/v1/invoice/bycustomer/{id}': {
+            get: {
+                summary: 'List invoices for a customer (paginated)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer', default: 100, maximum: 500 } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+                ],
+                responses: { 200: { description: 'OK' }, 400: { description: 'Invalid customer id' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/customerpayment': {
+            post: {
+                summary: 'Create a customer payment',
+                security: [{ authKey: [] }],
+                requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/CustomerPayment' } } } },
+                responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/customerpayment/{id}': {
+            get: { summary: 'Get one customer payment', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+            patch: { summary: 'Partial update of a customer payment', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/CustomerPayment' } } } }, responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+            delete: { summary: 'Soft-delete a customer payment', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+        },
+        '/v1/customerpayment/bycustomer/{id}': {
+            get: {
+                summary: 'List customer payments for a customer (paginated, newest first)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer', default: 100, maximum: 500 } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+                ],
+                responses: { 200: { description: 'OK' }, 400: { description: 'Invalid customer id' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/invoicejob': {
+            post: {
+                summary: 'Create an invoice line (job → invoice)',
+                security: [{ authKey: [] }],
+                requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/InvoiceJob' } } } },
+                responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/invoicejob/{id}': {
+            get: { summary: 'Get one invoice line', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+            patch: { summary: 'Partial update of an invoice line', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/InvoiceJob' } } } }, responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+            delete: { summary: 'Soft-delete an invoice line', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+        },
+        '/v1/invoicejob/byinvoice/{id}': {
+            get: {
+                summary: 'List invoice lines for an invoice (paginated)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer', default: 100, maximum: 500 } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+                ],
+                responses: { 200: { description: 'OK' }, 400: { description: 'Invalid invoice id' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/productentry': {
+            post: {
+                summary: 'Create a product entry',
+                security: [{ authKey: [] }],
+                requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/ProductEntry' } } } },
+                responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/productentry/{id}': {
+            get: { summary: 'Get one product entry', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+            patch: { summary: 'Partial update of a product entry', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/ProductEntry' } } } }, responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+            delete: { summary: 'Soft-delete a product entry', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+        },
+        '/v1/productentry/byjob/{id}': {
+            get: {
+                summary: 'List product entries for a job (paginated)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer', default: 100, maximum: 500 } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+                ],
+                responses: { 200: { description: 'OK' }, 400: { description: 'Invalid job id' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/versioninfo': {
+            post: {
+                summary: 'Create a version info record (master keys only)',
+                security: [{ authKey: [] }],
+                requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/VersionInfo' } } } },
+                responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Non-master key' } },
+            },
+            get: {
+                summary: 'List version info (any authKey)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'limit', in: 'query', schema: { type: 'integer', default: 100, maximum: 500 } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+                ],
+                responses: { 200: { description: 'OK' }, 403: { description: 'Missing authKey' } },
+            },
+        },
+        '/v1/versioninfo/{id}': {
+            get: { summary: 'Get one version info (any authKey)', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Missing authKey' } } },
+            patch: { summary: 'Partial update of a version info (master keys only)', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/VersionInfo' } } } }, responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Non-master key' } } },
+            delete: { summary: 'Hard-delete a version info (master keys only — no archive column on this table)', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Deleted' }, 404: { description: 'Not found' }, 403: { description: 'Non-master key' } } },
         },
     },
 };

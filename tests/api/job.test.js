@@ -1,0 +1,57 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Aaron K. Clark
+
+import { describe, test, expect, vi, beforeAll } from 'vitest';
+import request from 'supertest';
+import express from 'express';
+
+vi.mock('../../app/config/db.config.js', () => ({
+    sequelize: { query: vi.fn().mockResolvedValue([]), QueryTypes: { SELECT: 'SELECT' } },
+    Sequelize: {},
+    Customer: {}, TimeEntry: {}, Worker: {}, BillingType: {}, InventoryItem: {}, Company: {},
+    Job: {
+        findByPk: vi.fn().mockResolvedValue(null),
+        findAndCountAll: vi.fn().mockResolvedValue({ count: 0, rows: [] }),
+        create: vi.fn().mockResolvedValue({ jobId: 1 }),
+    },
+    Invoice: {}, CustomerPayment: {},
+    ApiKey: {}, ApiMaster: {},
+}));
+
+let app;
+
+beforeAll(async () => {
+    const router = (await import('../../app/routers/router.js')).default
+        || require('../../app/routers/router.js');
+    app = express();
+    app.use(express.json());
+    app.use('/', router);
+});
+
+describe('Job auth contract', () => {
+    test('GET /v1/job/:id 403 without authKey', async () => { expect((await request(app).get('/v1/job/1')).status).toBe(403); });
+    test('POST /v1/job 403 without authKey', async () => {
+        const res = await request(app).post('/v1/job').send({ jobCustId: 1, jobDesc: 'work' });
+        expect(res.status).toBe(403);
+    });
+    test('GET /v1/job/bycustomer/:id 403 without authKey', async () => { expect((await request(app).get('/v1/job/bycustomer/1')).status).toBe(403); });
+    test('PATCH /v1/job/:id 403 without authKey', async () => { expect((await request(app).patch('/v1/job/1').send({ jobDesc: 'x' })).status).toBe(403); });
+    test('DELETE /v1/job/:id 403 without authKey', async () => { expect((await request(app).delete('/v1/job/1')).status).toBe(403); });
+});
+
+describe('Job route mounting', () => {
+    test('routes mounted', async () => {
+        expect((await request(app).get('/v1/job/1').set('authKey', 'any')).status).not.toBe(404);
+    });
+});
+
+describe('Job body validation', () => {
+    test('POST rejects unknown field', async () => {
+        const res = await request(app).post('/v1/job').set('authKey', 'any').send({ jobCustId: 1, jobDesc: 'x', bogus: 'no' });
+        expect(res.status).toBe(400);
+    });
+    test('POST rejects missing jobDesc', async () => {
+        const res = await request(app).post('/v1/job').set('authKey', 'any').send({ jobCustId: 1 });
+        expect(res.status).toBe(400);
+    });
+});
