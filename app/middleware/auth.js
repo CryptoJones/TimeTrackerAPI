@@ -88,6 +88,54 @@ async function getCompanyIdByCustomerId(customerId) {
 }
 
 /**
+ * Resolve a PO vendor id to its owning company id. Used by
+ * PurchaseOrderHeader to scope auth — headers reference a vendor
+ * (pohPovId), and the vendor's povCompId is the auth boundary.
+ */
+async function getCompanyIdByPovId(povId) {
+    const idStr = povId == null ? '' : String(povId);
+    if (idStr.length === 0 || idStr === '0') return -1;
+    try {
+        const r = await db.sequelize.query(
+            'SELECT "povCompId" FROM "dbo"."PurchaseOrderVendors" WHERE "povId" = ? AND "povArch" = false;',
+            { replacements: [povId], type: sequelize.QueryTypes.SELECT },
+        );
+        if (!r || r.length === 0) return -1;
+        const cid = r[0].povCompId;
+        return typeof cid === 'number' && cid > 0 ? cid : -1;
+    } catch (error) {
+        log.error({ err: error }, 'auth.getCompanyIdByPovId query failed');
+        return -1;
+    }
+}
+
+/**
+ * Resolve a PO header id to its owning company id. Used by
+ * PurchaseOrderLine — lines reference a header (polpoh), and the
+ * header references a vendor (pohPovId), and the vendor's povCompId
+ * is the auth boundary. Single query via JOIN keeps the lookup cheap.
+ */
+async function getCompanyIdByPohId(pohId) {
+    const idStr = pohId == null ? '' : String(pohId);
+    if (idStr.length === 0 || idStr === '0') return -1;
+    try {
+        const r = await db.sequelize.query(
+            `SELECT v."povCompId"
+             FROM "dbo"."PurchaseOrderHeaders" h
+             JOIN "dbo"."PurchaseOrderVendors" v ON v."povId" = h."pohPovId"
+             WHERE h."pohId" = ? AND h."pohArch" = false AND v."povArch" = false;`,
+            { replacements: [pohId], type: sequelize.QueryTypes.SELECT },
+        );
+        if (!r || r.length === 0) return -1;
+        const cid = r[0].povCompId;
+        return typeof cid === 'number' && cid > 0 ? cid : -1;
+    } catch (error) {
+        log.error({ err: error }, 'auth.getCompanyIdByPohId query failed');
+        return -1;
+    }
+}
+
+/**
  * Resolve a job id to its owning company id.
  *
  * Job has no direct *CompId — it scopes through Customer
@@ -168,6 +216,8 @@ module.exports = {
     getCompanyId,
     getCompanyIdByCustomerId,
     getCompanyIdByJobId,
+    getCompanyIdByPovId,
+    getCompanyIdByPohId,
     requireAuthKey,
     resolveAuth,
 };

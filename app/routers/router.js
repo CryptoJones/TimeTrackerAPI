@@ -19,6 +19,8 @@ const invoiceJob = require('../controllers/invoicejobcontroller.js');
 const productEntry = require('../controllers/productentrycontroller.js');
 const versionInfo = require('../controllers/versioninfocontroller.js');
 const purchaseOrderVendor = require('../controllers/purchaseordervendorcontroller.js');
+const purchaseOrderHeader = require('../controllers/purchaseorderheadercontroller.js');
+const purchaseOrderLine = require('../controllers/purchaseorderlinecontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -34,6 +36,8 @@ const invoiceJobSchemas = require('../schemas/invoicejob.schema.js');
 const productEntrySchemas = require('../schemas/productentry.schema.js');
 const versionInfoSchemas = require('../schemas/versioninfo.schema.js');
 const purchaseOrderVendorSchemas = require('../schemas/purchaseordervendor.schema.js');
+const purchaseOrderHeaderSchemas = require('../schemas/purchaseorderheader.schema.js');
+const purchaseOrderLineSchemas = require('../schemas/purchaseorderline.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
 // of the API process and reachability of the database.
@@ -411,6 +415,64 @@ router.delete(
     '/v1/purchaseordervendor/:id',
     v.params(purchaseOrderVendorSchemas.intIdParam),
     purchaseOrderVendor.remove,
+);
+
+// v1 purchaseorderheader routes. Vendor-scoped via pohPovId → povCompId.
+router.post(
+    '/v1/purchaseorderheader',
+    v.body(purchaseOrderHeaderSchemas.createBody),
+    purchaseOrderHeader.create,
+);
+router.get(
+    '/v1/purchaseorderheader/byvendor/:id',
+    v.params(purchaseOrderHeaderSchemas.intIdParam),
+    v.query(purchaseOrderHeaderSchemas.listByVendorQuery),
+    purchaseOrderHeader.listByVendor,
+);
+router.get(
+    '/v1/purchaseorderheader/:id',
+    v.params(purchaseOrderHeaderSchemas.intIdParam),
+    purchaseOrderHeader.getById,
+);
+router.patch(
+    '/v1/purchaseorderheader/:id',
+    v.params(purchaseOrderHeaderSchemas.intIdParam),
+    v.body(purchaseOrderHeaderSchemas.updateBody),
+    purchaseOrderHeader.update,
+);
+router.delete(
+    '/v1/purchaseorderheader/:id',
+    v.params(purchaseOrderHeaderSchemas.intIdParam),
+    purchaseOrderHeader.remove,
+);
+
+// v1 purchaseorderline routes. Header-scoped via polpoh → header → vendor.povCompId.
+router.post(
+    '/v1/purchaseorderline',
+    v.body(purchaseOrderLineSchemas.createBody),
+    purchaseOrderLine.create,
+);
+router.get(
+    '/v1/purchaseorderline/byheader/:id',
+    v.params(purchaseOrderLineSchemas.intIdParam),
+    v.query(purchaseOrderLineSchemas.listByHeaderQuery),
+    purchaseOrderLine.listByHeader,
+);
+router.get(
+    '/v1/purchaseorderline/:id',
+    v.params(purchaseOrderLineSchemas.intIdParam),
+    purchaseOrderLine.getById,
+);
+router.patch(
+    '/v1/purchaseorderline/:id',
+    v.params(purchaseOrderLineSchemas.intIdParam),
+    v.body(purchaseOrderLineSchemas.updateBody),
+    purchaseOrderLine.update,
+);
+router.delete(
+    '/v1/purchaseorderline/:id',
+    v.params(purchaseOrderLineSchemas.intIdParam),
+    purchaseOrderLine.remove,
 );
 
 module.exports = router;
