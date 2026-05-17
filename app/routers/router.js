@@ -18,6 +18,7 @@ const customerPayment = require('../controllers/customerpaymentcontroller.js');
 const invoiceJob = require('../controllers/invoicejobcontroller.js');
 const productEntry = require('../controllers/productentrycontroller.js');
 const versionInfo = require('../controllers/versioninfocontroller.js');
+const purchaseOrderVendor = require('../controllers/purchaseordervendorcontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -32,6 +33,7 @@ const customerPaymentSchemas = require('../schemas/customerpayment.schema.js');
 const invoiceJobSchemas = require('../schemas/invoicejob.schema.js');
 const productEntrySchemas = require('../schemas/productentry.schema.js');
 const versionInfoSchemas = require('../schemas/versioninfo.schema.js');
+const purchaseOrderVendorSchemas = require('../schemas/purchaseordervendor.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
 // of the API process and reachability of the database.
@@ -380,6 +382,35 @@ router.delete(
     '/v1/versioninfo/:id',
     v.params(versionInfoSchemas.intIdParam),
     versionInfo.remove,
+);
+
+// v1 purchaseordervendor routes. Direct compId scoping via povCompId.
+router.post(
+    '/v1/purchaseordervendor',
+    v.body(purchaseOrderVendorSchemas.createBody),
+    purchaseOrderVendor.create,
+);
+router.get(
+    '/v1/purchaseordervendor/bycompany/:id',
+    v.params(purchaseOrderVendorSchemas.intIdParam),
+    v.query(purchaseOrderVendorSchemas.listByCompanyQuery),
+    purchaseOrderVendor.listByCompany,
+);
+router.get(
+    '/v1/purchaseordervendor/:id',
+    v.params(purchaseOrderVendorSchemas.intIdParam),
+    purchaseOrderVendor.getById,
+);
+router.patch(
+    '/v1/purchaseordervendor/:id',
+    v.params(purchaseOrderVendorSchemas.intIdParam),
+    v.body(purchaseOrderVendorSchemas.updateBody),
+    purchaseOrderVendor.update,
+);
+router.delete(
+    '/v1/purchaseordervendor/:id',
+    v.params(purchaseOrderVendorSchemas.intIdParam),
+    purchaseOrderVendor.remove,
 );
 
 module.exports = router;

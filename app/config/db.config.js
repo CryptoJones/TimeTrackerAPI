@@ -33,5 +33,6 @@ db.CustomerPayment = require('../models/customerpayment.model.js')(sequelize, Se
 db.InvoiceJob = require('../models/invoicejob.model.js')(sequelize, Sequelize);
 db.ProductEntry = require('../models/productentry.model.js')(sequelize, Sequelize);
 db.VersionInfo = require('../models/versioninfo.model.js')(sequelize, Sequelize);
+db.PurchaseOrderVendor = require('../models/purchaseordervendor.model.js')(sequelize, Sequelize);
 
 module.exports = db;
