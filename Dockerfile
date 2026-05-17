@@ -6,7 +6,9 @@
 #   Stage 1 (deps):    install production node_modules in a clean image
 #                      so we don't drag devDependencies into the runtime.
 #   Stage 2 (runtime): copy in the deps + app, drop to a non-root user,
-#                      expose 3000, healthcheck via the /healthz endpoint.
+#                      run under tini as PID 1, expose 3000, healthcheck
+#                      via the /healthz endpoint using Node's built-in
+#                      http module (no extra apt packages).
 #
 # Build:
 #   docker build -t timetrackerapi .
@@ -36,9 +38,13 @@ ENV NODE_ENV=production \
     PORT=3000 \
     HOST=0.0.0.0
 
-# wget is used by the HEALTHCHECK; it's tiny and avoids pulling curl.
+# tini gives us a proper PID 1 that reaps zombies and forwards signals
+# cleanly to the Node process. Node *can* handle SIGTERM itself (see the
+# graceful-shutdown handler in server.js) but as PID 1 the kernel
+# doesn't deliver some default signals, so an explicit init is the
+# safer pattern.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends wget \
+    && apt-get install -y --no-install-recommends tini \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -56,10 +62,19 @@ USER node
 
 EXPOSE 3000
 
-# HEALTHCHECK hits the in-app /healthz endpoint — same probe an
-# external orchestrator would use, so we exercise the full request
-# pipeline rather than just checking the process exists.
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD wget -q -O- http://localhost:${PORT:-3000}/healthz | grep -q '"status":"ok"' || exit 1
+# OCI image labels — surface in registry UIs and `docker inspect`.
+LABEL org.opencontainers.image.title="TimeTrackerAPI" \
+      org.opencontainers.image.description="Open-source Node.js + PostgreSQL TimeTrackerAPI" \
+      org.opencontainers.image.source="https://github.com/CryptoJones/TimeTrackerAPI" \
+      org.opencontainers.image.licenses="Apache-2.0" \
+      org.opencontainers.image.vendor="Aaron K. Clark"
 
+# HEALTHCHECK hits the in-app /healthz endpoint using Node's built-in
+# http module — no extra apt package needed. Same probe an external
+# orchestrator would use, so we exercise the full request pipeline
+# rather than just checking the process exists.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:'+(process.env.PORT||3000)+'/healthz',r=>{if(r.statusCode!==200)process.exit(1);let d='';r.on('data',c=>d+=c);r.on('end',()=>{try{process.exit(JSON.parse(d).status==='ok'?0:1)}catch(e){process.exit(1)}})}).on('error',()=>process.exit(1))"
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["node", "server.js"]

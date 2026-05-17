@@ -13,6 +13,13 @@ coverage
 .nyc_output
 .vitest
 
+# Tests themselves don't need to ship in the runtime image — they're
+# devDependencies and a `npm ci --omit=dev` build wouldn't have the
+# vitest binary anyway. Keeping them out trims a small amount of size
+# and keeps the runtime FS uncluttered.
+tests
+vitest.config.js
+
 # Editor / OS junk.
 .vscode
 .idea
@@ -27,6 +34,13 @@ Thumbs.db
 # CI configs aren't needed at runtime.
 .github
 .woodpecker.yml
+
+# Project docs aren't needed at runtime, but LICENSE is — Apache-2.0
+# §4(c) requires distributions of derivative works (including container
+# images) to include the License notice. Keep LICENSE in.
+CHANGELOG.md
+README.md
+docs
 
 # Env files — secrets should be passed via -e flags or compose, never
 # baked into the image.

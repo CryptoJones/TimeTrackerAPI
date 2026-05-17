@@ -6,9 +6,12 @@
 #   cp .env.example .env  (then set DB_PASSWORD)
 #   docker compose up --build
 #
-# The api service waits for the postgres healthcheck to pass before
-# starting, then bootstraps the schema by running both SQL files via
-# the `setup` one-shot service.
+# Service order:
+#   postgres → setup (psql bootstrap) → migrate (sequelize-cli) → api
+#
+# `setup` applies the baseline SQL files; `migrate` runs every pending
+# Sequelize migration on top. Both are one-shot (restart: "no"). The
+# api service won't start until both have exited 0.
 
 services:
   postgres:
@@ -30,7 +33,9 @@ services:
     # local psql can `docker compose exec postgres psql ...`.
 
   # One-shot schema bootstrap. Runs after postgres is healthy, applies
-  # both SQL files, then exits 0 so the api service can start.
+  # both SQL files, then exits 0. Idempotent only against an empty DB;
+  # against an existing schema the IF NOT EXISTS clauses (or lack
+  # thereof) determine outcome — see setup/*.sql for the details.
   setup:
     image: postgres:16-alpine
     depends_on:
@@ -50,13 +55,42 @@ services:
       "
     restart: "no"
 
+  # One-shot Sequelize migrations. Runs after the baseline SQL is in
+  # place; applies every pending migration in app/migrations/ on top.
+  # Re-uses the api image so we don't ship two near-identical Node
+  # images. The first migration is a no-op baseline marker, so this
+  # service can also be the "lets sequelize know the schema exists"
+  # bootstrap for fresh installs.
+  migrate:
+    build: .
+    image: timetrackerapi:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+      setup:
+        condition: service_completed_successfully
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-timetracker}
+      DB_USERNAME: ${DB_USERNAME:-timetracker}
+      DB_PASSWORD: ${DB_PASSWORD}
+      NODE_ENV: production
+    # npx + the locally-installed sequelize-cli — no global install
+    # in the image, no apt installs at runtime.
+    command: ["npx", "--no-install", "sequelize-cli", "db:migrate"]
+    restart: "no"
+
   api:
     build: .
+    image: timetrackerapi:latest
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
       setup:
+        condition: service_completed_successfully
+      migrate:
         condition: service_completed_successfully
     environment:
       DB_HOST: postgres
@@ -74,10 +108,9 @@ services:
     ports:
       - "${HOST_PORT:-3000}:3000"
     healthcheck:
-      # Use the Dockerfile-level healthcheck (wget /healthz). Compose
-      # re-declares it here only so `docker compose ps` shows the
-      # readiness state cleanly.
-      test: ["CMD-SHELL", "wget -q -O- http://localhost:3000/healthz | grep -q '\"status\":\"ok\"' || exit 1"]
+      # Mirrors the Dockerfile-level healthcheck; redeclared so
+      # `docker compose ps` shows readiness state cleanly.
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/healthz',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
       interval: 30s
       timeout: 5s
       retries: 3
