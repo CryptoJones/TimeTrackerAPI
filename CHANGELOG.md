@@ -8,6 +8,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **API surface expansion** (#38, PR #39): full CRUD for ten entities
+  that were in `setup/TimeTracker.sql` but lacked endpoints — Worker,
+  Company, BillingType, InventoryItem, Job, Invoice, CustomerPayment,
+  InvoiceJob, ProductEntry, VersionInfo. Path count went from 7 to 35.
+- Three centralized auth-scoping patterns in `middleware/auth.js`:
+  - Direct `compId` scoping (Worker, BillingType, InventoryItem) —
+    same as Customer.
+  - Customer-scoped via new `getCompanyIdByCustomerId()` helper
+    (Job, Invoice, CustomerPayment) — auth walks parent FK.
+  - Job-scoped via new `getCompanyIdByJobId()` helper
+    (InvoiceJob, ProductEntry) — auth walks two-hop FK.
+- Specials: Company has `compId` IS the company id (master-only
+  POST/DELETE/list; GET/PATCH scoped to own row). VersionInfo is
+  global, no archive column, reads open to any authKey, mutations
+  master-only, DELETE is a hard destroy.
+- Migration `20260517000000-purchase-orders-and-archive-columns`:
+  creates `PurchaseOrderHeaders`, `PurchaseOrderLines`,
+  `PurchaseOrderVendors`, and `InventoryTransactions` tables (omitted
+  from the initial PG port of the BACPAC), and retrofits the missing
+  `invitArch` and `injbArch` columns the new soft-delete logic
+  depends on.
+- `docker compose` now applies Sequelize migrations between the SQL
+  bootstrap and the api start (new `migrate` one-shot service).
+  Without this, migrations landed after the baseline never applied
+  to containerized deploys. (#40, PR #41)
+- `tini` runs as PID 1 in the container image for clean signal
+  forwarding to the Node process (server.js already had the
+  graceful-shutdown handler; tini just makes sure it gets the
+  signal). (#40, PR #41)
+- OCI `org.opencontainers.image.*` labels on the runtime image
+  (source URL, license, vendor). (#40, PR #41)
+
+### Changed
+- `sequelize-cli` moved from `devDependencies` to `dependencies` so
+  the production `npm ci --omit=dev` build can run migrations.
+- HEALTHCHECK in the Dockerfile uses Node's built-in `http` module
+  instead of `wget`; drops the `wget` apt-install layer. (#40)
+- `.dockerignore` excludes `tests/`, `vitest.config.js`, `README.md`,
+  `CHANGELOG.md`, and `docs/` from the runtime image; explicitly
+  keeps `LICENSE` (Apache-2.0 §4(c) requires it accompany derivative
+  works, including container images).
+
+### Added (earlier in [Unreleased] window)
 - Codeberg mirror at https://codeberg.org/CryptoJones/TimeTrackerAPI;
   README now carries badges for both forges.
 - `GET /healthz` liveness + DB-readiness probe. No auth. Returns
