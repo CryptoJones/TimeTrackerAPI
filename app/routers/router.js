@@ -21,6 +21,7 @@ const versionInfo = require('../controllers/versioninfocontroller.js');
 const purchaseOrderVendor = require('../controllers/purchaseordervendorcontroller.js');
 const purchaseOrderHeader = require('../controllers/purchaseorderheadercontroller.js');
 const purchaseOrderLine = require('../controllers/purchaseorderlinecontroller.js');
+const inventoryTransaction = require('../controllers/inventorytransactioncontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -38,6 +39,7 @@ const versionInfoSchemas = require('../schemas/versioninfo.schema.js');
 const purchaseOrderVendorSchemas = require('../schemas/purchaseordervendor.schema.js');
 const purchaseOrderHeaderSchemas = require('../schemas/purchaseorderheader.schema.js');
 const purchaseOrderLineSchemas = require('../schemas/purchaseorderline.schema.js');
+const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
 // of the API process and reachability of the database.
@@ -473,6 +475,35 @@ router.delete(
     '/v1/purchaseorderline/:id',
     v.params(purchaseOrderLineSchemas.intIdParam),
     purchaseOrderLine.remove,
+);
+
+// v1 inventorytransaction routes. Direct compId scoping via invtCompanyId.
+router.post(
+    '/v1/inventorytransaction',
+    v.body(inventoryTransactionSchemas.createBody),
+    inventoryTransaction.create,
+);
+router.get(
+    '/v1/inventorytransaction/bycompany/:id',
+    v.params(inventoryTransactionSchemas.intIdParam),
+    v.query(inventoryTransactionSchemas.listByCompanyQuery),
+    inventoryTransaction.listByCompany,
+);
+router.get(
+    '/v1/inventorytransaction/:id',
+    v.params(inventoryTransactionSchemas.intIdParam),
+    inventoryTransaction.getById,
+);
+router.patch(
+    '/v1/inventorytransaction/:id',
+    v.params(inventoryTransactionSchemas.intIdParam),
+    v.body(inventoryTransactionSchemas.updateBody),
+    inventoryTransaction.update,
+);
+router.delete(
+    '/v1/inventorytransaction/:id',
+    v.params(inventoryTransactionSchemas.intIdParam),
+    inventoryTransaction.remove,
 );
 
 module.exports = router;
