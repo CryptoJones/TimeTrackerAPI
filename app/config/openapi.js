@@ -171,6 +171,30 @@ const versionInfoSchema = {
     },
 };
 
+const purchaseOrderVendorSchema = {
+    type: 'object',
+    properties: {
+        povId: { type: 'integer', readOnly: true },
+        povName: { type: 'string' },
+        povMailingAddress1: { type: 'string' },
+        povMailingAddress2: { type: 'string' },
+        povMailingCity: { type: 'string' },
+        povMailingState: { type: 'string' },
+        povMailingCountry: { type: 'string' },
+        povMailingZip: { type: 'string' },
+        povBillingAddress1: { type: 'string' },
+        povBillingAddress2: { type: 'string' },
+        povBillingCity: { type: 'string' },
+        povBillingState: { type: 'string' },
+        povBillingCountry: { type: 'string' },
+        povBillingZip: { type: 'string' },
+        povPhone: { type: 'string' },
+        povEMail: { type: 'string', format: 'email' },
+        povCompId: { type: 'integer' },
+        povArch: { type: 'boolean', readOnly: true },
+    },
+};
+
 const timeEntrySchema = {
     type: 'object',
     properties: {
@@ -220,6 +244,7 @@ const spec = {
             InvoiceJob: invoiceJobSchema,
             ProductEntry: productEntrySchema,
             VersionInfo: versionInfoSchema,
+            PurchaseOrderVendor: purchaseOrderVendorSchema,
             Error: errorResponse,
         },
     },
@@ -663,6 +688,31 @@ const spec = {
             get: { summary: 'Get one version info (any authKey)', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Missing authKey' } } },
             patch: { summary: 'Partial update of a version info (master keys only)', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/VersionInfo' } } } }, responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Non-master key' } } },
             delete: { summary: 'Hard-delete a version info (master keys only — no archive column on this table)', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Deleted' }, 404: { description: 'Not found' }, 403: { description: 'Non-master key' } } },
+        },
+        '/v1/purchaseordervendor': {
+            post: {
+                summary: 'Create a PO vendor',
+                security: [{ authKey: [] }],
+                requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/PurchaseOrderVendor' } } } },
+                responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/purchaseordervendor/{id}': {
+            get: { summary: 'Get one PO vendor', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+            patch: { summary: 'Partial update of a PO vendor', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/PurchaseOrderVendor' } } } }, responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+            delete: { summary: 'Soft-delete a PO vendor', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+        },
+        '/v1/purchaseordervendor/bycompany/{id}': {
+            get: {
+                summary: 'List PO vendors in a company (paginated)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer', default: 100, maximum: 500 } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+                ],
+                responses: { 200: { description: 'OK' }, 400: { description: 'Invalid company id' }, 403: { description: 'Auth failure' } },
+            },
         },
     },
 };
