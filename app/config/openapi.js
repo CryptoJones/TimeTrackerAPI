@@ -171,6 +171,31 @@ const versionInfoSchema = {
     },
 };
 
+const purchaseOrderHeaderSchema = {
+    type: 'object',
+    properties: {
+        pohId: { type: 'integer', readOnly: true },
+        pohDate: { type: 'string', format: 'date-time' },
+        pohReference: { type: 'string' },
+        pohTerms: { type: 'string' },
+        pohPovId: { type: 'integer' },
+        pohArch: { type: 'boolean', readOnly: true },
+    },
+};
+
+const purchaseOrderLineSchema = {
+    type: 'object',
+    properties: {
+        polId: { type: 'integer', readOnly: true },
+        polpoh: { type: 'integer' },
+        polItemDesc: { type: 'string' },
+        polQty: { type: 'number' },
+        polPrice: { type: 'number' },
+        polInvtId: { type: 'integer' },
+        polArch: { type: 'boolean', readOnly: true },
+    },
+};
+
 const purchaseOrderVendorSchema = {
     type: 'object',
     properties: {
@@ -245,6 +270,8 @@ const spec = {
             ProductEntry: productEntrySchema,
             VersionInfo: versionInfoSchema,
             PurchaseOrderVendor: purchaseOrderVendorSchema,
+            PurchaseOrderHeader: purchaseOrderHeaderSchema,
+            PurchaseOrderLine: purchaseOrderLineSchema,
             Error: errorResponse,
         },
     },
@@ -712,6 +739,46 @@ const spec = {
                     { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
                 ],
                 responses: { 200: { description: 'OK' }, 400: { description: 'Invalid company id' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/purchaseorderheader': {
+            post: { summary: 'Create a PO header', security: [{ authKey: [] }], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/PurchaseOrderHeader' } } } }, responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } } },
+        },
+        '/v1/purchaseorderheader/{id}': {
+            get: { summary: 'Get one PO header', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+            patch: { summary: 'Partial update of a PO header', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/PurchaseOrderHeader' } } } }, responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+            delete: { summary: 'Soft-delete a PO header', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+        },
+        '/v1/purchaseorderheader/byvendor/{id}': {
+            get: {
+                summary: 'List PO headers for a vendor (paginated, newest first)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer', default: 100, maximum: 500 } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+                ],
+                responses: { 200: { description: 'OK' }, 400: { description: 'Invalid vendor id' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/purchaseorderline': {
+            post: { summary: 'Create a PO line', security: [{ authKey: [] }], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/PurchaseOrderLine' } } } }, responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } } },
+        },
+        '/v1/purchaseorderline/{id}': {
+            get: { summary: 'Get one PO line', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+            patch: { summary: 'Partial update of a PO line', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/PurchaseOrderLine' } } } }, responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+            delete: { summary: 'Soft-delete a PO line', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+        },
+        '/v1/purchaseorderline/byheader/{id}': {
+            get: {
+                summary: 'List PO lines for a header (paginated)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer', default: 100, maximum: 500 } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+                ],
+                responses: { 200: { description: 'OK' }, 400: { description: 'Invalid header id' }, 403: { description: 'Auth failure' } },
             },
         },
     },
