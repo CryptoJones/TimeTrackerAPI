@@ -101,6 +101,13 @@ router.post(
     v.body(timeEntrySchemas.createTimeEntryBody),
     timeEntry.create,
 );
+// Literal paths declared BEFORE /:id so express doesn't try to
+// parse "export.csv" / "bycompany" as a customer id.
+router.get(
+    '/v1/timeentry/export.csv',
+    v.query(timeEntrySchemas.exportCsvQuery),
+    timeEntry.exportCsv,
+);
 router.get(
     '/v1/timeentry/bycompany/:id',
     v.params(timeEntrySchemas.intIdParam),
@@ -122,11 +129,6 @@ router.delete(
     '/v1/timeentry/:id',
     v.params(timeEntrySchemas.intIdParam),
     timeEntry.remove,
-);
-router.get(
-    '/v1/timeentry/export.csv',
-    v.query(timeEntrySchemas.exportCsvQuery),
-    timeEntry.exportCsv,
 );
 
 // v1 worker routes.
