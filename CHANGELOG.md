@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **Fixed an IPv6 rate-limit bypass**. The custom `keyByAuthKeyOrIp`
+  rate-limit key generator was reading `req.ip` directly and
+  concatenating it into the key. express-rate-limit v8+ surfaced
+  this as `ERR_ERL_KEY_GEN_IPV6`: IPv6 clients could rotate through
+  their /64 allocation, each appearing as a distinct IP, to bypass
+  the per-IP rate-limit budget on the anonymous (brute-force)
+  path. Fix routes the IP through the package's `ipKeyGenerator()`
+  helper, which normalizes IPv6 to a /64 prefix. Authenticated
+  keying (sha256 of the authKey header) is unchanged. **Operators
+  on previous releases should upgrade.**
+
+### Removed
+- **Unused production dependencies**: `express-asyncify` and
+  `express-promise-router`. Both were listed in package.json since
+  the initial port but never imported anywhere. Surfaces as a
+  smaller `npm ci` footprint; no behavior change.
+
 ### Changed
 - **CI gains a live Postgres service**. Both GitHub Actions and
   Woodpecker spin up `postgres:16-alpine` alongside the Node
