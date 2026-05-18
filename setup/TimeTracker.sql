@@ -17,6 +17,26 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
+-- Idempotency guard. If the dbo schema already exists, treat this
+-- bootstrap script as a no-op rather than failing on CREATE SCHEMA.
+-- That makes \`docker compose up\` survive re-runs against a populated
+-- postgres-data volume without needing \`down -v\` first.
+--
+-- The rest of the file is pg_dump output that wasn't authored with
+-- idempotency in mind (CREATE TABLE without IF NOT EXISTS, ALTER
+-- TABLE ADD CONSTRAINT which has no IF NOT EXISTS form, etc.).
+-- Rather than retrofit IF NOT EXISTS to ~40 statements piecemeal,
+-- we gate the whole file on whether the schema is already present.
+--
+SELECT EXISTS (
+    SELECT 1 FROM information_schema.schemata WHERE schema_name = 'dbo'
+) AS dbo_exists \gset
+\if :dbo_exists
+\echo 'dbo schema already exists — setup/TimeTracker.sql is a no-op'
+\q
+\endif
+
+--
 -- Name: dbo; Type: SCHEMA; Schema: -; Owner: timetracker
 --
 
