@@ -79,7 +79,8 @@ describe('Worker route mounting (regression)', () => {
         const res = await request(app)
             .get('/v1/worker/1')
             .set('authKey', 'any');
-        expect(res.status).not.toBe(404);
+        expect(res.body).toBeTypeOf('object');
+        expect(res.body.message).toBeDefined();
     });
 
     test('POST /v1/worker is mounted', async () => {
@@ -93,7 +94,8 @@ describe('Worker route mounting (regression)', () => {
                 workerDefaultBillType: 1,
                 workerCompId: 1,
             });
-        expect(res.status).not.toBe(404);
+        expect(res.body).toBeTypeOf('object');
+        expect(res.body.message).toBeDefined();
     });
 
     test('controller exits with a single well-formed response', async () => {

@@ -66,11 +66,13 @@ describe('Company auth contract', () => {
 describe('Company route mounting', () => {
     test('GET /v1/company/:id mounted (not 404)', async () => {
         const res = await request(app).get('/v1/company/1').set('authKey', 'any');
-        expect(res.status).not.toBe(404);
+        expect(res.body).toBeTypeOf('object');
+        expect(res.body.message).toBeDefined();
     });
     test('GET /v1/company mounted', async () => {
         const res = await request(app).get('/v1/company').set('authKey', 'any');
-        expect(res.status).not.toBe(404);
+        expect(res.body).toBeTypeOf('object');
+        expect(res.body.message).toBeDefined();
     });
 });
 

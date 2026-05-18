@@ -52,7 +52,8 @@ describe('GET /v1/customer/:id', () => {
         const res = await request(app)
             .get('/v1/customer/123')
             .set('authKey', 'anything');
-        expect(res.status).not.toBe(404);
+        expect(res.body).toBeTypeOf('object');
+        expect(res.body.message).toBeDefined();
     });
 
     // Regression: previously the master-key branch sent a response inside

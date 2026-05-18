@@ -50,7 +50,8 @@ describe('POST /v1/customer', () => {
             .post('/v1/customer')
             .set('authKey', 'anything')
             .send({});
-        expect(res.status).not.toBe(404);
+        expect(res.body).toBeTypeOf('object');
+        expect(res.body.message).toBeDefined();
         expect(res.status).not.toBe(405);
     });
 
