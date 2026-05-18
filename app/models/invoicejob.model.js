@@ -41,7 +41,7 @@ module.exports = (sequelize, Sequelize) => {
         },
     }, {
         tableName: 'InvoiceJob',
-        timestamps: false,
+        timestamps: true,
         defaultScope: { where: { injbArch: false } }
     });
 

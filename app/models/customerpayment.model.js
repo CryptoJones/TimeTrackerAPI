@@ -41,7 +41,7 @@ module.exports = (sequelize, Sequelize) => {
         },
     }, {
         tableName: 'CustomerPayment',
-        timestamps: false,
+        timestamps: true,
         defaultScope: { where: { cpayArch: false } }
     });
 

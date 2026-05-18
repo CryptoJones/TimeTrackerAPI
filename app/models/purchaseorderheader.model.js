@@ -22,7 +22,7 @@ module.exports = (sequelize, Sequelize) => {
         pohArch:       { field: 'pohArch',      type: Sequelize.BOOLEAN, defaultValue: false },
     }, {
         tableName: 'PurchaseOrderHeaders',
-        timestamps: false,
+        timestamps: true,
         defaultScope: { where: { pohArch: false } }
     });
 

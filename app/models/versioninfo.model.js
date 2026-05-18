@@ -27,7 +27,7 @@ module.exports = (sequelize, Sequelize) => {
         },
     }, {
         tableName: 'VersionInfo',
-        timestamps: false,
+        timestamps: true,
     });
 
     return VersionInfo;

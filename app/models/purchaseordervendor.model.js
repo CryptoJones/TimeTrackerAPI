@@ -35,7 +35,7 @@ module.exports = (sequelize, Sequelize) => {
         povArch:             { field: 'povArch',             type: Sequelize.BOOLEAN, defaultValue: false },
     }, {
         tableName: 'PurchaseOrderVendors',
-        timestamps: false,
+        timestamps: true,
         defaultScope: { where: { povArch: false } }
     });
 
