@@ -37,6 +37,20 @@ const createCustomerBody = z.object({
     message: 'Unexpected field in body. Whitelist: custCompanyName, custFName, custLName, custAddress1, custAddress2, custCity, custState, custZip, custPhone, custEmail, custCompId.',
 });
 
+/**
+ * POST /v1/customer/bulk body. Array of customer-create bodies wrapped
+ * in { customers: [...] }. Each entry is validated by the same
+ * createCustomerBody schema, so unknown fields are rejected uniformly.
+ *
+ * Capped at 500 entries to keep individual requests bounded; an ETL
+ * job pushing more should chunk.
+ */
+const bulkCustomerBody = z.object({
+    customers: z.array(createCustomerBody).min(1).max(500),
+}).strict({
+    message: 'Unexpected field in body. Whitelist: customers (array).',
+});
+
 const listByCompanyQuery = z.object({
     limit: z.coerce.number().int().positive().max(500).optional(),
     offset: z.coerce.number().int().nonnegative().optional(),
@@ -67,6 +81,7 @@ const searchQuery = z.object({
 module.exports = {
     intIdParam,
     createCustomerBody,
+    bulkCustomerBody,
     listByCompanyQuery,
     searchQuery,
 };

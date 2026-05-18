@@ -344,6 +344,42 @@ const spec = {
                 },
             },
         },
+        '/v1/customer/bulk': {
+            post: {
+                summary: 'Bulk-create customers (transaction-wrapped, all-or-nothing)',
+                description:
+                    'Body: `{ customers: [{...}, ...] }`. Each entry follows the ' +
+                    'same shape as POST /v1/customer. Capped at 500 entries; ' +
+                    'ETL jobs should chunk. If any entry fails to insert the ' +
+                    'whole transaction rolls back.',
+                security: [{ authKey: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    customers: {
+                                        type: 'array',
+                                        minItems: 1,
+                                        maxItems: 500,
+                                        items: { $ref: '#/components/schemas/Customer' },
+                                    },
+                                },
+                                required: ['customers'],
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    201: { description: 'All customers created' },
+                    400: { description: 'Validation failure (array empty / master without custCompId on some entry)' },
+                    403: { description: 'Missing authKey or cross-tenant create attempt' },
+                    500: { description: 'Transaction rolled back due to DB error' },
+                },
+            },
+        },
         '/v1/customer/search': {
             get: {
                 summary: 'Search customers by substring (company-scoped)',
