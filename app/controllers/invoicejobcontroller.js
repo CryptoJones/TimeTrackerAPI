@@ -10,6 +10,7 @@
 const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
+const { buildLinkHeader } = require('../middleware/pagination.js');
 const InvoiceJob = db.InvoiceJob;
 
 const IsMaster = auth.isMaster;
@@ -136,6 +137,9 @@ exports.listByInvoice = async (req, res) => {
             limit, offset,
             order: [['injbId', 'ASC']],
         });
+        const link = buildLinkHeader({ req, limit, offset, count });
+        if (link) res.setHeader('Link', link);
+        res.setHeader('Access-Control-Expose-Headers', 'Link');
         return res.status(200).json({
             message: "Successfully retrieved invoice lines for InvoiceId " + targetInvoiceId,
             count, limit, offset, invoiceJobs: rows,

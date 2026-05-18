@@ -5,6 +5,7 @@
 const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
+const { buildLinkHeader } = require('../middleware/pagination.js');
 const CustomerPayment = db.CustomerPayment;
 
 const IsMaster = auth.isMaster;
@@ -117,6 +118,9 @@ exports.listByCustomer = async (req, res) => {
             limit, offset,
             order: [['cpayDate', 'DESC']],
         });
+        const link = buildLinkHeader({ req, limit, offset, count });
+        if (link) res.setHeader('Link', link);
+        res.setHeader('Access-Control-Expose-Headers', 'Link');
         return res.status(200).json({
             message: "Successfully retrieved customer payments for CustomerId " + targetCustomerId,
             count, limit, offset, customerPayments: rows,
