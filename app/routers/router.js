@@ -156,6 +156,15 @@ router.delete(
 );
 
 // v1 worker routes.
+//
+// /bulk goes BEFORE /:id-bearing routes so Express's matcher doesn't
+// route the literal "bulk" segment through the :id-typed validator.
+// (Same trick as /v1/customer/bulk and /v1/customer/export.csv.)
+router.post(
+    '/v1/worker/bulk',
+    v.body(workerSchemas.bulkWorkerBody),
+    worker.bulkCreate,
+);
 router.post(
     '/v1/worker',
     v.body(workerSchemas.createWorkerBody),
@@ -186,6 +195,11 @@ router.delete(
 
 // v1 billingtype routes.
 router.post(
+    '/v1/billingtype/bulk',
+    v.body(billingTypeSchemas.bulkBillingTypeBody),
+    billingType.bulkCreate,
+);
+router.post(
     '/v1/billingtype',
     v.body(billingTypeSchemas.createBillingTypeBody),
     billingType.create,
@@ -214,6 +228,11 @@ router.delete(
 );
 
 // v1 inventoryitem routes.
+router.post(
+    '/v1/inventoryitem/bulk',
+    v.body(inventoryItemSchemas.bulkInventoryItemBody),
+    inventoryItem.bulkCreate,
+);
 router.post(
     '/v1/inventoryitem',
     v.body(inventoryItemSchemas.createInventoryItemBody),
@@ -446,6 +465,11 @@ router.delete(
 
 // v1 purchaseordervendor routes. Direct compId scoping via povCompId.
 router.post(
+    '/v1/purchaseordervendor/bulk',
+    v.body(purchaseOrderVendorSchemas.bulkBody),
+    purchaseOrderVendor.bulkCreate,
+);
+router.post(
     '/v1/purchaseordervendor',
     v.body(purchaseOrderVendorSchemas.createBody),
     purchaseOrderVendor.create,
@@ -532,6 +556,11 @@ router.delete(
 );
 
 // v1 inventorytransaction routes. Direct compId scoping via invtCompanyId.
+router.post(
+    '/v1/inventorytransaction/bulk',
+    v.body(inventoryTransactionSchemas.bulkBody),
+    inventoryTransaction.bulkCreate,
+);
 router.post(
     '/v1/inventorytransaction',
     v.body(inventoryTransactionSchemas.createBody),

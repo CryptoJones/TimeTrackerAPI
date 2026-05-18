@@ -30,9 +30,16 @@ const listByCompanyQuery = z.object({
     message: 'Unexpected query parameter. Allowed: limit, offset.',
 });
 
+const bulkBillingTypeBody = z.object({
+    billingTypes: z.array(createBillingTypeBody).min(1).max(500),
+}).strict({
+    message: 'Unexpected field in body. Whitelist: billingTypes (array).',
+});
+
 module.exports = {
     intIdParam,
     createBillingTypeBody,
     updateBillingTypeBody,
     listByCompanyQuery,
+    bulkBillingTypeBody,
 };
