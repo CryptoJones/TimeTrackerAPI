@@ -128,7 +128,7 @@ exports.listByCompany = async (req, res) => {
 
     try {
         const { count, rows } = await InventoryItem.findAndCountAll({
-            where: { invitCompId: targetCompanyId, invitArch: false },
+            where: { invitCompId: targetCompanyId },
             limit,
             offset,
             order: [['invitId', 'ASC']],

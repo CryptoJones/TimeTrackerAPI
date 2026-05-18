@@ -128,7 +128,7 @@ exports.listByCompany = async (req, res) => {
 
     try {
         const { count, rows } = await InventoryTransaction.findAndCountAll({
-            where: { invtCompanyId: targetCompanyId, invtArch: false },
+            where: { invtCompanyId: targetCompanyId },
             limit, offset,
             order: [['invtId', 'DESC']],
         });

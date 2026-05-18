@@ -111,7 +111,7 @@ exports.listByJob = async (req, res) => {
 
     try {
         const { count, rows } = await ProductEntry.findAndCountAll({
-            where: { pentJobId: targetJobId, penArch: false },
+            where: { pentJobId: targetJobId },
             limit, offset,
             order: [['pentId', 'ASC']],
         });

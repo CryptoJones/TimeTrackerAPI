@@ -230,7 +230,7 @@ exports.getAllByCompanyId = async (req, res) => {
     // Soft-deleted customers are not returned. Older clients that
     // weren't checking custArch already filter manually; this just
     // makes the server's behavior match the documented contract.
-    const where = { custCompId: companyId, custArch: false };
+    const where = { custCompId: companyId };
 
     try {
         const { count, rows } = await Customer.findAndCountAll({
@@ -328,7 +328,7 @@ exports.exportCsv = async (req, res) => {
     let rows;
     try {
         rows = await Customer.findAll({
-            where: { custCompId: effectiveCompanyId, custArch: false },
+            where: { custCompId: effectiveCompanyId },
             limit: limit + 1, // +1 to detect "did we hit the cap"
             offset,
             order: [['custId', 'ASC']],
@@ -553,7 +553,6 @@ exports.search = async (req, res) => {
     const pattern = `%${q}%`;
     const where = {
         custCompId: effectiveCompanyId,
-        custArch: false,
         [Op.or]: [
             { custCompanyName: { [Op.iLike]: pattern } },
             { custFName: { [Op.iLike]: pattern } },

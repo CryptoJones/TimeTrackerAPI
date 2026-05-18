@@ -114,7 +114,7 @@ exports.listByHeader = async (req, res) => {
 
     try {
         const { count, rows } = await PurchaseOrderLine.findAndCountAll({
-            where: { polpoh: targetHeaderId, polArch: false },
+            where: { polpoh: targetHeaderId },
             limit, offset,
             order: [['polId', 'ASC']],
         });
