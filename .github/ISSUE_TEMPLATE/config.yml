@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Aaron K. Clark
+#
+# GitHub picks up this file under .github/ISSUE_TEMPLATE/ and uses it
+# to render the "additional links" section on the New Issue picker.
+
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/CryptoJones/TimeTrackerAPI/security/advisories/new
+    about: Report a security vulnerability privately. NEVER open a public issue.
+  - name: Codeberg mirror
+    url: https://codeberg.org/CryptoJones/TimeTrackerAPI/issues
+    about: Issues filed on the Codeberg mirror are equally accepted.
