@@ -112,6 +112,32 @@ The server listens on `http://0.0.0.0:3000` by default. No root required.
 
 ---
 
+## Testing
+
+```bash
+npm test          # unit + API suite (mocks the DB; no infra needed)
+npm test -- --watch    # vitest watch mode
+```
+
+For integration tests against a real Postgres — see
+[`tests/integration/README.md`](tests/integration/README.md).
+Short version:
+
+```bash
+cp .env.example .env   # set DB_PASSWORD
+sudo docker compose up -d postgres setup migrate
+DB_HOST=localhost DB_PORT=5432 DB_NAME=timetracker \
+    DB_USERNAME=timetracker DB_PASSWORD=$(grep ^DB_PASSWORD= .env | cut -d= -f2-) \
+    npx vitest run tests/integration
+sudo docker compose down -v   # cleanup
+```
+
+The committed `docker-compose.override.yml` exposes Postgres on
+`127.0.0.1:5432` for these host-side test runs; without it the
+postgres container is reachable only from other compose services.
+
+---
+
 ## Environment variables
 
 All configuration lives in environment variables (loaded from `.env`

@@ -1,0 +1,11 @@
+# Local-only override for integration testing. Exposes Postgres on
+# 127.0.0.1:5432 so the host-side vitest integration suite can reach
+# it. NOT for production / shared environments — leaving 5432 open
+# on a public host is a credential-brute-force invitation.
+#
+# This file is local; do not commit. The .dockerignore already
+# excludes it from the runtime image build context.
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:5432:5432"
