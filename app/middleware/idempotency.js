@@ -32,8 +32,23 @@
  */
 
 const crypto = require('crypto');
-const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
+
+/**
+ * Late-bound + injectable DB accessor. Same pattern as
+ * `app/middleware/auth.js#getDb` — vitest's `vi.mock` does not
+ * reliably intercept this codebase's CJS `require()`, so HTTP-level
+ * tests that want to drive the replay-cache logic substitute a stub
+ * via `_setDbForTesting(stub)`. Production code MUST NOT call the
+ * setter. P5-M (idempotency follow-up).
+ */
+let _dbOverride = null;
+function getDb() {
+    return _dbOverride || require('../config/db.config.js');
+}
+function _setDbForTesting(db) {
+    _dbOverride = db || null;
+}
 
 const TTL_MS = 24 * 60 * 60 * 1000;  // 24 hours
 // Keys are client-picked; reject anything that looks like garbage.
@@ -114,7 +129,7 @@ async function idempotency(req, res, next) {
         });
     }
 
-    if (!db.sequelize || typeof db.sequelize.query !== 'function') {
+    if (!getDb().sequelize || typeof getDb().sequelize.query !== 'function') {
         // Test env or misconfiguration. Don't block writes.
         return next();
     }
@@ -124,11 +139,11 @@ async function idempotency(req, res, next) {
 
     // Best-effort prune. Awaited so we don't pile up overlapping
     // DELETEs under load; cheap because the index covers it.
-    pruneExpired(db.sequelize).catch(() => {});
+    pruneExpired(getDb().sequelize).catch(() => {});
 
     let existing;
     try {
-        const rows = await db.sequelize.query(
+        const rows = await getDb().sequelize.query(
             `SELECT "ikRequestHash" AS "requestHash",
                     "ikResponseStatus" AS "status",
                     "ikResponseBody" AS "body"
@@ -137,7 +152,7 @@ async function idempotency(req, res, next) {
                 AND "ikExpiresAt" >= now()`,
             {
                 replacements: { scope, key: rawKey },
-                type: db.Sequelize.QueryTypes.SELECT,
+                type: getDb().Sequelize.QueryTypes.SELECT,
             },
         );
         existing = rows && rows[0];
@@ -176,7 +191,7 @@ async function idempotency(req, res, next) {
             // Fire and forget — the response shouldn't block on the
             // cache write. If the INSERT loses a race with a
             // concurrent retry the UNIQUE constraint catches it.
-            db.sequelize.query(
+            getDb().sequelize.query(
                 `INSERT INTO "dbo"."IdempotencyKey"
                     ("ikScope", "ikKey", "ikRequestHash",
                      "ikResponseStatus", "ikResponseBody", "ikExpiresAt")
@@ -211,4 +226,9 @@ module.exports = {
     buildScope,
     KEY_PATTERN,
     TTL_MS,
+    // Test-only seam: pass a stub `{ sequelize: { query: ... }, Sequelize:
+    // { QueryTypes: { SELECT } } }` to drive the cache lookup + write
+    // paths from HTTP tests. Pass null (or no arg) to restore the
+    // production lookup. Production code MUST NOT call this.
+    _setDbForTesting,
 };

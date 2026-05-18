@@ -87,6 +87,73 @@ describe('Idempotency middleware: mounted on POST routes', () => {
         expect(res.status).not.toBe(409);
     });
 
+    test('first write + replay round-trip works via the _setDbForTesting seam', async () => {
+        // Walk the full first-write → replay path that vi.mock alone
+        // can't reach. The stub plays both roles of the cache table:
+        // SELECT returns nothing on the first request (cache miss),
+        // INSERT writes a row, SELECT on the second request returns
+        // the stored row.
+        const idem = require('../../app/middleware/idempotency.js');
+        const storedRows = new Map();
+        const stub = {
+            sequelize: {
+                query: vi.fn(async (sql, opts) => {
+                    if (/^SELECT/.test(sql)) {
+                        const key = opts && opts.replacements && opts.replacements.key;
+                        const scope = opts && opts.replacements && opts.replacements.scope;
+                        const hit = storedRows.get(`${scope}::${key}`);
+                        return hit ? [hit] : [];
+                    }
+                    if (/^INSERT/.test(sql)) {
+                        const { scope, key, requestHash, status, body } = opts.replacements;
+                        storedRows.set(`${scope}::${key}`, {
+                            requestHash, status, body: JSON.parse(body),
+                        });
+                        return [[], 1];
+                    }
+                    return [];
+                }),
+            },
+            Sequelize: { QueryTypes: { SELECT: 'SELECT' } },
+        };
+        idem._setDbForTesting(stub);
+        try {
+            const key = '01HFREPLAY12345';
+            const body = { custCompanyName: 'Acme' };
+            // First request: cache miss → controller runs → response stored.
+            const first = await request(app)
+                .post('/v1/customer')
+                .set('authKey', 'any')
+                .set('Idempotency-Key', key)
+                .send(body);
+            // Whatever the controller decided (403/500 with the
+            // broken-DB env). We DON'T care about the underlying
+            // status, only that the response was cached.
+            expect(first.headers['idempotency-replay']).toBeUndefined();
+
+            // Second request: same key + same body. Should be a replay.
+            const second = await request(app)
+                .post('/v1/customer')
+                .set('authKey', 'any')
+                .set('Idempotency-Key', key)
+                .send(body);
+            expect(second.headers['idempotency-replay']).toBe('true');
+            expect(second.status).toBe(first.status);
+            expect(second.body).toEqual(first.body);
+
+            // Third request: same key, DIFFERENT body → 409 conflict.
+            const third = await request(app)
+                .post('/v1/customer')
+                .set('authKey', 'any')
+                .set('Idempotency-Key', key)
+                .send({ custCompanyName: 'Different' });
+            expect(third.status).toBe(409);
+            expect(third.body.code).toBe('idempotency_key_reused');
+        } finally {
+            idem._setDbForTesting(null);
+        }
+    });
+
     test('GET requests are never gated by the middleware', async () => {
         // Even with a malformed header, a GET should sail through —
         // the middleware is wrapped in a method check that no-ops
