@@ -118,7 +118,6 @@ exports.listByJob = async (req, res) => {
         });
         const link = buildLinkHeader({ req, limit, offset, count });
         if (link) res.setHeader('Link', link);
-        res.setHeader('Access-Control-Expose-Headers', 'Link');
         return res.status(200).json({
             message: "Successfully retrieved product entries for JobId " + targetJobId,
             count, limit, offset, productEntries: rows,

@@ -121,7 +121,6 @@ exports.listByVendor = async (req, res) => {
         });
         const link = buildLinkHeader({ req, limit, offset, count });
         if (link) res.setHeader('Link', link);
-        res.setHeader('Access-Control-Expose-Headers', 'Link');
         return res.status(200).json({
             message: "Successfully retrieved purchase orders for VendorId " + targetVendorId,
             count, limit, offset, purchaseOrderHeaders: rows,
