@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **CI gains a live Postgres service**. Both GitHub Actions and
+  Woodpecker spin up `postgres:16-alpine` alongside the Node
+  matrix, run `setup/TimeTracker.sql` for the `dbo` schema
+  bootstrap, then `npm run migrate` to apply every migration. The
+  integration suite at `tests/integration/db-roundtrip.test.js`
+  no longer self-skips in CI — it gates every PR against schema /
+  migration drift. The unit + api suites still pass with or
+  without a DB, so local `npm test` works unchanged.
+
 ### Added
 - **OpenAPI completeness pass**. All 12 previously-undocumented
   bulk-create endpoints now appear in the spec via a shared
