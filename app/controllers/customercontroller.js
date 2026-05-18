@@ -252,6 +252,119 @@ exports.getAllByCompanyId = async (req, res) => {
 };
 
 /**
+ * GET /v1/customer/export.csv
+ *
+ * CSV dump of customers in a company. text/csv response, no JSON
+ * envelope. Companion to bycompany/:id for clients that want to
+ * pipe into spreadsheet tools.
+ *
+ * Auth shape mirrors the search endpoint:
+ *   - non-master without companyId → auto-scope to own company
+ *   - non-master with mismatching companyId → 403
+ *   - master without companyId → 400
+ *
+ * Capped at 5000 rows per call (oversize quietly truncates with a
+ * trailing comment row so clients know to page). Soft-deleted rows
+ * excluded. Field order matches the Customer JSON schema.
+ */
+exports.exportCsv = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+
+    let isAuthKeyMasterKey;
+    try {
+        isAuthKeyMasterKey = await IsMaster(authKey);
+    } catch (error) {
+        log.error({ err: error }, 'IsMaster failed');
+        return res.status(500).json({ message: "Error!", error: String(error) });
+    }
+
+    let effectiveCompanyId;
+    if (isAuthKeyMasterKey) {
+        const qCompanyId = Number(req.query.companyId);
+        if (!Number.isInteger(qCompanyId) || qCompanyId <= 0) {
+            return res.status(400).json({
+                message: "Master keys must specify companyId on export.csv.",
+            });
+        }
+        effectiveCompanyId = qCompanyId;
+    } else {
+        let authKeyCompanyId;
+        try {
+            authKeyCompanyId = await GetCompanyId(authKey);
+        } catch (error) {
+            log.error({ err: error }, 'GetCompanyId failed');
+            return res.status(500).json({ message: "Error!", error: String(error) });
+        }
+        if (authKeyCompanyId === -1) {
+            return res.status(403).json({ message: "Invalid Authorization Key." });
+        }
+        const qCompanyId = req.query.companyId !== undefined ? Number(req.query.companyId) : null;
+        if (qCompanyId !== null && qCompanyId !== authKeyCompanyId) {
+            return res.status(403).json({
+                message: "Cannot export customers for a company you do not belong to.",
+            });
+        }
+        effectiveCompanyId = authKeyCompanyId;
+    }
+
+    const HARD_CAP = 5000;
+    const requestedLimit = parseInt(req.query.limit, 10);
+    const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
+        ? Math.min(requestedLimit, HARD_CAP)
+        : HARD_CAP;
+    const requestedOffset = parseInt(req.query.offset, 10);
+    const offset = Number.isInteger(requestedOffset) && requestedOffset >= 0
+        ? requestedOffset
+        : 0;
+
+    let rows;
+    try {
+        rows = await Customer.findAll({
+            where: { custCompId: effectiveCompanyId, custArch: false },
+            limit: limit + 1, // +1 to detect "did we hit the cap"
+            offset,
+            order: [['custId', 'ASC']],
+        });
+    } catch (error) {
+        log.error({ err: error }, 'Customer.findAll for CSV export failed');
+        return res.status(500).json({ message: "Error!", error: String(error) });
+    }
+
+    const truncated = rows.length > limit;
+    if (truncated) rows = rows.slice(0, limit);
+
+    // CSV serialization. Wraps every field in quotes (simpler than
+    // detecting which ones need it) and doubles any embedded quotes.
+    const FIELDS = [
+        'custId', 'custCompanyName', 'custFName', 'custLName',
+        'custAddress1', 'custAddress2',
+        'custCity', 'custState', 'custZip',
+        'custPhone', 'custEmail', 'custCompId',
+    ];
+    const escape = (val) => {
+        if (val === null || val === undefined) return '""';
+        return '"' + String(val).replace(/"/g, '""') + '"';
+    };
+    const lines = [];
+    lines.push(FIELDS.join(','));
+    for (const r of rows) {
+        lines.push(FIELDS.map((f) => escape(r[f])).join(','));
+    }
+    if (truncated) {
+        lines.push(`# truncated at ${limit} rows; re-call with offset=${offset + limit} to continue`);
+    }
+
+    const body = lines.join('\r\n') + '\r\n';
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition',
+        `attachment; filename="customers-company-${effectiveCompanyId}.csv"`);
+    return res.status(200).send(body);
+};
+
+/**
  * POST /v1/customer/bulk
  *
  * Transaction-wrapped batch create. Body: { customers: [{...}, ...] }.
