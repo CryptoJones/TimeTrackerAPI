@@ -6,6 +6,7 @@ const { sequelize } = require('../config/db.config.js');
 const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
+const { buildLinkHeader } = require('../middleware/pagination.js');
 const Customer = db.Customer;
 
 // IsMaster / GetCompanyId previously lived inline in this file and
@@ -238,6 +239,10 @@ exports.getAllByCompanyId = async (req, res) => {
             offset,
             order: [['custId', 'ASC']],
         });
+        const link = buildLinkHeader({ req, limit, offset, count });
+        if (link) res.setHeader('Link', link);
+        // Expose Link header to browser JS clients via CORS.
+        res.setHeader('Access-Control-Expose-Headers', 'Link');
         return res.status(200).json({
             message: "Successfully retrieved customers with CompanyId " + companyId,
             count,
