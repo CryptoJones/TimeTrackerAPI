@@ -7,10 +7,12 @@ steps:
     image: node:20-slim
     commands:
       - npm ci
+      - npm run lint
       - npm test
 
   test-node-22:
     image: node:22-slim
     commands:
       - npm ci
+      - npm run lint
       - npm test

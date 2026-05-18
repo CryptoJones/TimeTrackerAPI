@@ -3,7 +3,7 @@
 //
 // Tests for the global error handler + 404 fallthrough.
 
-import { describe, test, expect, vi, beforeAll } from 'vitest';
+import { describe, test, expect, beforeAll } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import { errorHandler, notFound } from '../../app/middleware/error-handler.js';

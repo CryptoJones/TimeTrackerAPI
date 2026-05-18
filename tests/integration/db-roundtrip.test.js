@@ -27,7 +27,6 @@ beforeAll(async () => {
         await db.sequelize.authenticate();
         connected = true;
     } catch (err) {
-        // eslint-disable-next-line no-console
         console.warn('[integration] PG unreachable, skipping suite:', err.message);
     }
 }, 30000);
@@ -42,7 +41,6 @@ afterAll(async () => {
             { replacements: [`${SENTINEL}%`] },
         );
     } catch (e) {
-        // eslint-disable-next-line no-console
         console.warn('[integration] cleanup DELETE failed:', e.message);
     }
     try {
