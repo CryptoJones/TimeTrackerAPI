@@ -20,6 +20,7 @@ docker compose up -d postgres setup       # local Postgres + schema bootstrap
 npm run migrate                            # apply all sequelize migrations
 npm test                                   # unit + api + integration
 npm start                                  # serves on PORT (default 3000)
+npm run dev                                # same, but auto-reloads on app/ + server.js edits
 ```
 
 `npm test` runs the full vitest suite (45+ files, 479+ cases at this
