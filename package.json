@@ -13,6 +13,8 @@
     "start": "node server.js",
     "test": "vitest run",
     "test:watch": "vitest",
+    "lint": "eslint app/ server.js tests/",
+    "lint:fix": "eslint --fix app/ server.js tests/",
     "migrate": "sequelize-cli db:migrate",
     "migrate:undo": "sequelize-cli db:migrate:undo",
     "migrate:status": "sequelize-cli db:migrate:status",
@@ -39,6 +41,9 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.4.0",
+    "globals": "^17.6.0",
     "supertest": "^7.2.2",
     "vitest": "^4.1.6"
   }

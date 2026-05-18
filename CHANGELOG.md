@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **ESLint flat config + CI gate** (P5-L). New `eslint.config.js`
+  with rules tuned for high-signal bug catching rather than style
+  preferences: `no-unused-vars` (with `^_` opt-out), `eqeqeq`,
+  `no-console` (allowing only `error`/`warn` outside tests),
+  `prefer-const`, `no-var`. Tests get a relaxed variant
+  (`no-unused-vars` as a warning, console allowed). Migrations
+  ignore unused args to honor sequelize-cli's
+  `(queryInterface, Sequelize)` contract. Wired into GitHub Actions
+  and Woodpecker so every PR now runs `npm run lint` ahead of the
+  vitest suite. `npm run lint:fix` available for autofixable rules.
 - **`createdAt` / `updatedAt` on every domain entity** (P4-K). New
   migration adds two `TIMESTAMPTZ NOT NULL DEFAULT now()` columns to
   18 tables (everything except `IdempotencyKey`, which already
