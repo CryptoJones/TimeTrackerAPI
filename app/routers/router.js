@@ -5,6 +5,7 @@ const router = express.Router();
 
 const swaggerUi = require('swagger-ui-express');
 const { attachAuth } = require('../middleware/auth.js');
+const { idempotency } = require('../middleware/idempotency.js');
 
 const customer = require('../controllers/customercontroller.js');
 const health = require('../controllers/healthcontroller.js');
@@ -56,6 +57,17 @@ router.get('/healthz', health.healthz);
 // used to fence /v1/whoami's downstream peers via per-controller
 // adoption in follow-up PRs).
 router.use('/v1', attachAuth);
+
+// Idempotency-Key support for POSTs. The middleware is a no-op
+// for non-POST methods and for POSTs that don't send the header;
+// it only kicks in when a client opts in by setting the header. We
+// mount it AFTER attachAuth so the cache scope can be hashed
+// together with the calling auth key (avoids cross-tenant collisions
+// for clients that happen to pick the same Idempotency-Key value).
+router.use('/v1', (req, res, next) => {
+    if (req.method !== 'POST') return next();
+    return idempotency(req, res, next);
+});
 
 // Identity probe — returns what the calling authKey resolves to.
 // Distinguishes "header missing" (403) from "header present but
