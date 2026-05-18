@@ -272,5 +272,129 @@ exports.remove = async (req, res) => {
     }
 };
 
+/**
+ * GET /v1/timeentry/export.csv?companyId=&customerId=&from=&to=
+ *
+ * CSV dump of time entries. The natural invoicing flow:
+ *   - filter by customer + date range
+ *   - export rows
+ *   - feed into spreadsheet / accounting tool
+ *
+ * Auth shape mirrors /v1/customer/export.csv: master must specify
+ * companyId, non-master is auto-scoped. Same 5000-row cap with the
+ * trailing `# truncated` comment if exceeded.
+ *
+ * Date range is permissive on bad input (silent drop) to match the
+ * existing listByCompany behavior — a typo'd `from` query param
+ * shouldn't 400 a long-running export script.
+ */
+exports.exportCsv = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+
+    let isMasterKey;
+    try {
+        isMasterKey = await IsMaster(authKey);
+    } catch (error) {
+        log.error({ err: error }, 'IsMaster failed');
+        return res.status(500).json({ message: "Error!", error: String(error) });
+    }
+
+    let effectiveCompanyId;
+    if (isMasterKey) {
+        const qCompanyId = Number(req.query.companyId);
+        if (!Number.isInteger(qCompanyId) || qCompanyId <= 0) {
+            return res.status(400).json({
+                message: "Master keys must specify companyId on export.csv.",
+            });
+        }
+        effectiveCompanyId = qCompanyId;
+    } else {
+        let authKeyCompanyId;
+        try {
+            authKeyCompanyId = await GetCompanyId(authKey);
+        } catch (error) {
+            log.error({ err: error }, 'GetCompanyId failed');
+            return res.status(500).json({ message: "Error!", error: String(error) });
+        }
+        if (authKeyCompanyId === -1) {
+            return res.status(403).json({ message: "Invalid Authorization Key." });
+        }
+        const qCompanyId = req.query.companyId !== undefined ? Number(req.query.companyId) : null;
+        if (qCompanyId !== null && qCompanyId !== authKeyCompanyId) {
+            return res.status(403).json({
+                message: "Cannot export time entries for a company you do not belong to.",
+            });
+        }
+        effectiveCompanyId = authKeyCompanyId;
+    }
+
+    const where = { teCompId: effectiveCompanyId, teArch: false };
+    const customerId = Number(req.query.customerId);
+    if (Number.isInteger(customerId) && customerId > 0) {
+        where.teCustId = customerId;
+    }
+    const Op = db.Sequelize && db.Sequelize.Op;
+    if (Op && req.query.from) {
+        where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.gte]: req.query.from });
+    }
+    if (Op && req.query.to) {
+        where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.lte]: req.query.to });
+    }
+
+    const HARD_CAP = 5000;
+    const requestedLimit = parseInt(req.query.limit, 10);
+    const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
+        ? Math.min(requestedLimit, HARD_CAP)
+        : HARD_CAP;
+    const requestedOffset = parseInt(req.query.offset, 10);
+    const offset = Number.isInteger(requestedOffset) && requestedOffset >= 0
+        ? requestedOffset
+        : 0;
+
+    let rows;
+    try {
+        rows = await TimeEntry.findAll({
+            where,
+            limit: limit + 1,
+            offset,
+            order: [['teStartedAt', 'DESC']],
+        });
+    } catch (error) {
+        log.error({ err: error }, 'TimeEntry.findAll for CSV export failed');
+        return res.status(500).json({ message: "Error!", error: String(error) });
+    }
+
+    const truncated = rows.length > limit;
+    if (truncated) rows = rows.slice(0, limit);
+
+    const FIELDS = [
+        'teId', 'teCustId', 'teCompId',
+        'teStartedAt', 'teEndedAt', 'teMinutes',
+        'teBillable', 'teDescription',
+    ];
+    const escape = (val) => {
+        if (val === null || val === undefined) return '""';
+        // Date instances serialize to ISO; everything else .toString().
+        const s = (val instanceof Date) ? val.toISOString() : String(val);
+        return '"' + s.replace(/"/g, '""') + '"';
+    };
+    const lines = [];
+    lines.push(FIELDS.join(','));
+    for (const r of rows) {
+        lines.push(FIELDS.map((f) => escape(r[f])).join(','));
+    }
+    if (truncated) {
+        lines.push(`# truncated at ${limit} rows; re-call with offset=${offset + limit} to continue`);
+    }
+    const body = lines.join('\r\n') + '\r\n';
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition',
+        `attachment; filename="timeentries-company-${effectiveCompanyId}.csv"`);
+    return res.status(200).send(body);
+};
+
 // Exposed for unit testing.
 exports._internals = { computeMinutes, IsMaster, GetCompanyId };
