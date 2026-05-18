@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 
 const swaggerUi = require('swagger-ui-express');
+const { attachAuth } = require('../middleware/auth.js');
 
 const customer = require('../controllers/customercontroller.js');
 const health = require('../controllers/healthcontroller.js');
@@ -46,9 +47,20 @@ const inventoryTransactionSchemas = require('../schemas/inventorytransaction.sch
 // of the API process and reachability of the database.
 router.get('/healthz', health.healthz);
 
+// attachAuth runs on every /v1/* request and populates
+// req.authKey / req.isMaster / req.companyId without rejecting.
+// Existing controllers still have their inline authKey check; once
+// they migrate to read req.isMaster / req.companyId, the inline
+// check becomes redundant and requireAuth can be mounted globally.
+// Until then we keep mounting requireAuth opt-in (currently only
+// used to fence /v1/whoami's downstream peers via per-controller
+// adoption in follow-up PRs).
+router.use('/v1', attachAuth);
+
 // Identity probe — returns what the calling authKey resolves to.
-// Useful for SDK clients confirming credentials without firing a
-// domain call. Mounted under /v1 because it's authKey-scoped.
+// Distinguishes "header missing" (403) from "header present but
+// unknown" (200 with authenticated:false) so a strict guard
+// middleware here would collapse useful signal.
 router.get('/v1/whoami', whoami.whoami);
 
 // OpenAPI: machine-readable spec at /openapi.json, interactive

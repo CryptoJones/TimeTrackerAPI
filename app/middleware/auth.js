@@ -195,37 +195,78 @@ function requireAuthKey(req, res, next) {
 }
 
 /**
- * Express middleware: resolves the authKey into {isMaster, companyId}
- * context on req, then proceeds. Non-master with unknown authKey
- * returns 403 directly so downstream controllers can assume the
- * key resolved to *something*.
+ * Express middleware: best-effort attach `authKey` + resolved
+ * `{ isMaster, companyId }` onto the request. Never rejects — endpoints
+ * like /v1/whoami need to distinguish "header missing" from "header
+ * present but unknown" themselves, and a strict guard middleware
+ * would collapse those into a uniform 403.
+ *
+ * Always sets:
+ *   req.authKey   string | null    (raw header value, or null)
+ *   req.isMaster  boolean          (false on unknown / missing key)
+ *   req.companyId number           (-1 sentinel for "no scoped key")
+ *
+ * Use `requireAuth` after this on routes that DO want the 403
+ * behavior (every /v1/* route except /v1/whoami).
  */
-async function resolveAuth(req, res, next) {
+async function attachAuth(req, res, next) {
     const authKey = req.get('authKey');
-    if (!authKey) {
-        return res.status(403).json({ message: 'Authorization key not sent.' });
-    }
-    req.authKey = authKey;
+    req.authKey = authKey || null;
+    req.isMaster = false;
+    req.companyId = -1;
+    if (!authKey) return next();
     try {
         req.isMaster = await isMaster(authKey);
     } catch (error) {
-        log.error({ err: error }, 'auth.isMaster failed');
-        return res.status(500).json({ message: 'Error!', error: String(error) });
+        log.error({ err: error }, 'attachAuth: isMaster failed');
+        return res.status(500).json({ message: 'Error!' });
     }
     if (req.isMaster) {
-        req.companyId = null; // master keys aren't scoped to a single company
+        // Master keys aren't scoped to a single company. Leave
+        // companyId at -1; handlers needing a target scope read
+        // it from req.params / req.body / req.query.
         return next();
     }
     try {
         req.companyId = await getCompanyId(authKey);
     } catch (error) {
-        log.error({ err: error }, 'auth.getCompanyId failed');
-        return res.status(500).json({ message: 'Error!', error: String(error) });
+        log.error({ err: error }, 'attachAuth: getCompanyId failed');
+        return res.status(500).json({ message: 'Error!' });
     }
-    if (req.companyId === -1) {
+    return next();
+}
+
+/**
+ * Express middleware: 403s requests that aren't authenticated.
+ * Assumes attachAuth has already run upstream.
+ *
+ *   - missing authKey header                  -> 403 "Authorization key not sent."
+ *   - present authKey, not master, no scope   -> 403 "Invalid Authorization Key."
+ *   - otherwise                               -> next()
+ */
+function requireAuth(req, res, next) {
+    if (!req.authKey) {
+        return res.status(403).json({ message: 'Authorization key not sent.' });
+    }
+    if (!req.isMaster && req.companyId === -1) {
         return res.status(403).json({ message: 'Invalid Authorization Key.' });
     }
     return next();
+}
+
+/**
+ * Combined middleware kept for backward-compat with anywhere it
+ * was mounted directly. New mounts should use attachAuth +
+ * requireAuth as two separate middlewares so endpoints can opt
+ * out of the strict 403 (like /v1/whoami).
+ */
+async function resolveAuth(req, res, next) {
+    let attachOk = false;
+    await new Promise((resolve) => {
+        attachAuth(req, res, () => { attachOk = true; resolve(); });
+    });
+    if (!attachOk) return; // attachAuth already sent a 500
+    return requireAuth(req, res, next);
 }
 
 module.exports = {
@@ -236,6 +277,8 @@ module.exports = {
     getCompanyIdByPovId,
     getCompanyIdByPohId,
     requireAuthKey,
+    attachAuth,
+    requireAuth,
     resolveAuth,
     hashKey,
 };
