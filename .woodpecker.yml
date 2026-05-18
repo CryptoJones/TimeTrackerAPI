@@ -36,6 +36,7 @@ steps:
       - npm ci
       - npm run migrate
       - npm run lint
+      - npm run audit
       - npm test
 
   test-node-22:
@@ -61,4 +62,5 @@ steps:
       - npm ci
       - npm run migrate
       - npm run lint
+      - npm run audit
       - npm test

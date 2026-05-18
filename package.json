@@ -15,10 +15,14 @@
     "test:watch": "vitest",
     "lint": "eslint app/ server.js tests/",
     "lint:fix": "eslint --fix app/ server.js tests/",
+    "audit": "npm audit --audit-level=high --omit=dev",
     "migrate": "sequelize-cli db:migrate",
     "migrate:undo": "sequelize-cli db:migrate:undo",
     "migrate:status": "sequelize-cli db:migrate:status",
     "migrate:generate": "sequelize-cli migration:generate --name"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "author": "https://github.com/CryptoJones",
   "license": "Apache-2.0",

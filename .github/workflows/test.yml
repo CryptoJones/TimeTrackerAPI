@@ -72,5 +72,7 @@ jobs:
         run: npm run migrate
       - name: Lint
         run: npm run lint
+      - name: npm audit (production deps, high+)
+        run: npm run audit
       - name: Run vitest (unit + api + integration)
         run: npm test
