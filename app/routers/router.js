@@ -68,6 +68,11 @@ router.get(
     v.query(customerSchemas.searchQuery),
     customer.search,
 );
+router.post(
+    '/v1/customer/bulk',
+    v.body(customerSchemas.bulkCustomerBody),
+    customer.bulkCreate,
+);
 router.get(
     '/v1/customer/:id',
     v.params(customerSchemas.intIdParam),
