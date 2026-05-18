@@ -5,6 +5,7 @@
 const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
+const { buildLinkHeader } = require('../middleware/pagination.js');
 const TimeEntry = db.TimeEntry;
 
 // Auth helpers used to live inline here — they now share a single
@@ -163,17 +164,34 @@ exports.listByCompany = async (req, res) => {
     const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
         ? Math.min(requestedLimit, 500)
         : 100;
+    const requestedOffset = parseInt(req.query.offset, 10);
+    const offset = Number.isInteger(requestedOffset) && requestedOffset >= 0
+        ? requestedOffset
+        : 0;
 
     try {
-        const entries = await TimeEntry.findAll({ where, limit, order: [['teStartedAt', 'DESC']] });
+        // Switched to findAndCountAll so the body carries a true total
+        // (previously `count` was just the page length — misleading on
+        // anything past the first page). Link header builds off the
+        // total too.
+        const { count, rows } = await TimeEntry.findAndCountAll({
+            where,
+            limit,
+            offset,
+            order: [['teStartedAt', 'DESC']],
+        });
+        const link = buildLinkHeader({ req, limit, offset, count });
+        if (link) res.setHeader('Link', link);
+        res.setHeader('Access-Control-Expose-Headers', 'Link');
         return res.status(200).json({
             message: "Found.",
-            count: entries.length,
+            count,
             limit,
-            timeEntries: entries,
+            offset,
+            timeEntries: rows,
         });
     } catch (error) {
-        log.error({ err: error }, 'TimeEntry.findAll failed');
+        log.error({ err: error }, 'TimeEntry.findAndCountAll failed');
         return res.status(500).json({ message: "Error!", error: String(error) });
     }
 };
