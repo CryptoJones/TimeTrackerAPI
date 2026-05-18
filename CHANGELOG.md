@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **OpenAPI completeness pass**. All 12 previously-undocumented
+  bulk-create endpoints now appear in the spec via a shared
+  `bulkPath(bodyKey, schemaName)` helper (kept the entries from
+  drifting into 13 hand-maintained near-duplicates). The
+  `Idempotency-Key` header is documented as an optional parameter
+  on every bulk POST. `/metrics` gets its own path entry with the
+  Prometheus text-format response and the `METRICS_BEARER_TOKEN`
+  401-gate documented. Three new OpenAPI tests pin the additions.
 - **Bulk-create endpoints for 7 indirect-scoped entities** (P3-H2).
   New `POST /v1/<entity>/bulk` on Job, Invoice, CustomerPayment,
   InvoiceJob, ProductEntry, PurchaseOrderHeader, PurchaseOrderLine.
