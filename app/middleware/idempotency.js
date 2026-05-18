@@ -1,0 +1,214 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Aaron K. Clark
+"use strict";
+
+/**
+ * Stripe-style Idempotency-Key support for POST endpoints.
+ *
+ * Why
+ *   POSTs that create resources (TimeEntry, Customer, Invoice, etc.)
+ *   are unsafe to retry blindly — a network blip during the client's
+ *   read of the response makes the retry indistinguishable from a
+ *   first attempt, and the server creates a duplicate row.
+ *
+ *   A client that picks an `Idempotency-Key` header on the original
+ *   request can replay the exact same call freely: this middleware
+ *   stores the first response for 24h and replays it for any matching
+ *   retry within that window. If the client sends the SAME key with
+ *   a DIFFERENT body, we return 409 to flag the misuse.
+ *
+ * Scope
+ *   The cache key is sha256(authKey || ':' || method || path). Two
+ *   different operators (or two different routes) cannot collide
+ *   even if they pick the same Idempotency-Key string. We index the
+ *   body separately so we can tell "same retry" from "same key,
+ *   different intent".
+ *
+ * Cleanup
+ *   Each request opportunistically prunes rows past `ikExpiresAt`.
+ *   No background sweeper job needed — at typical write rates the
+ *   table stays small. Tradeoff: a quiet period leaves a few expired
+ *   rows around; ignored on the next write.
+ */
+
+const crypto = require('crypto');
+const db = require('../config/db.config.js');
+const log = require('../config/logger.js');
+
+const TTL_MS = 24 * 60 * 60 * 1000;  // 24 hours
+// Keys are client-picked; reject anything that looks like garbage.
+// Stripe accepts up to 255 chars; we mirror that and require
+// printable ASCII to avoid `\0` injection into the SQL replacement
+// (Sequelize parameterizes, but defense in depth).
+const KEY_PATTERN = /^[\x21-\x7e]{1,255}$/;
+
+function sha256(s) {
+    return crypto.createHash('sha256').update(String(s)).digest('hex');
+}
+
+/**
+ * Stable JSON serializer so that two semantically-identical bodies
+ * (e.g., `{a:1,b:2}` vs `{b:2,a:1}`) hash to the same value. Without
+ * this, a client that reorders its JSON fields on retry would trip
+ * the body-mismatch 409.
+ */
+function canonicalJson(value) {
+    if (value === null || typeof value !== 'object') {
+        return JSON.stringify(value);
+    }
+    if (Array.isArray(value)) {
+        return '[' + value.map(canonicalJson).join(',') + ']';
+    }
+    const keys = Object.keys(value).sort();
+    return '{' + keys.map(k => JSON.stringify(k) + ':' + canonicalJson(value[k])).join(',') + '}';
+}
+
+function hashBody(body) {
+    // null body (no req.body, e.g., a POST with no JSON) collapses
+    // to the literal string "null" so two no-body retries still
+    // match each other.
+    return sha256(canonicalJson(body == null ? null : body));
+}
+
+function buildScope(req) {
+    // attachAuth runs upstream so req.authKey is populated when the
+    // header was supplied. For requests where attachAuth hasn't run
+    // we fall back to the raw header — gives a stable hash key but
+    // not a security boundary (the upstream auth check is the
+    // boundary; idempotency just dedups).
+    const authKey = (req && (req.authKey || (req.get && req.get('authKey')))) || '';
+    return sha256(authKey + ':' + req.method + ':' + (req.path || ''));
+}
+
+async function pruneExpired(sequelize) {
+    try {
+        await sequelize.query(
+            'DELETE FROM "dbo"."IdempotencyKey" WHERE "ikExpiresAt" < now()',
+        );
+    } catch (error) {
+        // Pruning is best-effort. Log and continue.
+        log.warn({ err: error }, 'IdempotencyKey: prune failed');
+    }
+}
+
+/**
+ * Express middleware. Mount on routes that should support idempotent
+ * retries. If the request lacks an `Idempotency-Key` header the
+ * middleware is a no-op (passes through to the handler).
+ *
+ * Behavior on header present:
+ *   - First time we've seen this (scope, key): proceed to handler,
+ *     then write the response to the cache before returning.
+ *   - Same (scope, key), same body hash: replay the cached response.
+ *   - Same (scope, key), DIFFERENT body hash: 409 Conflict with a
+ *     stable `{message, code: "idempotency_key_reused"}` body.
+ *   - Storage failure: log + proceed (the dedup is best-effort; we
+ *     never want it to break a write that would otherwise succeed).
+ */
+async function idempotency(req, res, next) {
+    const rawKey = req.get && req.get('Idempotency-Key');
+    if (!rawKey) return next();
+    if (!KEY_PATTERN.test(rawKey)) {
+        return res.status(400).json({
+            message: 'Invalid Idempotency-Key header — must be 1-255 printable ASCII chars.',
+        });
+    }
+
+    if (!db.sequelize || typeof db.sequelize.query !== 'function') {
+        // Test env or misconfiguration. Don't block writes.
+        return next();
+    }
+
+    const scope = buildScope(req);
+    const bodyHash = hashBody(req.body);
+
+    // Best-effort prune. Awaited so we don't pile up overlapping
+    // DELETEs under load; cheap because the index covers it.
+    pruneExpired(db.sequelize).catch(() => {});
+
+    let existing;
+    try {
+        const rows = await db.sequelize.query(
+            `SELECT "ikRequestHash" AS "requestHash",
+                    "ikResponseStatus" AS "status",
+                    "ikResponseBody" AS "body"
+               FROM "dbo"."IdempotencyKey"
+              WHERE "ikScope" = :scope AND "ikKey" = :key
+                AND "ikExpiresAt" >= now()`,
+            {
+                replacements: { scope, key: rawKey },
+                type: db.Sequelize.QueryTypes.SELECT,
+            },
+        );
+        existing = rows && rows[0];
+    } catch (error) {
+        log.warn({ err: error }, 'IdempotencyKey: lookup failed, proceeding without dedup');
+        return next();
+    }
+
+    if (existing) {
+        if (existing.requestHash !== bodyHash) {
+            return res.status(409).json({
+                message: 'Idempotency-Key was reused with a different request body.',
+                code: 'idempotency_key_reused',
+            });
+        }
+        // Replay the cached response verbatim. Set a header so
+        // clients can tell a replay apart from a fresh write — useful
+        // for observability and for client-side write counters.
+        res.setHeader('Idempotency-Replay', 'true');
+        return res.status(existing.status).json(existing.body);
+    }
+
+    // First time seeing this key. Intercept the handler's response
+    // so we can persist it BEFORE the bytes flush to the client. We
+    // wrap res.json (the controllers' uniform exit) and store there.
+    const originalJson = res.json.bind(res);
+    res.json = function patchedJson(body) {
+        // Statuscode could have been set via res.status() prior to
+        // .json(). Default to 200 if nothing explicit.
+        const status = res.statusCode || 200;
+        // Only persist successful or client-error writes. 5xx
+        // responses indicate the request never succeeded and we
+        // want the retry to actually re-run.
+        if (status >= 200 && status < 500) {
+            const expiresAt = new Date(Date.now() + TTL_MS);
+            // Fire and forget — the response shouldn't block on the
+            // cache write. If the INSERT loses a race with a
+            // concurrent retry the UNIQUE constraint catches it.
+            db.sequelize.query(
+                `INSERT INTO "dbo"."IdempotencyKey"
+                    ("ikScope", "ikKey", "ikRequestHash",
+                     "ikResponseStatus", "ikResponseBody", "ikExpiresAt")
+                 VALUES (:scope, :key, :requestHash,
+                         :status, :body::jsonb, :expiresAt)
+                 ON CONFLICT ("ikScope", "ikKey") DO NOTHING`,
+                {
+                    replacements: {
+                        scope,
+                        key: rawKey,
+                        requestHash: bodyHash,
+                        status,
+                        body: JSON.stringify(body),
+                        expiresAt,
+                    },
+                },
+            ).catch((error) => {
+                log.warn({ err: error }, 'IdempotencyKey: store failed');
+            });
+        }
+        return originalJson(body);
+    };
+
+    return next();
+}
+
+module.exports = {
+    idempotency,
+    // Exported for unit tests:
+    canonicalJson,
+    hashBody,
+    buildScope,
+    KEY_PATTERN,
+    TTL_MS,
+};

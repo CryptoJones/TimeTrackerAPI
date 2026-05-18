@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Idempotency-Key support on POST routes** (P3-G).
+  Clients may send an `Idempotency-Key: <printable-ASCII, 1-255>`
+  header on any POST under `/v1/*`. The first response (status +
+  JSON body) is cached in the new `dbo.IdempotencyKey` table for
+  24h, keyed by `sha256(authKey:method:path)` + the raw key value.
+  Retries with the same body replay the cached response and carry
+  an `Idempotency-Replay: true` response header; retries with a
+  DIFFERENT body return `409 { code: "idempotency_key_reused" }`.
+  No-op for POSTs without the header — legacy clients are unaffected.
 - **Sequelize associations across the full entity graph** (PR #54).
   Every FK now has a `hasMany`/`belongsTo` pair in `db.config.js`,
   enabling `include`-based eager loading and the auto-generated
