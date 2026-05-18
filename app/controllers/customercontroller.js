@@ -7,6 +7,7 @@ const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
+const { makeBulkCreate } = require('./_bulk-helpers.js');
 const Customer = db.Customer;
 
 // IsMaster / GetCompanyId previously lived inline in this file and
@@ -372,106 +373,31 @@ exports.exportCsv = async (req, res) => {
 /**
  * POST /v1/customer/bulk
  *
- * Transaction-wrapped batch create. Body: { customers: [{...}, ...] }.
+ * Transaction-wrapped batch create via the shared
+ * `makeBulkCreate` factory. Body: { customers: [{...}, ...] }.
+ * All-or-nothing semantics: a single failure rolls the batch back.
  *
- * All-or-nothing semantics: if any customer fails to create (DB
- * constraint, etc.), the whole batch is rolled back. The endpoint
- * either returns 201 with the full set OR a 500/4xx with no rows
- * inserted.
- *
- * Auth contract matches POST /v1/customer:
+ * Auth contract matches POST /v1/customer (and every other
+ * direct-compId bulk endpoint):
  *   - missing authKey                                       -> 403
  *   - non-master + entry with custCompId mismatching scope  -> 403
  *   - non-master without custCompId on any entry            -> defaults to scope
  *   - master without custCompId on any entry                -> 400
  */
-exports.bulkCreate = async (req, res) => {
-    const authKey = req.get('authKey');
-    if (!authKey) {
-        return res.status(403).json({ message: "Authorization key not sent." });
-    }
-
-    let isAuthKeyMasterKey;
-    try {
-        isAuthKeyMasterKey = await IsMaster(authKey);
-    } catch (error) {
-        log.error({ err: error }, 'IsMaster failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
-    }
-
-    const inputCustomers = (req.body && Array.isArray(req.body.customers))
-        ? req.body.customers
-        : [];
-    if (inputCustomers.length === 0) {
-        return res.status(400).json({ message: "customers array is required and must be non-empty." });
-    }
-
-    // Resolve authKey company once (only needed for non-master path).
-    let authKeyCompanyId = null;
-    if (!isAuthKeyMasterKey) {
-        try {
-            authKeyCompanyId = await GetCompanyId(authKey);
-        } catch (error) {
-            log.error({ err: error }, 'GetCompanyId failed');
-            return res.status(500).json({ message: "Error!", error: String(error) });
-        }
-        if (authKeyCompanyId === -1) {
-            return res.status(403).json({ message: "Invalid Authorization Key." });
-        }
-    }
-
-    // Whitelist + auth-scope each entry.
-    const ALLOWED_FIELDS = [
+exports.bulkCreate = makeBulkCreate({
+    Model: Customer,
+    modelKey: 'Customer',
+    compIdField: 'custCompId',
+    allowedFields: [
         'custCompanyName', 'custFName', 'custLName',
         'custAddress1', 'custAddress2',
         'custCity', 'custState', 'custZip',
         'custPhone', 'custEmail', 'custCompId',
-    ];
-    const payloads = [];
-    for (let i = 0; i < inputCustomers.length; i += 1) {
-        const entry = inputCustomers[i] || {};
-        const p = {};
-        for (const f of ALLOWED_FIELDS) {
-            if (entry[f] !== undefined) p[f] = entry[f];
-        }
-        if (isAuthKeyMasterKey) {
-            if (p.custCompId === undefined || Number(p.custCompId) <= 0) {
-                return res.status(400).json({
-                    message: `customers[${i}]: master-key requests must specify custCompId.`,
-                });
-            }
-        } else {
-            if (p.custCompId !== undefined && Number(p.custCompId) !== authKeyCompanyId) {
-                return res.status(403).json({
-                    message: `customers[${i}]: cannot create a customer for a company you do not belong to.`,
-                });
-            }
-            p.custCompId = authKeyCompanyId;
-        }
-        p.custArch = false;
-        payloads.push(p);
-    }
-
-    // All-or-nothing: bulk insert inside a transaction.
-    const t = await db.sequelize.transaction();
-    try {
-        const created = await Customer.bulkCreate(payloads, {
-            transaction: t,
-            validate: true,
-            returning: true,
-        });
-        await t.commit();
-        return res.status(201).json({
-            message: `Created ${created.length} customer(s).`,
-            count: created.length,
-            customers: created,
-        });
-    } catch (error) {
-        try { await t.rollback(); } catch (_) { /* swallow */ }
-        log.error({ err: error }, 'Customer.bulkCreate failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
-    }
-};
+    ],
+    archField: 'custArch',
+    bodyKey: 'customers',
+    createdKey: 'customers',
+});
 
 /**
  * GET /v1/customer/search
