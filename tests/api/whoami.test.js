@@ -3,20 +3,13 @@
 //
 // HTTP tests for GET /v1/whoami.
 //
-// Same constraint as the other API tests in this directory:
-// vi.mock on db.config.js does NOT actually intercept the nested
-// CJS require chain — the controller still talks to the real
-// (unconfigured) Sequelize, which fails and falls through the
-// try/catch to the "unknown key" branch. The recognized-key
-// branches (master / scoped) need the integration suite to cover.
-//
-// What this file CAN verify without a working mock:
-//   - the route is mounted (not 404)
-//   - 403 when authKey header is missing
-//   - DB-failure fallback returns the documented unknown-key shape
-//   - response is always JSON with the documented top-level keys
+// As of P5-M, `app/middleware/auth.js` exposes a `_setDbForTesting`
+// seam that lets these HTTP-level tests drive the previously-
+// unreachable master-key and scoped-key success paths through
+// caller-controlled model stubs. The original "DB-broken" fallback
+// behavior is still covered by the no-stub tests.
 
-import { describe, test, expect, vi, beforeAll } from 'vitest';
+import { describe, test, expect, vi, beforeAll, afterEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 
@@ -59,6 +52,63 @@ describe('GET /v1/whoami auth contract', () => {
         expect(
             res.body.authenticated !== undefined || res.body.message !== undefined,
         ).toBe(true);
+    });
+});
+
+describe('GET /v1/whoami success paths (via P5-M _setDbForTesting seam)', () => {
+    let auth;
+
+    afterEach(async () => {
+        // Restore the production lookup after each case so other tests
+        // in this file (DB-unreachable fallback) still see the
+        // unstubbed behavior.
+        if (!auth) auth = require('../../app/middleware/auth.js');
+        auth._setDbForTesting(null);
+    });
+
+    test('master key returns authenticated:true, isMaster:true, companyId:null', async () => {
+        auth = require('../../app/middleware/auth.js');
+        auth._setDbForTesting({
+            ApiMaster: { findOne: vi.fn().mockResolvedValue({ amId: 1 }) },
+            ApiKey: { findOne: vi.fn() },
+        });
+        const res = await request(app).get('/v1/whoami').set('authKey', 'master-key');
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual({
+            authenticated: true,
+            isMaster: true,
+            companyId: null,
+        });
+    });
+
+    test('scoped (non-master) key returns authenticated:true, isMaster:false, companyId:<int>', async () => {
+        auth = require('../../app/middleware/auth.js');
+        auth._setDbForTesting({
+            ApiMaster: { findOne: vi.fn().mockResolvedValue(null) },
+            ApiKey: { findOne: vi.fn().mockResolvedValue({ akCompanyId: 42 }) },
+        });
+        const res = await request(app).get('/v1/whoami').set('authKey', 'scoped-key');
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual({
+            authenticated: true,
+            isMaster: false,
+            companyId: 42,
+        });
+    });
+
+    test('unknown key (DB responds, no row) returns authenticated:false', async () => {
+        auth = require('../../app/middleware/auth.js');
+        auth._setDbForTesting({
+            ApiMaster: { findOne: vi.fn().mockResolvedValue(null) },
+            ApiKey: { findOne: vi.fn().mockResolvedValue(null) },
+        });
+        const res = await request(app).get('/v1/whoami').set('authKey', 'made-up');
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual({
+            authenticated: false,
+            isMaster: false,
+            companyId: null,
+        });
     });
 });
 
