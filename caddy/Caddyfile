@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Aaron K. Clark
+#
+# Caddy v2 configuration for TimeTrackerAPI's TLS reverse-proxy
+# layer. Loaded by the `caddy` service in docker-compose.tls.yml.
+#
+# Behavior:
+#   - {$TLS_DOMAIN} interpolates from the env (must be set).
+#   - {$TLS_EMAIL} is forwarded to Let's Encrypt for renewal notices.
+#   - HTTP traffic on :80 redirects to HTTPS (Caddy default behavior).
+#   - HTTPS terminates here; backend api at api:3000 is plain HTTP
+#     inside the compose network.
+#   - HSTS is on by default in Caddy (max-age=31536000) — kept.
+#   - Access logs go to stdout for `docker compose logs`.
+#
+# Local-dev / self-signed mode: set TLS_DOMAIN=localhost. Caddy will
+# use its built-in CA, no ACME calls, and the browser will warn on
+# first visit. Fine for testing the wiring.
+
+{
+    # Global options.
+    email {$TLS_EMAIL}
+    # Uncomment for staging cert during cutover testing — limits
+    # ACME rate-limit pain if something is misconfigured.
+    # acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
+{$TLS_DOMAIN} {
+    reverse_proxy api:3000 {
+        # Standard X-Forwarded-* headers so the app's TRUST_PROXY
+        # path can identify the real client IP for rate-limiting.
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up Host {host}
+    }
+
+    # Compress responses. Skip for /openapi.json since it's already
+    # small and aggressive compression on JSON adds a few ms.
+    encode gzip
+
+    # Structured access logs to stdout.
+    log {
+        output stdout
+        format console
+    }
+}

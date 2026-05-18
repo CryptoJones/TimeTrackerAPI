@@ -1,0 +1,68 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Aaron K. Clark
+#
+# Optional TLS reverse-proxy layer. Puts Caddy in front of the api
+# service so production deployments get:
+#   - automatic Let's Encrypt cert provisioning + renewal (ACME)
+#   - HTTP → HTTPS redirect on :80
+#   - HTTP/2 + HTTPS on :443
+#   - rate-limit-friendly logging
+#
+# Usage (production):
+#
+#   cp .env.example .env
+#   # edit .env: set DB_PASSWORD + TLS_DOMAIN + TLS_EMAIL
+#   sudo docker compose \
+#       -f docker-compose.yml \
+#       -f docker-compose.tls.yml \
+#       up -d
+#
+# The api service is rebound to localhost-only inside the compose
+# network — Caddy is the only thing the public hits. Don't combine
+# this file with docker-compose.override.yml (which exposes Postgres
+# on 5432) on a public host.
+#
+# For local TLS (self-signed cert), set TLS_DOMAIN=localhost. Caddy
+# will skip ACME and use its internal CA — your browser will warn,
+# but the wiring is identical to the prod path. Useful for testing
+# HSTS / cookie-secure / SameSite behavior end-to-end.
+
+services:
+  # Remove the host port binding from api — Caddy reaches it via
+  # the compose network. Removes the api as a directly-reachable
+  # service from outside the box.
+  api:
+    ports: !reset []
+    environment:
+      # Tell the app it's behind a proxy so X-Forwarded-For
+      # propagation works for rate-limit + access logs.
+      TRUST_PROXY: "true"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"   # HTTP/3
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data         # ACME certs + state
+      - caddy-config:/config
+    environment:
+      TLS_DOMAIN: ${TLS_DOMAIN:?TLS_DOMAIN must be set (FQDN or 'localhost')}
+      TLS_EMAIL:  ${TLS_EMAIL:-}
+    healthcheck:
+      # Hit Caddy's admin endpoint to verify it's up. Bound to
+      # localhost inside the container; not exposed externally.
+      test: ["CMD", "wget", "-q", "-O-", "http://127.0.0.1:2019/config/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  caddy-data:
+  caddy-config:
