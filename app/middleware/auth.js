@@ -27,16 +27,33 @@
  *   keeps the cheap check cheap (one DB hit, not three).
  */
 
+const crypto = require('crypto');
 const { sequelize } = require('../config/db.config.js');
 const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
+
+/**
+ * Hash an authKey for lookup. Migration 20260518000000 converted
+ * ApiKey.akKEY / ApiMaster.amKEY columns from UUID to TEXT and
+ * replaced row values with SHA-256 hex digests. Operator tokens
+ * issued before the migration keep working because the API hashes
+ * the incoming header here before the SQL lookup.
+ *
+ * SHA-256 unsalted (vs bcrypt/argon2id) because API tokens are
+ * high-entropy (UUID v4 = 122 bits); brute force against a leaked
+ * hash table is impractical. Hashing is to prevent direct replay
+ * if the DB leaks, not to protect a low-entropy password.
+ */
+function hashKey(rawKey) {
+    return crypto.createHash('sha256').update(String(rawKey)).digest('hex');
+}
 
 async function isMaster(authKey) {
     if (!authKey || authKey.length === 0) return false;
     try {
         const r = await db.sequelize.query(
             'SELECT * FROM "dbo"."ApiMaster" WHERE "amKEY" = ? AND "ApiMaster"."amArchive" = false;',
-            { replacements: [authKey], type: sequelize.QueryTypes.SELECT },
+            { replacements: [hashKey(authKey)], type: sequelize.QueryTypes.SELECT },
         );
         if (!r || r.length === 0) return false;
         return typeof r[0].amId === 'number' && r[0].amId > 0;
@@ -51,7 +68,7 @@ async function getCompanyId(authKey) {
     try {
         const r = await db.sequelize.query(
             'SELECT * FROM "dbo"."ApiKey" WHERE "akKEY" = ? AND "ApiKey"."akArchive" = false;',
-            { replacements: [authKey], type: sequelize.QueryTypes.SELECT },
+            { replacements: [hashKey(authKey)], type: sequelize.QueryTypes.SELECT },
         );
         if (!r || r.length === 0) return -1;
         const cid = r[0].akCompanyId;
@@ -220,4 +237,5 @@ module.exports = {
     getCompanyIdByPohId,
     requireAuthKey,
     resolveAuth,
+    hashKey,
 };
