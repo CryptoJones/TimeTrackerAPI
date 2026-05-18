@@ -11,6 +11,7 @@
   ],
   "scripts": {
     "start": "node server.js",
+    "dev": "node --watch --watch-path=./app --watch-path=./server.js server.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint app/ server.js tests/",
