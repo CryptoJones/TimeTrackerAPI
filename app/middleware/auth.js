@@ -183,16 +183,20 @@ async function getCompanyIdByPohId(pohId) {
         const row = await getDb().PurchaseOrderHeader.findByPk(pohId, {
             attributes: ['pohId'],
             include: [{
+                // db.config.js registers this association with
+                // `as: 'vendor'`. Without the alias the include
+                // silently matches nothing — was a latent bug in
+                // P5-M caught by the cascade integration suite.
                 model: getDb().PurchaseOrderVendor,
+                as: 'vendor',
                 attributes: ['povCompId'],
                 required: true,
             }],
         });
         if (!row) return -1;
-        // Association produces row.PurchaseOrderVendor (singular,
-        // belongsTo). defaultScope on PurchaseOrderVendor filters
-        // archived vendors automatically.
-        const vendor = row.PurchaseOrderVendor || row.purchaseOrderVendor;
+        // defaultScope on PurchaseOrderVendor filters archived
+        // vendors automatically.
+        const vendor = row.vendor;
         if (!vendor) return -1;
         const cid = vendor.povCompId;
         return typeof cid === 'number' && cid > 0 ? cid : -1;
@@ -216,13 +220,18 @@ async function getCompanyIdByJobId(jobId) {
         const row = await getDb().Job.findByPk(jobId, {
             attributes: ['jobId'],
             include: [{
+                // db.config.js registers this association with
+                // `as: 'customer'`. Without the alias the include
+                // silently matches nothing — was a latent bug in
+                // P5-M caught by the cascade integration suite.
                 model: getDb().Customer,
+                as: 'customer',
                 attributes: ['custCompId'],
                 required: true,
             }],
         });
         if (!row) return -1;
-        const customer = row.Customer || row.customer;
+        const customer = row.customer;
         if (!customer) return -1;
         const cid = customer.custCompId;
         return typeof cid === 'number' && cid > 0 ? cid : -1;
