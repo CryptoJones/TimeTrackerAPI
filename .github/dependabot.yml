@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Aaron K. Clark
+#
+# Dependabot configuration. Automates dependency updates so the
+# `npm audit` CI gate doesn't surprise us at release time.
+#
+# Two ecosystems get watched:
+#   1. npm — the production + dev tree in package.json.
+#   2. github-actions — workflow action versions in .github/workflows/.
+#   3. docker — base images in Dockerfile / docker-compose.yml.
+#
+# Update cadence is weekly. Patch + minor groups land as one combined
+# PR per ecosystem; major versions get their own PR for review.
+
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: "America/Chicago"
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: "chore(deps)"
+      include: scope
+    groups:
+      # Bundle non-major bumps into a single PR per week so the queue
+      # doesn't fragment. Majors stay separate (each can have a
+      # breaking change worth reviewing on its own).
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: "America/Chicago"
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      prefix: "chore(actions)"
+
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: "America/Chicago"
+    labels:
+      - dependencies
+      - docker
+    commit-message:
+      prefix: "chore(docker)"
