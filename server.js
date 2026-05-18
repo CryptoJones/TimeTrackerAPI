@@ -57,10 +57,13 @@ app.use(pinoHttp({
     serializers: {
         req: (req) => ({
             method: req.method,
-            url: req.url,
+            // url is redacted at the serializer boundary — if an SDK
+            // mistakenly puts the authKey in the query string instead
+            // of the header, the raw value still doesn't land in the
+            // structured log. Header values are separately covered by
+            // logger.js's redact paths.
+            url: require('./app/middleware/redact-url.js').redactUrl(req.url),
             remoteAddress: req.remoteAddress,
-            // headers intentionally omitted — see logger.js redact paths
-            // for the authKey defense-in-depth.
         }),
     },
 }));
