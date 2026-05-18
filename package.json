@@ -30,8 +30,6 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^4.22.2",
-    "express-asyncify": "^1.0.1",
-    "express-promise-router": "^4.1.1",
     "express-rate-limit": "^8.5.2",
     "helmet": "^8.1.0",
     "pg": "^8.20.0",
