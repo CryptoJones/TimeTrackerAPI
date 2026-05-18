@@ -314,6 +314,36 @@ const spec = {
                 },
             },
         },
+        '/v1/whoami': {
+            get: {
+                summary: 'Identity probe — what does the calling authKey resolve to?',
+                description: 'Returns whether the supplied authKey is recognized, ' +
+                    'whether it is a master key, and which company it is scoped to. ' +
+                    'Useful for SDK clients confirming wiring without firing a ' +
+                    'domain endpoint and inferring from a 403/200.',
+                security: [{ authKey: [] }],
+                responses: {
+                    200: {
+                        description: 'OK — body indicates whether the key is recognized',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        authenticated: { type: 'boolean' },
+                                        isMaster: { type: 'boolean' },
+                                        companyId: { type: 'integer', nullable: true },
+                                    },
+                                    required: ['authenticated', 'isMaster', 'companyId'],
+                                },
+                            },
+                        },
+                    },
+                    403: { description: 'authKey header missing entirely' },
+                    500: { description: 'Server error (DB lookup failed)' },
+                },
+            },
+        },
         '/v1/customer/{id}': {
             get: {
                 summary: 'Get one customer by id',

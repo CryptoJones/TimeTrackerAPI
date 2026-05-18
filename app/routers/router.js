@@ -22,6 +22,7 @@ const purchaseOrderVendor = require('../controllers/purchaseordervendorcontrolle
 const purchaseOrderHeader = require('../controllers/purchaseorderheadercontroller.js');
 const purchaseOrderLine = require('../controllers/purchaseorderlinecontroller.js');
 const inventoryTransaction = require('../controllers/inventorytransactioncontroller.js');
+const whoami = require('../controllers/whoamicontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -44,6 +45,11 @@ const inventoryTransactionSchemas = require('../schemas/inventorytransaction.sch
 // Health / readiness probe. No auth required — only exposes liveness
 // of the API process and reachability of the database.
 router.get('/healthz', health.healthz);
+
+// Identity probe — returns what the calling authKey resolves to.
+// Useful for SDK clients confirming credentials without firing a
+// domain call. Mounted under /v1 because it's authKey-scoped.
+router.get('/v1/whoami', whoami.whoami);
 
 // OpenAPI: machine-readable spec at /openapi.json, interactive
 // Swagger UI at /docs. Both are unauthenticated by design — the
