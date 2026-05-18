@@ -1,0 +1,32 @@
+# EditorConfig — https://editorconfig.org
+#
+# Locks the whitespace conventions the codebase already uses so editors
+# don't silently rewrite them. Lint catches some of this (no-tabs etc.)
+# but EditorConfig acts on file-open, before code is even written.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml}]
+# YAML's anchor/alias semantics get touchy at >2 spaces; matches the
+# existing .github/workflows + .woodpecker convention.
+indent_size = 2
+
+[*.json]
+indent_size = 2
+
+[*.md]
+# Trailing whitespace in Markdown can mean a hard line break — leave
+# it alone rather than letting the editor strip it.
+trim_trailing_whitespace = false
+
+[Makefile]
+# tabs are required by make
+indent_style = tab
