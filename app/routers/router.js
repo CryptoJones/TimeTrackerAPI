@@ -68,6 +68,11 @@ router.get(
     v.query(customerSchemas.searchQuery),
     customer.search,
 );
+router.get(
+    '/v1/customer/export.csv',
+    v.query(customerSchemas.exportCsvQuery),
+    customer.exportCsv,
+);
 router.post(
     '/v1/customer/bulk',
     v.body(customerSchemas.bulkCustomerBody),

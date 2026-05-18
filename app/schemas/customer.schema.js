@@ -69,6 +69,18 @@ const listByCompanyQuery = z.object({
  * their authKey's owning company and a `companyId` param that
  * doesn't match returns 403.
  */
+/**
+ * GET /v1/customer/export.csv query schema. Same shape as search
+ * minus the `q` requirement.
+ */
+const exportCsvQuery = z.object({
+    companyId: z.coerce.number().int().positive().optional(),
+    limit: z.coerce.number().int().positive().max(5000).optional(),
+    offset: z.coerce.number().int().nonnegative().optional(),
+}).strict({
+    message: 'Unexpected query parameter. Allowed: companyId, limit, offset.',
+});
+
 const searchQuery = z.object({
     q: z.string().min(2).max(255),
     companyId: z.coerce.number().int().positive().optional(),
@@ -84,4 +96,5 @@ module.exports = {
     bulkCustomerBody,
     listByCompanyQuery,
     searchQuery,
+    exportCsvQuery,
 };

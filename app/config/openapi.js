@@ -344,6 +344,30 @@ const spec = {
                 },
             },
         },
+        '/v1/customer/export.csv': {
+            get: {
+                summary: 'CSV export of customers in a company',
+                description:
+                    'text/csv response (no JSON envelope), `Content-Disposition: attachment` set ' +
+                    'so browsers download as `customers-company-<id>.csv`. Capped at 5000 rows per ' +
+                    'call; an oversize result appends a `# truncated...` comment row so callers know ' +
+                    'to page via offset.',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys.' },
+                    { name: 'limit', in: 'query', schema: { type: 'integer', default: 5000, maximum: 5000 } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+                ],
+                responses: {
+                    200: {
+                        description: 'CSV body',
+                        content: { 'text/csv': { schema: { type: 'string' } } },
+                    },
+                    400: { description: 'Master without companyId' },
+                    403: { description: 'Missing authKey, or cross-tenant export attempt' },
+                },
+            },
+        },
         '/v1/customer/bulk': {
             post: {
                 summary: 'Bulk-create customers (transaction-wrapped, all-or-nothing)',
