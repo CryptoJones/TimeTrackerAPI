@@ -117,14 +117,25 @@ app.use(express.json({
 }));
 
 // Rate limit the v1 surface to defend against authKey brute-force.
-// Defaults: 100 requests / 15-minute window per IP. Operators can
-// tune via RATE_LIMIT_WINDOW_MS and RATE_LIMIT_MAX. Set
-// RATE_LIMIT_MAX=0 to disable entirely (e.g. for load testing).
-// /healthz is intentionally NOT rate-limited so orchestrator probes
-// never trip it.
+// Defaults: 100 requests / 15-minute window. Operators can tune via
+// RATE_LIMIT_WINDOW_MS and RATE_LIMIT_MAX. Set RATE_LIMIT_MAX=0 to
+// disable entirely (e.g. for load testing). /healthz is intentionally
+// NOT rate-limited so orchestrator probes never trip it.
+//
+// Key derivation:
+//   - Authenticated requests (authKey header present): key by the
+//     hash prefix of that authKey. Mobile-carrier-NAT users sharing
+//     an IP no longer poison each other's budget; brute-force
+//     attempts get cut off per-key regardless of how many IPs the
+//     attacker rotates through.
+//   - Anonymous requests (no header): key by IP, the
+//     express-rate-limit default. This is the brute-force path —
+//     someone trying keys to find a valid one — and per-IP is the
+//     right granularity there.
 const rateLimitMax = parseInt(process.env.RATE_LIMIT_MAX, 10);
 const rateLimitWindowMs = parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10);
 if (rateLimitMax !== 0) {
+    const { keyByAuthKeyOrIp } = require('./app/middleware/rate-limit-key.js');
     const v1Limiter = rateLimit({
         windowMs: Number.isFinite(rateLimitWindowMs) && rateLimitWindowMs > 0
             ? rateLimitWindowMs
@@ -135,6 +146,7 @@ if (rateLimitMax !== 0) {
         standardHeaders: true,   // RateLimit-* headers
         legacyHeaders: false,    // no X-RateLimit-* legacy headers
         message: { message: 'Too many requests — try again later.' },
+        keyGenerator: keyByAuthKeyOrIp,
     });
     app.use('/v1', v1Limiter);
 }
