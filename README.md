@@ -18,7 +18,8 @@ Working example at [node.timetrackerapi.com](http://node.timetrackerapi.com).
 
 | Endpoint                            | Auth required | Description                                  |
 |-------------------------------------|---------------|----------------------------------------------|
-| `GET /healthz`                      | no            | Liveness + DB-readiness probe (returns `{status, db, uptime_s, version, elapsed_ms}`; 200 ok / 503 degraded). |
+| `GET /healthz`                      | no            | Liveness + DB-readiness probe (returns `{status, db, uptime_s, version, elapsed_ms, migration}`; 200 ok / 503 degraded). `migration` carries the last applied migration name from `SequelizeMeta`, useful for verifying rolling-deploy schema versions. |
+| `GET /metrics`                      | no (or bearer)| Prometheus scrape endpoint. Default Node.js metrics + per-request `http_requests_total` / `http_request_duration_seconds`. Authentication is OPTIONAL: leave `METRICS_BEARER_TOKEN` unset for an open scrape (private-network deployment) or set it to require `Authorization: Bearer <token>`. |
 | `GET /docs`                         | no            | Interactive Swagger UI for the full API. |
 | `GET /openapi.json`                 | no            | Raw OpenAPI 3.0 spec (machine-readable). |
 | `GET /v1/customer/:id`              | yes (`authKey`) | Single customer lookup. Master key sees all; non-master only sees customers in its own company. |
@@ -43,6 +44,25 @@ Working example at [node.timetrackerapi.com](http://node.timetrackerapi.com).
 | `* /v1/purchaseorderheader/*`       | yes (`authKey`) | Purchase orders. Vendor-scoped — auth resolves via `pohPovId → vendor.povCompId`. `GET /byvendor/:id` lists POs for a vendor, newest first. |
 | `* /v1/purchaseorderline/*`         | yes (`authKey`) | PO line items. Header-scoped via `polpoh → header → vendor → company`. `GET /byheader/:id` lists line items on a PO. |
 | `* /v1/inventorytransaction/*`      | yes (`authKey`) | Inventory movement log. Direct company scoping via `invtCompanyId`. `invtDirection` is `0` (inbound) or `1` (outbound). PATCH/DELETE exposed for surface parity; audit-grade deployments may want to disable them at the proxy. |
+| `POST /v1/<entity>/bulk`            | yes (`authKey`) | Transactional all-or-nothing bulk-create on all 13 soft-deletable entities (customer, worker, billingtype, inventoryitem, inventorytransaction, purchaseordervendor, job, invoice, customerpayment, invoicejob, productentry, purchaseorderheader, purchaseorderline). Body: `{ <entityKey>: [{...}, ...] }` capped at 500 entries. Same auth scoping as the single-create POST. If any entry fails to insert, the whole batch rolls back. |
+
+### Cross-cutting headers + behaviors
+
+- **`Idempotency-Key` (request header, optional)** — set on any POST to make it
+  idempotent for 24h. Identical retry replays the cached response with
+  `Idempotency-Replay: true`. Same key + different body → `409
+  { code: "idempotency_key_reused" }`. Printable ASCII, 1-255 chars.
+- **`Link` (response header, RFC 5988)** — every paginated list endpoint emits
+  `next` / `prev` / `first` / `last` URLs when applicable, so clients can walk
+  the result set without doing offset arithmetic.
+- **`X-Request-Id` (response header, also accepted on request)** — every
+  response carries a UUID correlator; the same id appears in every structured
+  log line for that request. Supply your own X-Request-Id on the way in to
+  propagate trace context from a reverse proxy / mesh.
+- **`RateLimit-*` (response headers, RFC standard)** — `RateLimit-Limit`,
+  `RateLimit-Remaining`, `RateLimit-Reset` on every /v1/* response.
+- Browser JS reading any of the above on a cross-origin response works
+  out-of-the-box: the CORS layer's `Access-Control-Expose-Headers` covers them.
 
 Every v1 request must include the API key in the `authKey` HTTP header.
 The `/healthz` endpoint is intentionally unauthenticated so it can be
