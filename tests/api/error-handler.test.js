@@ -21,8 +21,34 @@ beforeAll(() => {
         next(new Error('boom'));
     });
     app.get('/explode/with-status', (req, res, next) => {
+        // 4xx WITHOUT expose=true: message should NOT pass through
+        // (it could leak internals from an internal middleware /
+        // library that throws with detail).
+        const err = new Error('Sensitive internal detail');
+        err.status = 418;
+        next(err);
+    });
+    app.get('/explode/exposed', (req, res, next) => {
+        // 4xx WITH expose=true (http-errors convention): message
+        // is safe to surface to the client.
         const err = new Error('I am a teapot');
         err.status = 418;
+        err.expose = true;
+        next(err);
+    });
+    app.get('/explode/payload-too-large', (req, res, next) => {
+        // Simulates body-parser's PayloadTooLargeError shape.
+        const err = new Error('request entity too large');
+        err.status = 413;
+        err.expose = true;  // body-parser sets this
+        next(err);
+    });
+    app.get('/explode/sequelize-style-4xx', (req, res, next) => {
+        // 4xx-status from an internal library (Sequelize, pg driver,
+        // etc.) — these set a status but DON'T set expose. We must
+        // NOT echo their .message.
+        const err = new Error('SequelizeValidationError: column "X" cannot be null');
+        err.status = 400;
         next(err);
     });
     app.get('/explode/leaky', (req, res, next) => {
@@ -55,8 +81,37 @@ describe('global error handler', () => {
     test('honors a numeric err.status in 4xx range', async () => {
         const res = await request(app).get('/explode/with-status');
         expect(res.status).toBe(418);
-        // For 4xx the message goes through (it's a client error, not a server one)
+    });
+
+    test('4xx without err.expose returns a generic message (no detail leak)', async () => {
+        const res = await request(app).get('/explode/with-status');
+        // Status echoed; sensitive .message NOT echoed.
+        expect(res.body.message).not.toMatch(/sensitive internal detail/i);
+        // We use a per-status generic, or fall back to "Request error."
+        // for non-canonical statuses (like 418).
+        expect(typeof res.body.message).toBe('string');
+        expect(res.body.message.length).toBeGreaterThan(0);
+    });
+
+    test('4xx WITH err.expose=true echoes the message (http-errors convention)', async () => {
+        const res = await request(app).get('/explode/exposed');
+        expect(res.status).toBe(418);
         expect(res.body.message).toBe('I am a teapot');
+    });
+
+    test('PayloadTooLargeError-style 413 (expose=true) passes the message through', async () => {
+        const res = await request(app).get('/explode/payload-too-large');
+        expect(res.status).toBe(413);
+        expect(res.body.message).toMatch(/request entity too large/i);
+    });
+
+    test('Sequelize-style 4xx (no expose) gets a generic 400 message', async () => {
+        const res = await request(app).get('/explode/sequelize-style-4xx');
+        expect(res.status).toBe(400);
+        const text = JSON.stringify(res.body);
+        expect(text).not.toMatch(/Sequelize/);
+        expect(text).not.toMatch(/column.*X/);
+        expect(res.body.message).toMatch(/bad request/i);
     });
 });
 
