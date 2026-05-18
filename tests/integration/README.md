@@ -34,15 +34,14 @@ sudo docker compose down -v
 
 ## Known gotchas
 
-- **`setup` exits 3 on re-run against a populated volume.** The
-  `setup/TimeTracker.sql` script does an unconditional
-  `CREATE SCHEMA dbo` which fails if the schema already exists.
-  Workaround: `docker compose down -v` before re-running. (Tracker
-  for the idempotency fix is filed as a separate issue.)
 - **`docker-compose.override.yml` opens port 5432 on the host.**
   Fine for local dev; do not push the override file's port
   binding to a public host without firewall rules — Postgres on
   the open internet is a credential-brute-force invitation.
+- **Re-running `setup` against an existing volume is safe** since
+  PR #57 made `setup/TimeTracker.sql` idempotent. Step 4's
+  `down -v` is for "I want a fresh database" cleanup, not a
+  workaround.
 
 ## Without docker
 
