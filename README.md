@@ -122,6 +122,27 @@ npm start
 
 The server listens on `http://0.0.0.0:3000` by default. No root required.
 
+### Behind TLS (production)
+
+The repo ships an opt-in TLS reverse-proxy layer using Caddy in
+`docker-compose.tls.yml`. Caddy handles automatic Let's Encrypt
+provisioning + renewal, HTTP→HTTPS redirect, and HTTP/2 +
+HTTP/3 on :443. The api service is rebound off the host port so
+Caddy is the only thing the public reaches.
+
+```bash
+# In .env: set DB_PASSWORD, TLS_DOMAIN (your FQDN), and TLS_EMAIL.
+sudo docker compose \
+    -f docker-compose.yml \
+    -f docker-compose.tls.yml \
+    up -d
+```
+
+For local TLS testing set `TLS_DOMAIN=localhost`; Caddy uses its
+built-in CA (self-signed) instead of ACME. Don't combine
+`docker-compose.tls.yml` with `docker-compose.override.yml` on a
+public host — the override exposes Postgres on :5432.
+
 ---
 
 ## Testing
