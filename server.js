@@ -13,6 +13,7 @@ const db = require('./app/config/db.config.js');
 const log = require('./app/config/logger.js');
 const router = require('./app/routers/router.js');
 const { errorHandler, notFound } = require('./app/middleware/error-handler.js');
+const { metricsMiddleware } = require('./app/middleware/metrics.js');
 
 const app = express();
 
@@ -153,6 +154,11 @@ if (rateLimitMax !== 0) {
     });
     app.use('/v1', v1Limiter);
 }
+
+// Metrics observer. Mounted BEFORE the router so it sees every
+// request that flows through (including 404s). The handler at
+// /metrics is exposed inside the router itself.
+app.use(metricsMiddleware);
 
 app.use('/', router);
 

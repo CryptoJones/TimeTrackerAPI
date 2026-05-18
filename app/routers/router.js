@@ -48,6 +48,12 @@ const inventoryTransactionSchemas = require('../schemas/inventorytransaction.sch
 // of the API process and reachability of the database.
 router.get('/healthz', health.healthz);
 
+// Prometheus scrape endpoint. Auth is optional, gated by
+// METRICS_BEARER_TOKEN env var; unset => unauthenticated, the
+// usual private-network deployment pattern.
+const { metricsHandler } = require('../middleware/metrics.js');
+router.get('/metrics', metricsHandler);
+
 // attachAuth runs on every /v1/* request and populates
 // req.authKey / req.isMaster / req.companyId without rejecting.
 // Existing controllers still have their inline authKey check; once
