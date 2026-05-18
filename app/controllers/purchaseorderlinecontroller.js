@@ -11,6 +11,7 @@ const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
+const { makeBulkCreateIndirect } = require('./_bulk-helpers.js');
 const PurchaseOrderLine = db.PurchaseOrderLine;
 
 const IsMaster = auth.isMaster;
@@ -209,5 +210,16 @@ exports.remove = async (req, res) => {
         return res.status(500).json({ message: "Error!", error: String(error) });
     }
 };
+
+exports.bulkCreate = makeBulkCreateIndirect({
+    Model: PurchaseOrderLine,
+    modelKey: 'PurchaseOrderLine',
+    parentFkField: 'polpoh',
+    resolveParentCompanyId: auth.getCompanyIdByPohId,
+    allowedFields: ALLOWED_FIELDS_CREATE,
+    archField: 'polArch',
+    bodyKey: 'purchaseOrderLines',
+    createdKey: 'purchaseOrderLines',
+});
 
 exports._internals = { IsMaster, GetCompanyId, GetCompanyIdByPohId };

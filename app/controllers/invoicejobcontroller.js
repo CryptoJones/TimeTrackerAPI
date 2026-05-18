@@ -11,6 +11,7 @@ const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
+const { makeBulkCreateIndirect } = require('./_bulk-helpers.js');
 const InvoiceJob = db.InvoiceJob;
 
 const IsMaster = auth.isMaster;
@@ -228,5 +229,16 @@ exports.remove = async (req, res) => {
         return res.status(500).json({ message: "Error!", error: String(error) });
     }
 };
+
+exports.bulkCreate = makeBulkCreateIndirect({
+    Model: InvoiceJob,
+    modelKey: 'InvoiceJob',
+    parentFkField: 'injbJobId',
+    resolveParentCompanyId: auth.getCompanyIdByJobId,
+    allowedFields: ALLOWED_FIELDS_CREATE,
+    archField: 'injbArch',
+    bodyKey: 'invoiceJobs',
+    createdKey: 'invoiceJobs',
+});
 
 exports._internals = { IsMaster, GetCompanyId, GetCompanyIdByJobId };

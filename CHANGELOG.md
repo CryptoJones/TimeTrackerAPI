@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Bulk-create endpoints for 7 indirect-scoped entities** (P3-H2).
+  New `POST /v1/<entity>/bulk` on Job, Invoice, CustomerPayment,
+  InvoiceJob, ProductEntry, PurchaseOrderHeader, PurchaseOrderLine.
+  Same 500-entry cap and transactional all-or-nothing semantics as
+  the direct-compId family from P3-H, but per-entry auth scope is
+  resolved through the parent FK (Customer / Job / Vendor / Header)
+  via the existing helpers in `app/middleware/auth.js`. A new
+  `makeBulkCreateIndirect` factory in
+  `app/controllers/_bulk-helpers.js` parameterizes over the parent
+  FK column + the auth-helper that resolves it; the 7 controllers
+  gain ~10 LOC each instead of ~120. The bulk surface now covers
+  **all 13 soft-deletable entities.**
+
 ### Changed
 - **`app/middleware/auth.js` is now testable end-to-end** (P5-M).
   Two changes:

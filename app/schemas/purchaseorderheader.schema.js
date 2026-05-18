@@ -37,9 +37,16 @@ const listByVendorQuery = z.object({
     message: 'Unexpected query parameter. Allowed: limit, offset.',
 });
 
+const bulkBody = z.object({
+    purchaseOrderHeaders: z.array(createBody).min(1).max(500),
+}).strict({
+    message: 'Unexpected field in body. Whitelist: purchaseOrderHeaders (array).',
+});
+
 module.exports = {
     intIdParam,
     createBody,
     updateBody,
     listByVendorQuery,
+    bulkBody,
 };

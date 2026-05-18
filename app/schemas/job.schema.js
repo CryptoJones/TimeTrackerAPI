@@ -29,9 +29,16 @@ const listByCustomerQuery = z.object({
     message: 'Unexpected query parameter. Allowed: limit, offset.',
 });
 
+const bulkJobBody = z.object({
+    jobs: z.array(createJobBody).min(1).max(500),
+}).strict({
+    message: 'Unexpected field in body. Whitelist: jobs (array).',
+});
+
 module.exports = {
     intIdParam,
     createJobBody,
     updateJobBody,
     listByCustomerQuery,
+    bulkJobBody,
 };

@@ -6,6 +6,7 @@ const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
+const { makeBulkCreateIndirect } = require('./_bulk-helpers.js');
 const CustomerPayment = db.CustomerPayment;
 
 const IsMaster = auth.isMaster;
@@ -209,5 +210,16 @@ exports.remove = async (req, res) => {
         return res.status(500).json({ message: "Error!", error: String(error) });
     }
 };
+
+exports.bulkCreate = makeBulkCreateIndirect({
+    Model: CustomerPayment,
+    modelKey: 'CustomerPayment',
+    parentFkField: 'cpayCustId',
+    resolveParentCompanyId: auth.getCompanyIdByCustomerId,
+    allowedFields: ALLOWED_FIELDS_CREATE,
+    archField: 'cpayArch',
+    bodyKey: 'customerPayments',
+    createdKey: 'customerPayments',
+});
 
 exports._internals = { IsMaster, GetCompanyId, GetCompanyIdByCustomerId };
