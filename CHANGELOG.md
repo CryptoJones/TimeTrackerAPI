@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Bulk-create endpoints for 5 direct-compId entities** (P3-H).
+  New `POST /v1/<entity>/bulk` on Worker, BillingType, InventoryItem,
+  InventoryTransaction, and PurchaseOrderVendor. Same shape as the
+  existing `POST /v1/customer/bulk`: 500-entry cap, zod-strict
+  whitelist, transactional all-or-nothing insert, master vs.
+  non-master scoping enforced per entry. Shared
+  `app/controllers/_bulk-helpers.js#makeBulkCreate` factory removes
+  ~150 lines of would-be duplication; Customer's pre-existing handler
+  keeps its bespoke logic until a follow-up unifies them.
 - **Idempotency-Key support on POST routes** (P3-G).
   Clients may send an `Idempotency-Key: <printable-ASCII, 1-255>`
   header on any POST under `/v1/*`. The first response (status +

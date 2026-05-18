@@ -6,6 +6,7 @@ const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
+const { makeBulkCreate } = require('./_bulk-helpers.js');
 const BillingType = db.BillingType;
 
 const IsMaster = auth.isMaster;
@@ -224,5 +225,15 @@ exports.remove = async (req, res) => {
         return res.status(500).json({ message: "Error!", error: String(error) });
     }
 };
+
+exports.bulkCreate = makeBulkCreate({
+    Model: BillingType,
+    modelKey: 'BillingType',
+    compIdField: 'btCompId',
+    allowedFields: ALLOWED_FIELDS_CREATE,
+    archField: 'btArch',
+    bodyKey: 'billingTypes',
+    createdKey: 'billingTypes',
+});
 
 exports._internals = { IsMaster, GetCompanyId };

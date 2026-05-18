@@ -48,9 +48,21 @@ const listByCompanyQuery = z.object({
     message: 'Unexpected query parameter. Allowed: limit, offset.',
 });
 
+/**
+ * POST /v1/worker/bulk body. Mirrors customer's bulk shape. Each entry
+ * is validated by the same createWorkerBody so the whitelist semantics
+ * stay uniform between single and bulk paths.
+ */
+const bulkWorkerBody = z.object({
+    workers: z.array(createWorkerBody).min(1).max(500),
+}).strict({
+    message: 'Unexpected field in body. Whitelist: workers (array).',
+});
+
 module.exports = {
     intIdParam,
     createWorkerBody,
     updateWorkerBody,
     listByCompanyQuery,
+    bulkWorkerBody,
 };
