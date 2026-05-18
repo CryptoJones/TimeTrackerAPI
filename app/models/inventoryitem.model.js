@@ -39,7 +39,7 @@ module.exports = (sequelize, Sequelize) => {
         },
     }, {
         tableName: 'InventoryItem',
-        timestamps: false,
+        timestamps: true,
         defaultScope: { where: { invitArch: false } }
     });
 

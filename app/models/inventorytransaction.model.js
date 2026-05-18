@@ -26,7 +26,7 @@ module.exports = (sequelize, Sequelize) => {
         invtInitId:     { field: 'invtInitId',     type: Sequelize.INTEGER, allowNull: false },
     }, {
         tableName: 'InventoryTransactions',
-        timestamps: false,
+        timestamps: true,
         defaultScope: { where: { invtArch: false } }
     });
 

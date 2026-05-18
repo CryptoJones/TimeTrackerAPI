@@ -28,7 +28,7 @@ module.exports = (sequelize, Sequelize) => {
         polArch:      { field: 'polArch',     type: Sequelize.BOOLEAN, defaultValue: false },
     }, {
         tableName: 'PurchaseOrderLines',
-        timestamps: false,
+        timestamps: true,
         defaultScope: { where: { polArch: false } }
     });
 

@@ -39,7 +39,7 @@ module.exports = (sequelize, Sequelize) => {
         },
     }, {
         tableName: 'Job',
-        timestamps: false,
+        timestamps: true,
         defaultScope: { where: { jobArch: false } }
     });
 

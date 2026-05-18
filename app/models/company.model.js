@@ -37,7 +37,7 @@ module.exports = (sequelize, Sequelize) => {
         },
     }, {
         tableName: 'Company',
-        timestamps: false,
+        timestamps: true,
         defaultScope: { where: { compArch: false } }
     });
 

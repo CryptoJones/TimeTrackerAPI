@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`createdAt` / `updatedAt` on every domain entity** (P4-K). New
+  migration adds two `TIMESTAMPTZ NOT NULL DEFAULT now()` columns to
+  18 tables (everything except `IdempotencyKey`, which already
+  tracks its own time fields). All 18 models flip
+  `timestamps: false` → `true` so Sequelize auto-populates the
+  columns on every `.create()` / `.update()`. Existing rows are
+  backfilled to `now()` at apply time; operators with the original
+  SQL Server timestamps from the Atbash legacy can patch real values
+  post-migration via a one-off UPDATE.
 - **Prometheus `/metrics` endpoint** (P4-J). Exposes prom-client's
   default Node.js metrics (event-loop lag, heap, GC, etc.) plus
   per-request `http_requests_total{method,route,status}` and
