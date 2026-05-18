@@ -305,6 +305,11 @@ const spec = {
                                         uptime_s: { type: 'integer' },
                                         version: { type: 'string' },
                                         elapsed_ms: { type: 'number' },
+                                        migration: {
+                                            type: 'string',
+                                            nullable: true,
+                                            description: 'Last applied migration name from SequelizeMeta (lex-highest entry, which matches apply order since filenames are timestamp-prefixed). Null when SequelizeMeta is missing or unreadable.',
+                                        },
                                     },
                                 },
                             },

@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`migration` field on `GET /healthz`** (P4-I). Body now reports the
+  last applied migration name from `SequelizeMeta` (e.g.
+  `"20260519000000-idempotency-keys"`). Lets a rolling-deploy caller
+  verify each pod is at the expected schema version. Null when
+  SequelizeMeta is missing (fresh DB pre-migration) or unreadable —
+  the probe never flips to `status: degraded` over a migration-read
+  failure, since the DB itself is still up.
 - **Bulk-create endpoints for 5 direct-compId entities** (P3-H).
   New `POST /v1/<entity>/bulk` on Worker, BillingType, InventoryItem,
   InventoryTransaction, and PurchaseOrderVendor. Same shape as the

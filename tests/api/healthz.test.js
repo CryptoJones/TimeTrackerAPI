@@ -66,4 +66,16 @@ describe('GET /healthz', () => {
             expect(res.status).toBe(503);
         }
     });
+
+    test('carries a `migration` key (null OK, string OK)', async () => {
+        // P4-I: callers can use this to verify a rolling deploy is at
+        // the expected schema version. The mock returns the same value
+        // for every query() call so `migration` here may equal `ok`
+        // (the result of the SELECT 1 probe) or null depending on
+        // mock specificity — either is fine as long as the key exists.
+        const res = await request(app).get('/healthz');
+        expect(res.body).toHaveProperty('migration');
+        const m = res.body.migration;
+        expect(m === null || typeof m === 'string').toBe(true);
+    });
 });
