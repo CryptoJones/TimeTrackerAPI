@@ -27,7 +27,7 @@
   "author": "https://github.com/CryptoJones",
   "license": "Apache-2.0",
   "dependencies": {
-    "cors": "^2.8.5",
+    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^4.22.2",
     "express-asyncify": "^1.0.1",
