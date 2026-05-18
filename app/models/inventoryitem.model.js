@@ -40,6 +40,7 @@ module.exports = (sequelize, Sequelize) => {
     }, {
         tableName: 'InventoryItem',
         timestamps: false,
+        defaultScope: { where: { invitArch: false } }
     });
 
     return InventoryItem;

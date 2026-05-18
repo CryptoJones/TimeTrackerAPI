@@ -55,6 +55,7 @@ module.exports = (sequelize, Sequelize) => {
     }, {
         tableName: 'Worker',
         timestamps: false,
+        defaultScope: { where: { workerArch: false } }
     });
 
     return Worker;

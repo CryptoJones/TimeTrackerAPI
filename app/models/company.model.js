@@ -38,6 +38,7 @@ module.exports = (sequelize, Sequelize) => {
     }, {
         tableName: 'Company',
         timestamps: false,
+        defaultScope: { where: { compArch: false } }
     });
 
     return Company;

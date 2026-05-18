@@ -25,7 +25,8 @@ module.exports = (sequelize, Sequelize) => {
     },
         {
             tableName: 'ApiMaster',
-            timestamps: false
+            timestamps: false,
+            defaultScope: { where: { amArchive: false } }
         }
     );
 

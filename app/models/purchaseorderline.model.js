@@ -29,6 +29,7 @@ module.exports = (sequelize, Sequelize) => {
     }, {
         tableName: 'PurchaseOrderLines',
         timestamps: false,
+        defaultScope: { where: { polArch: false } }
     });
 
     return PurchaseOrderLine;

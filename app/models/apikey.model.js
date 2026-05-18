@@ -30,7 +30,8 @@ module.exports = (sequelize, Sequelize) => {
     },
         {
             tableName: 'ApiKey',
-            timestamps: false
+            timestamps: false,
+            defaultScope: { where: { akArchive: false } }
         }
     );
     return ApiKey;

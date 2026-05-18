@@ -46,6 +46,7 @@ module.exports = (sequelize, Sequelize) => {
     }, {
         tableName: 'ProductEntry',
         timestamps: false,
+        defaultScope: { where: { penArch: false } }
     });
 
     return ProductEntry;

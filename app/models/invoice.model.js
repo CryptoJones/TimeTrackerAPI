@@ -46,6 +46,7 @@ module.exports = (sequelize, Sequelize) => {
     }, {
         tableName: 'Invoice',
         timestamps: false,
+        defaultScope: { where: { invArch: false } }
     });
 
     return Invoice;

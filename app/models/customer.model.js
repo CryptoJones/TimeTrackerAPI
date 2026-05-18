@@ -66,7 +66,8 @@ module.exports = (sequelize, Sequelize) => {
     },
         {
             tableName: 'Customer',
-            timestamps: false
+            timestamps: false,
+            defaultScope: { where: { custArch: false } }
         }
     );
 
