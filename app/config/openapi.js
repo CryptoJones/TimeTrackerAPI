@@ -529,6 +529,30 @@ const spec = {
                 responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } },
             },
         },
+        '/v1/timeentry/export.csv': {
+            get: {
+                summary: 'CSV export of time entries (invoicing-friendly)',
+                description:
+                    'text/csv response with attachment Content-Disposition. ' +
+                    'Same filter set as bycompany (customerId, from, to) plus a ' +
+                    'master-only `companyId` requirement. 5000-row hard cap; ' +
+                    'oversize results append `# truncated…` comment row.',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys.' },
+                    { name: 'customerId', in: 'query', schema: { type: 'integer' } },
+                    { name: 'from', in: 'query', schema: { type: 'string', format: 'date-time' } },
+                    { name: 'to', in: 'query', schema: { type: 'string', format: 'date-time' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer', default: 5000, maximum: 5000 } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+                ],
+                responses: {
+                    200: { description: 'CSV body', content: { 'text/csv': { schema: { type: 'string' } } } },
+                    400: { description: 'Master without companyId' },
+                    403: { description: 'Missing authKey or cross-tenant export attempt' },
+                },
+            },
+        },
         '/v1/timeentry/bycompany/{id}': {
             get: {
                 summary: 'List time entries for a company',

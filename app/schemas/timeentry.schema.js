@@ -48,6 +48,22 @@ const updateTimeEntryBody = z.object({
     message: 'Unexpected field in body. Whitelist: teDescription, teStartedAt, teEndedAt, teBillable.',
 });
 
+/**
+ * GET /v1/timeentry/export.csv query schema. Like listByCompanyQuery
+ * but adds companyId (required for master) and bumps the limit cap
+ * to 5000 to match the CSV body's hard cap.
+ */
+const exportCsvQuery = z.object({
+    companyId: z.coerce.number().int().positive().optional(),
+    customerId: z.coerce.number().int().positive().optional(),
+    from: isoDatetime.optional(),
+    to: isoDatetime.optional(),
+    limit: z.coerce.number().int().positive().max(5000).optional(),
+    offset: z.coerce.number().int().nonnegative().optional(),
+}).strict({
+    message: 'Unexpected query parameter. Allowed: companyId, customerId, from, to, limit, offset.',
+});
+
 const listByCompanyQuery = z.object({
     customerId: z.coerce.number().int().positive().optional(),
     from: isoDatetime.optional(),
@@ -63,4 +79,5 @@ module.exports = {
     createTimeEntryBody,
     updateTimeEntryBody,
     listByCompanyQuery,
+    exportCsvQuery,
 };

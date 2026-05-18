@@ -123,6 +123,11 @@ router.delete(
     v.params(timeEntrySchemas.intIdParam),
     timeEntry.remove,
 );
+router.get(
+    '/v1/timeentry/export.csv',
+    v.query(timeEntrySchemas.exportCsvQuery),
+    timeEntry.exportCsv,
+);
 
 // v1 worker routes.
 router.post(
