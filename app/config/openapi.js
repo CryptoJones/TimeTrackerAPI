@@ -549,6 +549,7 @@ const spec = {
             post: {
                 summary: 'Create a customer',
                 security: [{ authKey: [] }],
+                parameters: [idempotencyKeyHeader],
                 requestBody: {
                     required: true,
                     content: {
@@ -566,6 +567,7 @@ const spec = {
             post: {
                 summary: 'Create a time entry',
                 security: [{ authKey: [] }],
+                parameters: [idempotencyKeyHeader],
                 requestBody: {
                     required: true,
                     content: {
@@ -642,6 +644,7 @@ const spec = {
             post: {
                 summary: 'Create a worker',
                 security: [{ authKey: [] }],
+                parameters: [idempotencyKeyHeader],
                 requestBody: {
                     required: true,
                     content: {
@@ -692,6 +695,7 @@ const spec = {
             post: {
                 summary: 'Create a billing type',
                 security: [{ authKey: [] }],
+                parameters: [idempotencyKeyHeader],
                 requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/BillingType' } } } },
                 responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } },
             },
@@ -733,6 +737,7 @@ const spec = {
             post: {
                 summary: 'Create an inventory item',
                 security: [{ authKey: [] }],
+                parameters: [idempotencyKeyHeader],
                 requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/InventoryItem' } } } },
                 responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } },
             },
@@ -774,6 +779,7 @@ const spec = {
             post: {
                 summary: 'Create a company (master keys only)',
                 security: [{ authKey: [] }],
+                parameters: [idempotencyKeyHeader],
                 requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/Company' } } } },
                 responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Non-master key' } },
             },
@@ -812,6 +818,7 @@ const spec = {
             post: {
                 summary: 'Create a job',
                 security: [{ authKey: [] }],
+                parameters: [idempotencyKeyHeader],
                 requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/Job' } } } },
                 responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } },
             },
@@ -837,6 +844,7 @@ const spec = {
             post: {
                 summary: 'Create an invoice',
                 security: [{ authKey: [] }],
+                parameters: [idempotencyKeyHeader],
                 requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/Invoice' } } } },
                 responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } },
             },
@@ -862,6 +870,7 @@ const spec = {
             post: {
                 summary: 'Create a customer payment',
                 security: [{ authKey: [] }],
+                parameters: [idempotencyKeyHeader],
                 requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/CustomerPayment' } } } },
                 responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } },
             },
@@ -887,6 +896,7 @@ const spec = {
             post: {
                 summary: 'Create an invoice line (job → invoice)',
                 security: [{ authKey: [] }],
+                parameters: [idempotencyKeyHeader],
                 requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/InvoiceJob' } } } },
                 responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } },
             },
@@ -912,6 +922,7 @@ const spec = {
             post: {
                 summary: 'Create a product entry',
                 security: [{ authKey: [] }],
+                parameters: [idempotencyKeyHeader],
                 requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/ProductEntry' } } } },
                 responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } },
             },
@@ -937,6 +948,7 @@ const spec = {
             post: {
                 summary: 'Create a version info record (master keys only)',
                 security: [{ authKey: [] }],
+                parameters: [idempotencyKeyHeader],
                 requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/VersionInfo' } } } },
                 responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Non-master key' } },
             },
@@ -959,6 +971,7 @@ const spec = {
             post: {
                 summary: 'Create a PO vendor',
                 security: [{ authKey: [] }],
+                parameters: [idempotencyKeyHeader],
                 requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/PurchaseOrderVendor' } } } },
                 responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } },
             },
@@ -981,7 +994,7 @@ const spec = {
             },
         },
         '/v1/purchaseorderheader': {
-            post: { summary: 'Create a PO header', security: [{ authKey: [] }], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/PurchaseOrderHeader' } } } }, responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } } },
+            post: { summary: 'Create a PO header', security: [{ authKey: [] }], parameters: [idempotencyKeyHeader], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/PurchaseOrderHeader' } } } }, responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } } },
         },
         '/v1/purchaseorderheader/{id}': {
             get: { summary: 'Get one PO header', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
@@ -1001,7 +1014,7 @@ const spec = {
             },
         },
         '/v1/purchaseorderline': {
-            post: { summary: 'Create a PO line', security: [{ authKey: [] }], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/PurchaseOrderLine' } } } }, responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } } },
+            post: { summary: 'Create a PO line', security: [{ authKey: [] }], parameters: [idempotencyKeyHeader], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/PurchaseOrderLine' } } } }, responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } } },
         },
         '/v1/purchaseorderline/{id}': {
             get: { summary: 'Get one PO line', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
@@ -1021,7 +1034,7 @@ const spec = {
             },
         },
         '/v1/inventorytransaction': {
-            post: { summary: 'Create an inventory transaction', security: [{ authKey: [] }], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/InventoryTransaction' } } } }, responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } } },
+            post: { summary: 'Create an inventory transaction', security: [{ authKey: [] }], parameters: [idempotencyKeyHeader], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/InventoryTransaction' } } } }, responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } } },
         },
         '/v1/inventorytransaction/{id}': {
             get: { summary: 'Get one inventory transaction', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },

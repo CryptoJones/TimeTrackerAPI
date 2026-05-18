@@ -93,6 +93,31 @@ describe('OpenAPI spec', () => {
         }
     });
 
+    test('single-create POSTs document the Idempotency-Key header', async () => {
+        // The middleware applies to every /v1/* POST, so the spec
+        // should advertise the header on the single-create endpoints
+        // too — not just the bulk variants. We don't pin the 409
+        // response on single POSTs (the same-key-different-body case
+        // is rare enough that documenting just the request header is
+        // sufficient for SDK code-gen).
+        const res = await request(app).get('/openapi.json');
+        const targets = [
+            '/v1/customer', '/v1/timeentry', '/v1/worker', '/v1/billingtype',
+            '/v1/inventoryitem', '/v1/company', '/v1/job', '/v1/invoice',
+            '/v1/customerpayment', '/v1/invoicejob', '/v1/productentry',
+            '/v1/versioninfo', '/v1/purchaseordervendor',
+            '/v1/purchaseorderheader', '/v1/purchaseorderline',
+            '/v1/inventorytransaction',
+        ];
+        for (const path of targets) {
+            const post = res.body.paths[path] && res.body.paths[path].post;
+            expect(post, `${path} POST should be documented`).toBeDefined();
+            const params = post.parameters || [];
+            const idem = params.find((p) => p.name === 'Idempotency-Key');
+            expect(idem, `${path} POST should document the Idempotency-Key header`).toBeDefined();
+        }
+    });
+
     test('bulk endpoints document the Idempotency-Key header', async () => {
         const res = await request(app).get('/openapi.json');
         const customer = res.body.paths['/v1/customer/bulk'];
