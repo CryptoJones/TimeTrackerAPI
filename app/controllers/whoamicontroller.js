@@ -24,50 +24,32 @@
  * whether the network plumbing is wrong vs. the credential.
  */
 
-const log = require('../config/logger.js');
-const auth = require('../middleware/auth.js');
+// Mounted under attachAuth but NOT under requireAuth — req.authKey
+// may be null, req.companyId may be -1. That's intentional; the
+// response shape distinguishes "header missing" from "header
+// present but unknown."
 
 exports.whoami = async (req, res) => {
-    const authKey = req.get('authKey');
-    if (!authKey) {
+    if (!req.authKey) {
         return res.status(403).json({ message: "Authorization key not sent." });
     }
-
-    let isMaster;
-    try {
-        isMaster = await auth.isMaster(authKey);
-    } catch (error) {
-        log.error({ err: error }, 'whoami: isMaster failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
-    }
-
-    if (isMaster) {
+    if (req.isMaster) {
         return res.status(200).json({
             authenticated: true,
             isMaster: true,
             companyId: null,
         });
     }
-
-    let companyId;
-    try {
-        companyId = await auth.getCompanyId(authKey);
-    } catch (error) {
-        log.error({ err: error }, 'whoami: getCompanyId failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
-    }
-
-    if (companyId === -1) {
+    if (req.companyId === -1) {
         return res.status(200).json({
             authenticated: false,
             isMaster: false,
             companyId: null,
         });
     }
-
     return res.status(200).json({
         authenticated: true,
         isMaster: false,
-        companyId,
+        companyId: req.companyId,
     });
 };
