@@ -38,4 +38,79 @@ db.PurchaseOrderHeader = require('../models/purchaseorderheader.model.js')(seque
 db.PurchaseOrderLine = require('../models/purchaseorderline.model.js')(sequelize, Sequelize);
 db.InventoryTransaction = require('../models/inventorytransaction.model.js')(sequelize, Sequelize);
 
+// ----------------------------------------------------------------------
+// Associations — centralized so the relationship graph is visible
+// in one place rather than scattered across 15 model files.
+//
+// These are JS-side associations only; they do NOT add FK constraints
+// to the live schema. The DDL in setup/TimeTracker.sql + the
+// 20260517000000 migration are authoritative for what the database
+// physically enforces. Associations here enable Sequelize `include`
+// (eager loading) and the auto-generated getter/setter methods, no
+// more.
+//
+// FK column names match the existing schema column names verbatim —
+// note that several use unusual casings ("polpoh", "invtInitId",
+// "penArch" typo) that we mirror rather than rename.
+// ----------------------------------------------------------------------
+
+// Company is the root of the tenancy tree — most entities belongsTo it.
+db.Company.hasMany(db.Customer,             { foreignKey: 'custCompId',     as: 'customers' });
+db.Company.hasMany(db.Worker,               { foreignKey: 'workerCompId',   as: 'workers' });
+db.Company.hasMany(db.BillingType,          { foreignKey: 'btCompId',       as: 'billingTypes' });
+db.Company.hasMany(db.InventoryItem,        { foreignKey: 'invitCompId',    as: 'inventoryItems' });
+db.Company.hasMany(db.ApiKey,               { foreignKey: 'akCompanyId',    as: 'apiKeys' });
+db.Company.hasMany(db.TimeEntry,            { foreignKey: 'teCompId',       as: 'timeEntries' });
+db.Company.hasMany(db.PurchaseOrderVendor,  { foreignKey: 'povCompId',      as: 'purchaseOrderVendors' });
+db.Company.hasMany(db.InventoryTransaction, { foreignKey: 'invtCompanyId',  as: 'inventoryTransactions' });
+
+db.Customer.belongsTo(db.Company,           { foreignKey: 'custCompId',     as: 'company' });
+db.Worker.belongsTo(db.Company,             { foreignKey: 'workerCompId',   as: 'company' });
+db.BillingType.belongsTo(db.Company,        { foreignKey: 'btCompId',       as: 'company' });
+db.InventoryItem.belongsTo(db.Company,      { foreignKey: 'invitCompId',    as: 'company' });
+db.ApiKey.belongsTo(db.Company,             { foreignKey: 'akCompanyId',    as: 'company' });
+db.TimeEntry.belongsTo(db.Company,          { foreignKey: 'teCompId',       as: 'company' });
+db.PurchaseOrderVendor.belongsTo(db.Company,{ foreignKey: 'povCompId',      as: 'company' });
+db.InventoryTransaction.belongsTo(db.Company,{ foreignKey: 'invtCompanyId', as: 'company' });
+
+// Customer fans out to job-like and ledger entities.
+db.Customer.hasMany(db.TimeEntry,        { foreignKey: 'teCustId',   as: 'timeEntries' });
+db.Customer.hasMany(db.Job,              { foreignKey: 'jobCustId',  as: 'jobs' });
+db.Customer.hasMany(db.Invoice,          { foreignKey: 'invCustId',  as: 'invoices' });
+db.Customer.hasMany(db.CustomerPayment,  { foreignKey: 'cpayCustId', as: 'payments' });
+
+db.TimeEntry.belongsTo(db.Customer,       { foreignKey: 'teCustId',   as: 'customer' });
+db.Job.belongsTo(db.Customer,             { foreignKey: 'jobCustId',  as: 'customer' });
+db.Invoice.belongsTo(db.Customer,         { foreignKey: 'invCustId',  as: 'customer' });
+db.CustomerPayment.belongsTo(db.Customer, { foreignKey: 'cpayCustId', as: 'customer' });
+
+// Worker → BillingType (default rate).
+db.BillingType.hasMany(db.Worker,    { foreignKey: 'workerDefaultBillType', as: 'workersWithDefault' });
+db.Worker.belongsTo(db.BillingType,  { foreignKey: 'workerDefaultBillType', as: 'defaultBillingType' });
+
+// Job has lines (InvoiceJob) and product entries.
+db.Job.hasMany(db.InvoiceJob,      { foreignKey: 'injbJobId', as: 'invoiceLines' });
+db.Job.hasMany(db.ProductEntry,    { foreignKey: 'pentJobId', as: 'productEntries' });
+db.InvoiceJob.belongsTo(db.Job,    { foreignKey: 'injbJobId', as: 'job' });
+db.ProductEntry.belongsTo(db.Job,  { foreignKey: 'pentJobId', as: 'job' });
+
+// Invoice has its line items.
+db.Invoice.hasMany(db.InvoiceJob,  { foreignKey: 'injbInvId', as: 'lines' });
+db.InvoiceJob.belongsTo(db.Invoice,{ foreignKey: 'injbInvId', as: 'invoice' });
+
+// InventoryItem is referenced by product entries, inventory
+// transactions, and PO lines.
+db.InventoryItem.hasMany(db.ProductEntry,         { foreignKey: 'pentInvtId',  as: 'productEntries' });
+db.InventoryItem.hasMany(db.InventoryTransaction, { foreignKey: 'invtInitId',  as: 'transactions' });
+db.InventoryItem.hasMany(db.PurchaseOrderLine,    { foreignKey: 'polInvtId',   as: 'purchaseOrderLines' });
+db.ProductEntry.belongsTo(db.InventoryItem,       { foreignKey: 'pentInvtId',  as: 'inventoryItem' });
+db.InventoryTransaction.belongsTo(db.InventoryItem,{ foreignKey: 'invtInitId', as: 'inventoryItem' });
+db.PurchaseOrderLine.belongsTo(db.InventoryItem,  { foreignKey: 'polInvtId',   as: 'inventoryItem' });
+
+// PurchaseOrder chain: Vendor → Header → Line.
+db.PurchaseOrderVendor.hasMany(db.PurchaseOrderHeader, { foreignKey: 'pohPovId', as: 'purchaseOrders' });
+db.PurchaseOrderHeader.belongsTo(db.PurchaseOrderVendor,{ foreignKey: 'pohPovId', as: 'vendor' });
+db.PurchaseOrderHeader.hasMany(db.PurchaseOrderLine,   { foreignKey: 'polpoh',   as: 'lines' });
+db.PurchaseOrderLine.belongsTo(db.PurchaseOrderHeader, { foreignKey: 'polpoh',   as: 'header' });
+
 module.exports = db;
