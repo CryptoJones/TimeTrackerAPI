@@ -8,6 +8,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Sequelize associations across the full entity graph** (PR #54).
+  Every FK now has a `hasMany`/`belongsTo` pair in `db.config.js`,
+  enabling `include`-based eager loading and the auto-generated
+  getter/setter methods. Verified via a 24-test unit suite that
+  walks `Model.associations` and asserts each expected edge.
+- **Integration test harness** against a real Postgres (PR #55).
+  `tests/integration/` runs only when `DB_PASSWORD` is set + the
+  Sequelize `authenticate()` call succeeds; skips gracefully
+  otherwise so `npm test` keeps working unchanged.
+- **Pre-built Postman collection** at
+  `setup/TimeTrackerAPI.postman_collection.json` (PR #59).
+  Generated from `app/config/openapi.js` via
+  `openapi-to-postmanv2`; covers all 47 endpoints across 16
+  entity folders. Regenerate after API changes with the one-liner
+  in the README.
+- **TLS reverse-proxy compose layer** (PR #60).
+  Opt-in `docker-compose.tls.yml` puts Caddy in front of the api:
+  automatic Let's Encrypt cert provisioning + renewal, HTTP →
+  HTTPS redirect, HTTP/2 + HTTP/3 on :443, HSTS, X-Forwarded-*
+  headers, gzip. `TLS_DOMAIN=localhost` opts into Caddy's
+  built-in CA for local self-signed dev.
+- **Committed `docker-compose.override.yml`** (PR #56) — exposes
+  Postgres on `127.0.0.1:5432` for host-side integration test runs.
+
+### Fixed
+- `setup/TimeTracker.sql` is now idempotent against a populated
+  database (PR #57). Re-running `docker compose up setup` against
+  an existing schema is a no-op exit-0 rather than the previous
+  exit-3 "schema dbo already exists" failure. Removes the
+  `docker compose down -v` workaround from the dev flow.
+
+### Docs
+- Full integration-test bring-up flow documented in
+  `tests/integration/README.md` (PRs #56 + #58). Covers the
+  override file, env vars, fresh vs re-run behavior, and the
+  conventions for cleanup sentinels.
+- README gets sections for **Testing**, **Behind TLS (production)**,
+  and a pointer to the Postman collection.
+
+### Added (earlier in this [Unreleased] window)
 - **PurchaseOrder + Inventory API surface** (#49, PRs #50, #51, #52):
   Full CRUD endpoints for the four tables added by the
   20260517000000 migration —
