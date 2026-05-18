@@ -53,6 +53,18 @@ monitors) without sharing a credential.
 
 *(authKey example using Postman)*
 
+A pre-built Postman collection covering every endpoint lives at
+[`setup/TimeTrackerAPI.postman_collection.json`](setup/TimeTrackerAPI.postman_collection.json).
+Import it via Postman → File → Import. Generated from the
+`/openapi.json` spec via [`openapi-to-postmanv2`](https://github.com/postmanlabs/openapi-to-postman),
+so it stays in sync with whatever the server actually serves —
+regenerate after API changes with:
+
+```bash
+node -e "require('fs').writeFileSync('/tmp/oas.json', JSON.stringify(require('./app/config/openapi.js')))" && \
+    npx --yes openapi-to-postmanv2 -s /tmp/oas.json -o setup/TimeTrackerAPI.postman_collection.json -p
+```
+
 ---
 
 ## Requirements
