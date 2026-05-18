@@ -140,10 +140,14 @@ describe('auth.getCompanyIdByPovId', () => {
 });
 
 describe('auth.getCompanyIdByPohId', () => {
-    test('resolves through the eager-loaded vendor association', async () => {
+    test('resolves through the eager-loaded vendor association (alias: vendor)', async () => {
+        // db.config.js registers this association as `as: 'vendor'`
+        // so Sequelize attaches the loaded row at `row.vendor`, not
+        // `row.PurchaseOrderVendor`. Using the unaliased name was the
+        // P5-M latent bug fixed alongside this test.
         stub.PurchaseOrderHeader.findByPk.mockResolvedValueOnce({
             pohId: 1,
-            PurchaseOrderVendor: { povCompId: 9 },
+            vendor: { povCompId: 9 },
         });
         expect(await auth.getCompanyIdByPohId(1)).toBe(9);
     });
@@ -156,17 +160,19 @@ describe('auth.getCompanyIdByPohId', () => {
     test('returns -1 if header has no vendor (broken FK)', async () => {
         stub.PurchaseOrderHeader.findByPk.mockResolvedValueOnce({
             pohId: 1,
-            PurchaseOrderVendor: null,
+            vendor: null,
         });
         expect(await auth.getCompanyIdByPohId(1)).toBe(-1);
     });
 });
 
 describe('auth.getCompanyIdByJobId', () => {
-    test('resolves through the eager-loaded customer association', async () => {
+    test('resolves through the eager-loaded customer association (alias: customer)', async () => {
+        // Same alias gotcha as getCompanyIdByPohId above. db.config.js
+        // uses `as: 'customer'` for Job → Customer.
         stub.Job.findByPk.mockResolvedValueOnce({
             jobId: 1,
-            Customer: { custCompId: 12 },
+            customer: { custCompId: 12 },
         });
         expect(await auth.getCompanyIdByJobId(1)).toBe(12);
     });
@@ -177,7 +183,7 @@ describe('auth.getCompanyIdByJobId', () => {
     });
 
     test('returns -1 if the job has no customer linkage', async () => {
-        stub.Job.findByPk.mockResolvedValueOnce({ jobId: 1, Customer: null });
+        stub.Job.findByPk.mockResolvedValueOnce({ jobId: 1, customer: null });
         expect(await auth.getCompanyIdByJobId(1)).toBe(-1);
     });
 });
