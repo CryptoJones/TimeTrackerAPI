@@ -3,8 +3,9 @@
 Open-source rewrite of Atbash Services' TimeTrackerAPI on **Node.js + PostgreSQL**.
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?logo=apache)](LICENSE)
-[![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14%2B-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Tests](https://github.com/CryptoJones/TimeTrackerAPI/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/CryptoJones/TimeTrackerAPI/actions/workflows/test.yml)
 [![Codeberg](https://img.shields.io/badge/Codeberg-CryptoJones%2FTimeTrackerAPI-2185D0?logo=codeberg&logoColor=white)](https://codeberg.org/CryptoJones/TimeTrackerAPI)
 [![GitHub](https://img.shields.io/badge/GitHub-CryptoJones%2FTimeTrackerAPI-181717?logo=github&logoColor=white)](https://github.com/CryptoJones/TimeTrackerAPI)
 
