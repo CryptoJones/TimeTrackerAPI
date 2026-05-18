@@ -251,6 +251,116 @@ exports.getAllByCompanyId = async (req, res) => {
     }
 };
 
+/**
+ * GET /v1/customer/search
+ *
+ * Substring search over custCompanyName / custFName / custLName.
+ *
+ * Auth contract:
+ *   - missing authKey                                          -> 403
+ *   - non-master + companyId in query NOT matching auth scope  -> 403
+ *   - non-master without companyId                             -> auto-scope to own
+ *   - master without companyId                                 -> 400 (companyId required)
+ *
+ * The companyId requirement for master keys is deliberate: a
+ * global substring search across every tenant's customer table
+ * is a big footgun (latency + accidental data exposure if the
+ * caller wasn't authorized to see all companies' data). Master
+ * keys must be explicit about the scope.
+ */
+exports.search = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+
+    let isAuthKeyMasterKey;
+    try {
+        isAuthKeyMasterKey = await IsMaster(authKey);
+    } catch (error) {
+        log.error({ err: error }, 'IsMaster failed');
+        return res.status(500).json({ message: "Error!", error: String(error) });
+    }
+
+    // Resolve effective companyId from auth + query
+    let effectiveCompanyId;
+    if (isAuthKeyMasterKey) {
+        const qCompanyId = Number(req.query.companyId);
+        if (!Number.isInteger(qCompanyId) || qCompanyId <= 0) {
+            return res.status(400).json({
+                message: "Master keys must specify companyId on search.",
+            });
+        }
+        effectiveCompanyId = qCompanyId;
+    } else {
+        let authKeyCompanyId;
+        try {
+            authKeyCompanyId = await GetCompanyId(authKey);
+        } catch (error) {
+            log.error({ err: error }, 'GetCompanyId failed');
+            return res.status(500).json({ message: "Error!", error: String(error) });
+        }
+        if (authKeyCompanyId === -1) {
+            return res.status(403).json({ message: "Invalid Authorization Key." });
+        }
+        const qCompanyId = req.query.companyId !== undefined ? Number(req.query.companyId) : null;
+        if (qCompanyId !== null && qCompanyId !== authKeyCompanyId) {
+            return res.status(403).json({
+                message: "Cannot search customers in a company you do not belong to.",
+            });
+        }
+        effectiveCompanyId = authKeyCompanyId;
+    }
+
+    const q = String(req.query.q || '');
+    const requestedLimit = parseInt(req.query.limit, 10);
+    const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
+        ? Math.min(requestedLimit, 500)
+        : 100;
+    const requestedOffset = parseInt(req.query.offset, 10);
+    const offset = Number.isInteger(requestedOffset) && requestedOffset >= 0
+        ? requestedOffset
+        : 0;
+
+    const Op = db.Sequelize && db.Sequelize.Op;
+    if (!Op) {
+        return res.status(500).json({ message: "Error!", error: "Sequelize Op not available" });
+    }
+
+    // ILIKE on Postgres; the `%` wildcards come from us, not the user.
+    const pattern = `%${q}%`;
+    const where = {
+        custCompId: effectiveCompanyId,
+        custArch: false,
+        [Op.or]: [
+            { custCompanyName: { [Op.iLike]: pattern } },
+            { custFName: { [Op.iLike]: pattern } },
+            { custLName: { [Op.iLike]: pattern } },
+        ],
+    };
+
+    try {
+        const { count, rows } = await Customer.findAndCountAll({
+            where,
+            limit,
+            offset,
+            order: [['custId', 'ASC']],
+        });
+        return res.status(200).json({
+            message: `Found ${count} customer(s) matching ${JSON.stringify(q)} in company ${effectiveCompanyId}`,
+            q,
+            companyId: effectiveCompanyId,
+            count,
+            limit,
+            offset,
+            customers: rows,
+        });
+    } catch (error) {
+        log.error({ err: error }, 'Customer.search findAndCountAll failed');
+        return res.status(500).json({ message: "Error!", error: String(error) });
+    }
+};
+
 // ---- helpers ----
 
 async function findAndRespond(customerId, res) {

@@ -44,8 +44,29 @@ const listByCompanyQuery = z.object({
     message: 'Unexpected query parameter. Allowed: limit, offset.',
 });
 
+/**
+ * GET /v1/customer/search query schema.
+ *
+ * `q` is the substring to match against custCompanyName, custFName,
+ * and custLName (case-insensitive ILIKE). 2-char minimum so we don't
+ * page-scan the table on every dropdown keystroke.
+ *
+ * `companyId` is master-only — non-master keys are auto-scoped to
+ * their authKey's owning company and a `companyId` param that
+ * doesn't match returns 403.
+ */
+const searchQuery = z.object({
+    q: z.string().min(2).max(255),
+    companyId: z.coerce.number().int().positive().optional(),
+    limit: z.coerce.number().int().positive().max(500).optional(),
+    offset: z.coerce.number().int().nonnegative().optional(),
+}).strict({
+    message: 'Unexpected query parameter. Allowed: q (>= 2 chars), companyId, limit, offset.',
+});
+
 module.exports = {
     intIdParam,
     createCustomerBody,
     listByCompanyQuery,
+    searchQuery,
 };

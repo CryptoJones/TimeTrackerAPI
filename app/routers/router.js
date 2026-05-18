@@ -61,6 +61,13 @@ router.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, {
 }));
 
 // v1 customer routes.
+// /search MUST be declared before /:id so express doesn't treat
+// "search" as an :id param (which intIdParam would 400 on).
+router.get(
+    '/v1/customer/search',
+    v.query(customerSchemas.searchQuery),
+    customer.search,
+);
 router.get(
     '/v1/customer/:id',
     v.params(customerSchemas.intIdParam),
