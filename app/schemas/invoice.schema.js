@@ -36,9 +36,16 @@ const listByCustomerQuery = z.object({
     message: 'Unexpected query parameter. Allowed: limit, offset.',
 });
 
+const bulkInvoiceBody = z.object({
+    invoices: z.array(createInvoiceBody).min(1).max(500),
+}).strict({
+    message: 'Unexpected field in body. Whitelist: invoices (array).',
+});
+
 module.exports = {
     intIdParam,
     createInvoiceBody,
     updateInvoiceBody,
     listByCustomerQuery,
+    bulkInvoiceBody,
 };

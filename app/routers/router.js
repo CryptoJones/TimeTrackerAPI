@@ -297,6 +297,11 @@ router.delete(
 
 // v1 job routes. Customer-scoped via jobCustId → Customer.custCompId.
 router.post(
+    '/v1/job/bulk',
+    v.body(jobSchemas.bulkJobBody),
+    job.bulkCreate,
+);
+router.post(
     '/v1/job',
     v.body(jobSchemas.createJobBody),
     job.create,
@@ -325,6 +330,11 @@ router.delete(
 );
 
 // v1 invoice routes.
+router.post(
+    '/v1/invoice/bulk',
+    v.body(invoiceSchemas.bulkInvoiceBody),
+    invoice.bulkCreate,
+);
 router.post(
     '/v1/invoice',
     v.body(invoiceSchemas.createInvoiceBody),
@@ -355,6 +365,11 @@ router.delete(
 
 // v1 customerpayment routes.
 router.post(
+    '/v1/customerpayment/bulk',
+    v.body(customerPaymentSchemas.bulkCustomerPaymentBody),
+    customerPayment.bulkCreate,
+);
+router.post(
     '/v1/customerpayment',
     v.body(customerPaymentSchemas.createCustomerPaymentBody),
     customerPayment.create,
@@ -384,6 +399,11 @@ router.delete(
 
 // v1 invoicejob routes. Job-scoped via injbJobId → Job.jobCustId → Customer.custCompId.
 router.post(
+    '/v1/invoicejob/bulk',
+    v.body(invoiceJobSchemas.bulkInvoiceJobBody),
+    invoiceJob.bulkCreate,
+);
+router.post(
     '/v1/invoicejob',
     v.body(invoiceJobSchemas.createInvoiceJobBody),
     invoiceJob.create,
@@ -412,6 +432,11 @@ router.delete(
 );
 
 // v1 productentry routes.
+router.post(
+    '/v1/productentry/bulk',
+    v.body(productEntrySchemas.bulkProductEntryBody),
+    productEntry.bulkCreate,
+);
 router.post(
     '/v1/productentry',
     v.body(productEntrySchemas.createProductEntryBody),
@@ -505,6 +530,11 @@ router.delete(
 
 // v1 purchaseorderheader routes. Vendor-scoped via pohPovId → povCompId.
 router.post(
+    '/v1/purchaseorderheader/bulk',
+    v.body(purchaseOrderHeaderSchemas.bulkBody),
+    purchaseOrderHeader.bulkCreate,
+);
+router.post(
     '/v1/purchaseorderheader',
     v.body(purchaseOrderHeaderSchemas.createBody),
     purchaseOrderHeader.create,
@@ -533,6 +563,11 @@ router.delete(
 );
 
 // v1 purchaseorderline routes. Header-scoped via polpoh → header → vendor.povCompId.
+router.post(
+    '/v1/purchaseorderline/bulk',
+    v.body(purchaseOrderLineSchemas.bulkBody),
+    purchaseOrderLine.bulkCreate,
+);
 router.post(
     '/v1/purchaseorderline',
     v.body(purchaseOrderLineSchemas.createBody),
