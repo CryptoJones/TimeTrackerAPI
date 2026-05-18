@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **`app/middleware/auth.js` is now testable end-to-end** (P5-M).
+  Two changes:
+  1. Every DB hit now goes through the Sequelize model layer
+     (`ApiMaster.findOne`, `Customer.findByPk`, etc.) instead of raw
+     `sequelize.query` calls — fewer hand-rolled SQL strings, and the
+     archive-filter relies on the P2-E defaultScope rather than a
+     repeated `<arch>: false` WHERE clause.
+  2. A test-only `_setDbForTesting(stub)` seam lets unit tests
+     substitute model fixtures directly. vitest's `vi.mock` does not
+     intercept this codebase's CJS `require()` reliably; the explicit
+     setter is the smallest practical injection point. Production
+     code MUST NOT call it.
+  Auth helpers gain 19 new unit-level cases including the previously
+  un-mockable "row found → returns the value" success paths.
+
 ### Added
 - **ESLint flat config + CI gate** (P5-L). New `eslint.config.js`
   with rules tuned for high-signal bug catching rather than style

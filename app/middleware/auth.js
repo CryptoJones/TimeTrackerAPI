@@ -28,9 +28,34 @@
  */
 
 const crypto = require('crypto');
-const { sequelize } = require('../config/db.config.js');
-const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
+
+/**
+ * Late-bound + injectable DB accessor. Returns the db.config module
+ * on every call, or a test-supplied substitute set via
+ * `_setDbForTesting(stub)`. P5-M.
+ *
+ * Why injection: vitest's `vi.mock()` does not intercept CJS
+ * `require()` in this codebase (the model files use CJS via
+ * sequelize-cli's conventions, and vitest's mock layer only patches
+ * ESM imports reliably here). Tests that want to drive the
+ * "row found" success paths therefore need a way to *explicitly*
+ * substitute the db. The setter is hidden behind a leading-underscore
+ * name to make it clear it's a test-only seam; production code
+ * never calls it.
+ *
+ * Production performance: Node caches the require by path, so the
+ * accessor is effectively a property read on `require.cache` after
+ * the first call.
+ */
+let _dbOverride = null;
+function getDb() {
+    return _dbOverride || require('../config/db.config.js');
+}
+function _setDbForTesting(db) {
+    // Pass `null` (or omit) to restore the production lookup.
+    _dbOverride = db || null;
+}
 
 /**
  * Hash an authKey for lookup. Migration 20260518000000 converted
@@ -48,15 +73,35 @@ function hashKey(rawKey) {
     return crypto.createHash('sha256').update(String(rawKey)).digest('hex');
 }
 
+/**
+ * Why model calls instead of raw `sequelize.query`:
+ *
+ * P5-M reworked this module to route every DB hit through the
+ * Sequelize model layer (`ApiMaster.findOne`, `Customer.findByPk`,
+ * etc.) for testability. `vi.mock('../config/db.config.js', ...)`
+ * intercepts the module export; the raw `db.sequelize.query` path
+ * had a nested CJS-require interplay that often slipped past the
+ * mock, leaving tests exercising the real (unreachable in tests) DB.
+ * Going through the models means every code path here is testable
+ * with the same model-stub fixtures the rest of the api tests use.
+ *
+ * Performance is no worse — these are single-row primary-key
+ * lookups; Sequelize's per-row instantiation overhead is in the
+ * sub-millisecond range and dwarfed by the network round-trip.
+ *
+ * The archive filter (`<arch>: false`) is no longer hand-rolled in
+ * the WHERE clause. P2-E added `defaultScope` to every model with
+ * an archive column, so the soft-delete filter is implicit.
+ */
+
 async function isMaster(authKey) {
     if (!authKey || authKey.length === 0) return false;
     try {
-        const r = await db.sequelize.query(
-            'SELECT * FROM "dbo"."ApiMaster" WHERE "amKEY" = ? AND "ApiMaster"."amArchive" = false;',
-            { replacements: [hashKey(authKey)], type: sequelize.QueryTypes.SELECT },
-        );
-        if (!r || r.length === 0) return false;
-        return typeof r[0].amId === 'number' && r[0].amId > 0;
+        const row = await getDb().ApiMaster.findOne({
+            where: { amKEY: hashKey(authKey) },
+            attributes: ['amId'],
+        });
+        return !!(row && typeof row.amId === 'number' && row.amId > 0);
     } catch (error) {
         log.error({ err: error }, 'auth.isMaster query failed');
         return false;
@@ -66,12 +111,12 @@ async function isMaster(authKey) {
 async function getCompanyId(authKey) {
     if (!authKey || authKey.length === 0) return -1;
     try {
-        const r = await db.sequelize.query(
-            'SELECT * FROM "dbo"."ApiKey" WHERE "akKEY" = ? AND "ApiKey"."akArchive" = false;',
-            { replacements: [hashKey(authKey)], type: sequelize.QueryTypes.SELECT },
-        );
-        if (!r || r.length === 0) return -1;
-        const cid = r[0].akCompanyId;
+        const row = await getDb().ApiKey.findOne({
+            where: { akKEY: hashKey(authKey) },
+            attributes: ['akCompanyId'],
+        });
+        if (!row) return -1;
+        const cid = row.akCompanyId;
         return typeof cid === 'number' && cid > 0 ? cid : -1;
     } catch (error) {
         log.error({ err: error }, 'auth.getCompanyId query failed');
@@ -91,12 +136,11 @@ async function getCompanyIdByCustomerId(customerId) {
     const idStr = customerId == null ? '' : String(customerId);
     if (idStr.length === 0 || idStr === '0') return -1;
     try {
-        const r = await db.sequelize.query(
-            'SELECT "custCompId" FROM "dbo"."Customer" WHERE "custId" = ? AND "custArch" = false;',
-            { replacements: [customerId], type: sequelize.QueryTypes.SELECT },
-        );
-        if (!r || r.length === 0) return -1;
-        const cid = r[0].custCompId;
+        const row = await getDb().Customer.findByPk(customerId, {
+            attributes: ['custCompId'],
+        });
+        if (!row) return -1;
+        const cid = row.custCompId;
         return typeof cid === 'number' && cid > 0 ? cid : -1;
     } catch (error) {
         log.error({ err: error }, 'auth.getCompanyIdByCustomerId query failed');
@@ -113,12 +157,11 @@ async function getCompanyIdByPovId(povId) {
     const idStr = povId == null ? '' : String(povId);
     if (idStr.length === 0 || idStr === '0') return -1;
     try {
-        const r = await db.sequelize.query(
-            'SELECT "povCompId" FROM "dbo"."PurchaseOrderVendors" WHERE "povId" = ? AND "povArch" = false;',
-            { replacements: [povId], type: sequelize.QueryTypes.SELECT },
-        );
-        if (!r || r.length === 0) return -1;
-        const cid = r[0].povCompId;
+        const row = await getDb().PurchaseOrderVendor.findByPk(povId, {
+            attributes: ['povCompId'],
+        });
+        if (!row) return -1;
+        const cid = row.povCompId;
         return typeof cid === 'number' && cid > 0 ? cid : -1;
     } catch (error) {
         log.error({ err: error }, 'auth.getCompanyIdByPovId query failed');
@@ -130,21 +173,28 @@ async function getCompanyIdByPovId(povId) {
  * Resolve a PO header id to its owning company id. Used by
  * PurchaseOrderLine — lines reference a header (polpoh), and the
  * header references a vendor (pohPovId), and the vendor's povCompId
- * is the auth boundary. Single query via JOIN keeps the lookup cheap.
+ * is the auth boundary. Eager-loaded via the PurchaseOrderHeader →
+ * PurchaseOrderVendor association so this stays one round-trip.
  */
 async function getCompanyIdByPohId(pohId) {
     const idStr = pohId == null ? '' : String(pohId);
     if (idStr.length === 0 || idStr === '0') return -1;
     try {
-        const r = await db.sequelize.query(
-            `SELECT v."povCompId"
-             FROM "dbo"."PurchaseOrderHeaders" h
-             JOIN "dbo"."PurchaseOrderVendors" v ON v."povId" = h."pohPovId"
-             WHERE h."pohId" = ? AND h."pohArch" = false AND v."povArch" = false;`,
-            { replacements: [pohId], type: sequelize.QueryTypes.SELECT },
-        );
-        if (!r || r.length === 0) return -1;
-        const cid = r[0].povCompId;
+        const row = await getDb().PurchaseOrderHeader.findByPk(pohId, {
+            attributes: ['pohId'],
+            include: [{
+                model: getDb().PurchaseOrderVendor,
+                attributes: ['povCompId'],
+                required: true,
+            }],
+        });
+        if (!row) return -1;
+        // Association produces row.PurchaseOrderVendor (singular,
+        // belongsTo). defaultScope on PurchaseOrderVendor filters
+        // archived vendors automatically.
+        const vendor = row.PurchaseOrderVendor || row.purchaseOrderVendor;
+        if (!vendor) return -1;
+        const cid = vendor.povCompId;
         return typeof cid === 'number' && cid > 0 ? cid : -1;
     } catch (error) {
         log.error({ err: error }, 'auth.getCompanyIdByPohId query failed');
@@ -163,15 +213,18 @@ async function getCompanyIdByJobId(jobId) {
     const idStr = jobId == null ? '' : String(jobId);
     if (idStr.length === 0 || idStr === '0') return -1;
     try {
-        const r = await db.sequelize.query(
-            `SELECT c."custCompId"
-             FROM "dbo"."Job" j
-             JOIN "dbo"."Customer" c ON c."custId" = j."jobCustId"
-             WHERE j."jobId" = ? AND j."jobArch" = false AND c."custArch" = false;`,
-            { replacements: [jobId], type: sequelize.QueryTypes.SELECT },
-        );
-        if (!r || r.length === 0) return -1;
-        const cid = r[0].custCompId;
+        const row = await getDb().Job.findByPk(jobId, {
+            attributes: ['jobId'],
+            include: [{
+                model: getDb().Customer,
+                attributes: ['custCompId'],
+                required: true,
+            }],
+        });
+        if (!row) return -1;
+        const customer = row.Customer || row.customer;
+        if (!customer) return -1;
+        const cid = customer.custCompId;
         return typeof cid === 'number' && cid > 0 ? cid : -1;
     } catch (error) {
         log.error({ err: error }, 'auth.getCompanyIdByJobId query failed');
@@ -281,4 +334,9 @@ module.exports = {
     requireAuth,
     resolveAuth,
     hashKey,
+    // Test-only seam: call with a stub db to drive auth functions
+    // through caller-controlled fixtures; call with no args (or null)
+    // to restore the production lookup. Production code MUST NOT call
+    // this. P5-M.
+    _setDbForTesting,
 };
