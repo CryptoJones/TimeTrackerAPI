@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Prometheus `/metrics` endpoint** (P4-J). Exposes prom-client's
+  default Node.js metrics (event-loop lag, heap, GC, etc.) plus
+  per-request `http_requests_total{method,route,status}` and
+  `http_request_duration_seconds{method,route,status}` series.
+  Route labels use the Express pattern (`/v1/customer/:id`) not the
+  rendered path, so cardinality stays bounded.
+  Authentication is OPTIONAL: unset `METRICS_BEARER_TOKEN` leaves
+  the endpoint open (the usual private-network deployment); setting
+  it requires `Authorization: Bearer <token>` on the scrape. Token
+  comparison is constant-time.
 - **`migration` field on `GET /healthz`** (P4-I). Body now reports the
   last applied migration name from `SequelizeMeta` (e.g.
   `"20260519000000-idempotency-keys"`). Lets a rolling-deploy caller
