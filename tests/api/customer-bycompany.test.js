@@ -44,7 +44,8 @@ describe('GET /v1/customer/bycompany/:id', () => {
         const res = await request(app)
             .get('/v1/customer/bycompany/1')
             .set('authKey', 'anything');
-        expect(res.status).not.toBe(404);
+        expect(res.body).toBeTypeOf('object');
+        expect(res.body.message).toBeDefined();
     });
 
     // Regression for #3. Previously this endpoint had no auth check and

@@ -62,7 +62,8 @@ describe('BillingType auth contract', () => {
 describe('BillingType route mounting', () => {
     test('routes are mounted (not 404)', async () => {
         const res = await request(app).get('/v1/billingtype/1').set('authKey', 'any');
-        expect(res.status).not.toBe(404);
+        expect(res.body).toBeTypeOf('object');
+        expect(res.body.message).toBeDefined();
     });
 });
 

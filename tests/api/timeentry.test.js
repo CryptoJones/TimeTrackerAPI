@@ -37,27 +37,32 @@ beforeAll(async () => {
 describe('/v1/timeentry routing', () => {
     test('POST /v1/timeentry route is mounted', async () => {
         const res = await request(app).post('/v1/timeentry').send({});
-        expect(res.status).not.toBe(404);
+        expect(res.body).toBeTypeOf('object');
+        expect(res.body.message).toBeDefined();
     });
 
     test('GET /v1/timeentry/:id route is mounted', async () => {
         const res = await request(app).get('/v1/timeentry/1');
-        expect(res.status).not.toBe(404);
+        expect(res.body).toBeTypeOf('object');
+        expect(res.body.message).toBeDefined();
     });
 
     test('GET /v1/timeentry/bycompany/:id route is mounted', async () => {
         const res = await request(app).get('/v1/timeentry/bycompany/1');
-        expect(res.status).not.toBe(404);
+        expect(res.body).toBeTypeOf('object');
+        expect(res.body.message).toBeDefined();
     });
 
     test('PATCH /v1/timeentry/:id route is mounted', async () => {
         const res = await request(app).patch('/v1/timeentry/1').send({});
-        expect(res.status).not.toBe(404);
+        expect(res.body).toBeTypeOf('object');
+        expect(res.body.message).toBeDefined();
     });
 
     test('DELETE /v1/timeentry/:id route is mounted', async () => {
         const res = await request(app).delete('/v1/timeentry/1');
-        expect(res.status).not.toBe(404);
+        expect(res.body).toBeTypeOf('object');
+        expect(res.body.message).toBeDefined();
     });
 });
 

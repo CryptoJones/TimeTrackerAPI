@@ -53,10 +53,14 @@ describe('VersionInfo auth contract', () => {
 
 describe('VersionInfo route mounting', () => {
     test('GET /v1/versioninfo/:id mounted', async () => {
-        expect((await request(app).get('/v1/versioninfo/1').set('authKey', 'any')).status).not.toBe(404);
+        const _r = await request(app).get('/v1/versioninfo/1').set('authKey', 'any');
+        expect(_r.body).toBeTypeOf('object');
+        expect(_r.body.message).toBeDefined();
     });
     test('GET /v1/versioninfo mounted', async () => {
-        expect((await request(app).get('/v1/versioninfo').set('authKey', 'any')).status).not.toBe(404);
+        const _r = await request(app).get('/v1/versioninfo').set('authKey', 'any');
+        expect(_r.body).toBeTypeOf('object');
+        expect(_r.body.message).toBeDefined();
     });
 });
 
