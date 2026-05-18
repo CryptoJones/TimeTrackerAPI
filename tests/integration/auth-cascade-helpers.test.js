@@ -60,6 +60,8 @@ beforeAll(async () => {
 
     const customer = await db.Customer.create({
         custCompanyName: `${SENTINEL}-customer`,
+        custFName: 'Cascade',
+        custLName: 'Test',
         custCompId: companyId,
         custArch: false,
     });
@@ -69,6 +71,7 @@ beforeAll(async () => {
         jobCustId: customerId,
         jobDesc: `${SENTINEL}-job`,
         jobArch: false,
+        jobInvoiced: false,
     });
     jobId = job.jobId;
 
@@ -164,6 +167,8 @@ describe.skipIf(!HAS_DB)('integration: cascade auth helpers against real PG', ()
         });
         const archivedCustomer = await db.Customer.create({
             custCompanyName: `${SENTINEL}-arch-customer`,
+            custFName: 'Arch',
+            custLName: 'Test',
             custCompId: isolatedCompany.compId,
             custArch: true,  // pre-archived
         });
@@ -171,6 +176,7 @@ describe.skipIf(!HAS_DB)('integration: cascade auth helpers against real PG', ()
             jobCustId: archivedCustomer.custId,
             jobDesc: `${SENTINEL}-orphan-job`,
             jobArch: false,
+            jobInvoiced: false,
         });
         expect(await auth.getCompanyIdByJobId(orphanJob.jobId)).toBe(-1);
     });
