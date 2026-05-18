@@ -243,7 +243,6 @@ exports.getAllByCompanyId = async (req, res) => {
         const link = buildLinkHeader({ req, limit, offset, count });
         if (link) res.setHeader('Link', link);
         // Expose Link header to browser JS clients via CORS.
-        res.setHeader('Access-Control-Expose-Headers', 'Link');
         return res.status(200).json({
             message: "Successfully retrieved customers with CompanyId " + companyId,
             count,
@@ -495,7 +494,6 @@ exports.search = async (req, res) => {
         });
         const link = buildLinkHeader({ req, limit, offset, count });
         if (link) res.setHeader('Link', link);
-        res.setHeader('Access-Control-Expose-Headers', 'Link');
         return res.status(200).json({
             message: `Found ${count} customer(s) matching ${JSON.stringify(q)} in company ${effectiveCompanyId}`,
             q,

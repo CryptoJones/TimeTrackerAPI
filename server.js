@@ -104,6 +104,23 @@ const corsOrigin = process.env.CORS_ORIGIN
 app.use(cors({
     origin: corsOrigin,
     optionsSuccessStatus: 200,
+    // Headers the browser JS layer needs to read off cross-origin
+    // responses. CORS hides any header not on the safelist unless we
+    // expose it explicitly here:
+    //   - Link              RFC 5988 pagination (next/prev/first/last)
+    //   - X-Request-Id      correlate a 5xx with a server log line
+    //   - Idempotency-Replay flagged when the response is a replay,
+    //                        not a fresh write (P3-G)
+    //   - RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset
+    //                        standard RFC headers from express-rate-limit
+    exposedHeaders: [
+        'Link',
+        'X-Request-Id',
+        'Idempotency-Replay',
+        'RateLimit-Limit',
+        'RateLimit-Remaining',
+        'RateLimit-Reset',
+    ],
 }));
 
 // Body size limit. The default in express.json() is 100kb; we make
