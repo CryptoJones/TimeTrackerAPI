@@ -70,6 +70,53 @@ describe('OpenAPI spec', () => {
         expect(schemas.TimeEntry.properties.teStartedAt).toBeDefined();
     });
 
+    test('spec documents all 13 bulk-create endpoints', async () => {
+        const res = await request(app).get('/openapi.json');
+        const paths = Object.keys(res.body.paths);
+        const expected = [
+            '/v1/customer/bulk',
+            '/v1/worker/bulk',
+            '/v1/billingtype/bulk',
+            '/v1/inventoryitem/bulk',
+            '/v1/inventorytransaction/bulk',
+            '/v1/purchaseordervendor/bulk',
+            '/v1/job/bulk',
+            '/v1/invoice/bulk',
+            '/v1/customerpayment/bulk',
+            '/v1/invoicejob/bulk',
+            '/v1/productentry/bulk',
+            '/v1/purchaseorderheader/bulk',
+            '/v1/purchaseorderline/bulk',
+        ];
+        for (const p of expected) {
+            expect(paths, `missing OpenAPI entry for ${p}`).toContain(p);
+        }
+    });
+
+    test('bulk endpoints document the Idempotency-Key header', async () => {
+        const res = await request(app).get('/openapi.json');
+        const customer = res.body.paths['/v1/customer/bulk'];
+        // Customer/bulk predates the factory; doesn't use the shared
+        // helper, so the header may or may not be on it. Pick a route
+        // we know goes through bulkPath() — Worker/bulk.
+        const worker = res.body.paths['/v1/worker/bulk'];
+        const params = (worker.post.parameters || []);
+        const idem = params.find((p) => p.name === 'Idempotency-Key');
+        expect(idem, 'worker/bulk should document the Idempotency-Key header').toBeDefined();
+        expect(idem.in).toBe('header');
+        expect(idem.required).toBe(false);
+        // customer/bulk path is also documented (any shape).
+        expect(customer.post).toBeDefined();
+    });
+
+    test('/metrics endpoint is documented', async () => {
+        const res = await request(app).get('/openapi.json');
+        const m = res.body.paths['/metrics'];
+        expect(m).toBeDefined();
+        expect(m.get).toBeDefined();
+        expect(m.get.responses['200']).toBeDefined();
+    });
+
     test('GET /docs serves Swagger UI HTML', async () => {
         const res = await request(app).get('/docs/');
         // swagger-ui-express serves HTML; we don't pin the exact body

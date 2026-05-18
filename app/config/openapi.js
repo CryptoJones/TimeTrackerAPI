@@ -246,6 +246,72 @@ const timeEntrySchema = {
     },
 };
 
+/**
+ * Reusable parameter spec for the `Idempotency-Key` header.
+ * Tagged onto every POST that opts into the dedup layer.
+ */
+const idempotencyKeyHeader = {
+    name: 'Idempotency-Key',
+    in: 'header',
+    required: false,
+    description:
+        'Client-chosen string (printable ASCII, 1-255 chars) that pins a ' +
+        'POST as idempotent for 24h. First success is cached; replays of ' +
+        'the same key + body return the cached response with ' +
+        '`Idempotency-Replay: true`. Replays of the same key with a ' +
+        'DIFFERENT body return 409 to flag the misuse.',
+    schema: { type: 'string', minLength: 1, maxLength: 255 },
+};
+
+/**
+ * OpenAPI path entry for a bulk-create endpoint. Every bulk route
+ * shares the same shape — outer JSON key wraps an array of the
+ * underlying entity create body, capped at 500 entries, with the
+ * transactional all-or-nothing semantics documented inline. We
+ * factor this so the 13 bulk entries don't drift into 13 hand-
+ * maintained near-duplicates.
+ */
+function bulkPath(bodyKey, schemaName) {
+    return {
+        post: {
+            summary: `Bulk-create ${bodyKey} (transaction-wrapped, all-or-nothing)`,
+            description:
+                `Body: \`{ ${bodyKey}: [{...}, ...] }\`. Each entry follows the ` +
+                `same shape as the single-create endpoint. Capped at 500 entries; ` +
+                `ETL jobs should chunk. If any entry fails to insert, the whole ` +
+                `transaction rolls back — partial success is never observable.`,
+            security: [{ authKey: [] }],
+            parameters: [idempotencyKeyHeader],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                [bodyKey]: {
+                                    type: 'array',
+                                    minItems: 1,
+                                    maxItems: 500,
+                                    items: { $ref: `#/components/schemas/${schemaName}` },
+                                },
+                            },
+                            required: [bodyKey],
+                        },
+                    },
+                },
+            },
+            responses: {
+                201: { description: 'All entries created' },
+                400: { description: 'Validation failure (array empty/capped, missing parent FK, master without scope)' },
+                403: { description: 'Missing authKey or cross-tenant create attempt' },
+                409: { description: 'Idempotency-Key reused with a different body' },
+                500: { description: 'Transaction rolled back due to DB error' },
+            },
+        },
+    };
+}
+
 const spec = {
     openapi: '3.0.3',
     info: {
@@ -972,6 +1038,38 @@ const spec = {
                     { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
                 ],
                 responses: { 200: { description: 'OK' }, 400: { description: 'Invalid company id' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/worker/bulk':              bulkPath('workers',             'Worker'),
+        '/v1/billingtype/bulk':         bulkPath('billingTypes',        'BillingType'),
+        '/v1/inventoryitem/bulk':       bulkPath('inventoryItems',      'InventoryItem'),
+        '/v1/inventorytransaction/bulk':bulkPath('inventoryTransactions','InventoryTransaction'),
+        '/v1/purchaseordervendor/bulk': bulkPath('vendors',             'PurchaseOrderVendor'),
+        '/v1/job/bulk':                 bulkPath('jobs',                'Job'),
+        '/v1/invoice/bulk':             bulkPath('invoices',            'Invoice'),
+        '/v1/customerpayment/bulk':     bulkPath('customerPayments',    'CustomerPayment'),
+        '/v1/invoicejob/bulk':          bulkPath('invoiceJobs',         'InvoiceJob'),
+        '/v1/productentry/bulk':        bulkPath('productEntries',      'ProductEntry'),
+        '/v1/purchaseorderheader/bulk': bulkPath('purchaseOrderHeaders','PurchaseOrderHeader'),
+        '/v1/purchaseorderline/bulk':   bulkPath('purchaseOrderLines',  'PurchaseOrderLine'),
+        '/metrics': {
+            get: {
+                summary: 'Prometheus scrape endpoint',
+                description:
+                    'Returns prom-client text-format metrics: default Node.js series ' +
+                    '(event-loop, heap, GC) plus per-request `http_requests_total` and ' +
+                    '`http_request_duration_seconds`. Route labels use the Express route ' +
+                    'pattern (e.g. `/v1/customer/:id`) so cardinality stays bounded. ' +
+                    'Authentication is OPTIONAL: leave `METRICS_BEARER_TOKEN` env unset ' +
+                    'for an open scrape (the usual private-network deployment), or set ' +
+                    'it to require `Authorization: Bearer <token>` on the scrape.',
+                responses: {
+                    200: {
+                        description: 'OK — Prometheus text-format metrics',
+                        content: { 'text/plain': { schema: { type: 'string' } } },
+                    },
+                    401: { description: 'Bearer token required (when METRICS_BEARER_TOKEN is set) and missing/invalid' },
+                },
             },
         },
     },
