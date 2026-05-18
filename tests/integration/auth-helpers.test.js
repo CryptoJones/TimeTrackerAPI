@@ -79,6 +79,10 @@ describe.skipIf(!HAS_DB)('integration: auth helpers against real PG', () => {
         await db.ApiMaster.create({
             amKEY: sha256(rawToken),
             amArchive: false,
+            // amArchiveDate is NOT NULL in the Atbash baseline schema.
+            // We set a far-past sentinel so the row never looks
+            // recently-archived to any future drift check.
+            amArchiveDate: new Date(0),
         });
         expect(await auth.isMaster(rawToken)).toBe(true);
         expect(await auth.isMaster('definitely-not-a-real-token')).toBe(false);
@@ -91,6 +95,7 @@ describe.skipIf(!HAS_DB)('integration: auth helpers against real PG', () => {
             akKEY: sha256(rawToken),
             akCompanyId: createdCompanyId,
             akArchive: false,
+            akArchiveDate: new Date(0),
         });
         expect(await auth.getCompanyId(rawToken)).toBe(createdCompanyId);
     });
@@ -108,6 +113,7 @@ describe.skipIf(!HAS_DB)('integration: auth helpers against real PG', () => {
             akKEY: hashed,
             akCompanyId: createdCompanyId,
             akArchive: true,  // pre-archived
+            akArchiveDate: new Date(),
         });
         // P2-E's defaultScope filters akArchive=false, so the lookup
         // should miss this archived row.
