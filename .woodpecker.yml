@@ -2,17 +2,61 @@ when:
   - event: [push, pull_request]
     branch: [master, main]
 
+# Live Postgres so the integration suite runs in CI rather than
+# self-skipping. The unit + api suites pass with or without the DB.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: timetracker
+      POSTGRES_PASSWORD: ci-test-password
+      POSTGRES_DB: timetracker
+
 steps:
   test-node-20:
     image: node:20-slim
+    environment:
+      DB_HOST: postgres
+      DB_PORT: '5432'
+      DB_NAME: timetracker
+      DB_USER: timetracker
+      DB_PASSWORD: ci-test-password
+      LOG_LEVEL: silent
     commands:
+      - apt-get update -qq && apt-get install -y -qq postgresql-client
+      - |
+        for i in $(seq 1 30); do
+          if pg_isready -h postgres -p 5432 -U timetracker -d timetracker -q; then
+            echo "postgres ready"; break
+          fi
+          sleep 1
+        done
+      - PGPASSWORD=ci-test-password psql -h postgres -U timetracker -d timetracker -f setup/TimeTracker.sql
       - npm ci
+      - npm run migrate
       - npm run lint
       - npm test
 
   test-node-22:
     image: node:22-slim
+    environment:
+      DB_HOST: postgres
+      DB_PORT: '5432'
+      DB_NAME: timetracker
+      DB_USER: timetracker
+      DB_PASSWORD: ci-test-password
+      LOG_LEVEL: silent
     commands:
+      - apt-get update -qq && apt-get install -y -qq postgresql-client
+      - |
+        for i in $(seq 1 30); do
+          if pg_isready -h postgres -p 5432 -U timetracker -d timetracker -q; then
+            echo "postgres ready"; break
+          fi
+          sleep 1
+        done
+      - PGPASSWORD=ci-test-password psql -h postgres -U timetracker -d timetracker -f setup/TimeTracker.sql
       - npm ci
+      - npm run migrate
       - npm run lint
       - npm test
