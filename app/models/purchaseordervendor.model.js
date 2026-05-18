@@ -36,6 +36,7 @@ module.exports = (sequelize, Sequelize) => {
     }, {
         tableName: 'PurchaseOrderVendors',
         timestamps: false,
+        defaultScope: { where: { povArch: false } }
     });
 
     return PurchaseOrderVendor;

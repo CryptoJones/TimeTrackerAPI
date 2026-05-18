@@ -38,6 +38,7 @@ module.exports = (sequelize, Sequelize) => {
     }, {
         tableName: 'BillingType',
         timestamps: false,
+        defaultScope: { where: { btArch: false } }
     });
 
     return BillingType;

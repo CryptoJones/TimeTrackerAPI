@@ -66,6 +66,7 @@ module.exports = (sequelize, Sequelize) => {
     }, {
         tableName: 'TimeEntry',
         timestamps: false,
+        defaultScope: { where: { teArch: false } }
     });
 
     return TimeEntry;
