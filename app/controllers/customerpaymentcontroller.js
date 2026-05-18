@@ -114,7 +114,7 @@ exports.listByCustomer = async (req, res) => {
 
     try {
         const { count, rows } = await CustomerPayment.findAndCountAll({
-            where: { cpayCustId: targetCustomerId, cpayArch: false },
+            where: { cpayCustId: targetCustomerId },
             limit, offset,
             order: [['cpayDate', 'DESC']],
         });

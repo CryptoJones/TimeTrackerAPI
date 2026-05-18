@@ -154,7 +154,7 @@ exports.listByCompany = async (req, res) => {
 
     try {
         const { count, rows } = await Worker.findAndCountAll({
-            where: { workerCompId: targetCompanyId, workerArch: false },
+            where: { workerCompId: targetCompanyId },
             limit,
             offset,
             order: [['workerId', 'ASC']],

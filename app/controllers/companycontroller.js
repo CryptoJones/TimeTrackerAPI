@@ -103,7 +103,6 @@ exports.list = async (req, res) => {
 
     try {
         const { count, rows } = await Company.findAndCountAll({
-            where: { compArch: false },
             limit,
             offset,
             order: [['compId', 'ASC']],

@@ -128,7 +128,7 @@ exports.listByCompany = async (req, res) => {
 
     try {
         const { count, rows } = await BillingType.findAndCountAll({
-            where: { btCompId: targetCompanyId, btArch: false },
+            where: { btCompId: targetCompanyId },
             limit,
             offset,
             order: [['btId', 'ASC']],

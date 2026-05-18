@@ -122,7 +122,7 @@ exports.listByCustomer = async (req, res) => {
 
     try {
         const { count, rows } = await Job.findAndCountAll({
-            where: { jobCustId: targetCustomerId, jobArch: false },
+            where: { jobCustId: targetCustomerId },
             limit,
             offset,
             order: [['jobId', 'ASC']],

@@ -133,7 +133,7 @@ exports.listByInvoice = async (req, res) => {
 
     try {
         const { count, rows } = await InvoiceJob.findAndCountAll({
-            where: { injbInvId: targetInvoiceId, injbArch: false },
+            where: { injbInvId: targetInvoiceId },
             limit, offset,
             order: [['injbId', 'ASC']],
         });

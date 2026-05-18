@@ -144,7 +144,7 @@ exports.listByCompany = async (req, res) => {
         }
     }
 
-    const where = { teCompId: targetCompanyId, teArch: false };
+    const where = { teCompId: targetCompanyId };
     const customerId = Number(req.query.customerId);
     if (Number.isInteger(customerId) && customerId > 0) {
         where.teCustId = customerId;
@@ -349,7 +349,7 @@ exports.exportCsv = async (req, res) => {
         effectiveCompanyId = authKeyCompanyId;
     }
 
-    const where = { teCompId: effectiveCompanyId, teArch: false };
+    const where = { teCompId: effectiveCompanyId };
     const customerId = Number(req.query.customerId);
     if (Number.isInteger(customerId) && customerId > 0) {
         where.teCustId = customerId;

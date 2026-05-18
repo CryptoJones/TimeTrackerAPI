@@ -114,7 +114,7 @@ exports.listByVendor = async (req, res) => {
 
     try {
         const { count, rows } = await PurchaseOrderHeader.findAndCountAll({
-            where: { pohPovId: targetVendorId, pohArch: false },
+            where: { pohPovId: targetVendorId },
             limit, offset,
             order: [['pohDate', 'DESC']],
         });

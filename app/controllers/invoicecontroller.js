@@ -115,7 +115,7 @@ exports.listByCustomer = async (req, res) => {
 
     try {
         const { count, rows } = await Invoice.findAndCountAll({
-            where: { invCustId: targetCustomerId, invArch: false },
+            where: { invCustId: targetCustomerId },
             limit, offset,
             order: [['invId', 'ASC']],
         });
