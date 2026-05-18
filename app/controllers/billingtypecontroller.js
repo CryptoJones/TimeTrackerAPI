@@ -5,6 +5,7 @@
 const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
+const { buildLinkHeader } = require('../middleware/pagination.js');
 const BillingType = db.BillingType;
 
 const IsMaster = auth.isMaster;
@@ -131,6 +132,9 @@ exports.listByCompany = async (req, res) => {
             offset,
             order: [['btId', 'ASC']],
         });
+        const link = buildLinkHeader({ req, limit, offset, count });
+        if (link) res.setHeader('Link', link);
+        res.setHeader('Access-Control-Expose-Headers', 'Link');
         return res.status(200).json({
             message: "Successfully retrieved billing types with CompanyId " + targetCompanyId,
             count,

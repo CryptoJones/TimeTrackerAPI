@@ -12,6 +12,7 @@
 const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
+const { buildLinkHeader } = require('../middleware/pagination.js');
 const Job = db.Job;
 
 const IsMaster = auth.isMaster;
@@ -126,6 +127,9 @@ exports.listByCustomer = async (req, res) => {
             offset,
             order: [['jobId', 'ASC']],
         });
+        const link = buildLinkHeader({ req, limit, offset, count });
+        if (link) res.setHeader('Link', link);
+        res.setHeader('Access-Control-Expose-Headers', 'Link');
         return res.status(200).json({
             message: "Successfully retrieved jobs for CustomerId " + targetCustomerId,
             count, limit, offset, jobs: rows,

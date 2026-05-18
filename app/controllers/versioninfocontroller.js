@@ -13,6 +13,7 @@
 const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
+const { buildLinkHeader } = require('../middleware/pagination.js');
 const VersionInfo = db.VersionInfo;
 
 const IsMaster = auth.isMaster;
@@ -85,6 +86,9 @@ exports.list = async (req, res) => {
             limit, offset,
             order: [['viDate', 'DESC']],
         });
+        const link = buildLinkHeader({ req, limit, offset, count });
+        if (link) res.setHeader('Link', link);
+        res.setHeader('Access-Control-Expose-Headers', 'Link');
         return res.status(200).json({
             message: "Successfully retrieved version info",
             count, limit, offset, versionInfos: rows,
