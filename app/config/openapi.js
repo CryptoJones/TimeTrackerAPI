@@ -344,6 +344,48 @@ const spec = {
                 },
             },
         },
+        '/v1/customer/search': {
+            get: {
+                summary: 'Search customers by substring (company-scoped)',
+                description:
+                    'Case-insensitive ILIKE match on custCompanyName / custFName / custLName. ' +
+                    'Non-master keys are auto-scoped to their authKey company; master keys ' +
+                    'must pass companyId explicitly (no global cross-tenant search).',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'q', in: 'query', required: true, schema: { type: 'string', minLength: 2, maxLength: 255 } },
+                    { name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys. Forbidden when it does not match a non-master authKey\'s own company.' },
+                    { name: 'limit', in: 'query', schema: { type: 'integer', default: 100, maximum: 500 } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+                ],
+                responses: {
+                    200: {
+                        description: 'OK — search results',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        message: { type: 'string' },
+                                        q: { type: 'string' },
+                                        companyId: { type: 'integer' },
+                                        count: { type: 'integer' },
+                                        limit: { type: 'integer' },
+                                        offset: { type: 'integer' },
+                                        customers: {
+                                            type: 'array',
+                                            items: { $ref: '#/components/schemas/Customer' },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    400: { description: 'Bad request — q missing/too short, or master without companyId' },
+                    403: { description: 'Missing authKey, or cross-tenant search attempt' },
+                },
+            },
+        },
         '/v1/customer/{id}': {
             get: {
                 summary: 'Get one customer by id',
