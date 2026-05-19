@@ -92,4 +92,40 @@ describe('GET /healthz', () => {
         // exotic case of a broken install.
         expect(res.body.version).not.toBe('unknown');
     });
+
+    test('503 carries a `db_error` string when the SELECT 1 probe throws', async () => {
+        // The OpenAPI spec pins `db_error` on the 503 schema (operators
+        // rely on the field for debugging a degraded probe). Without a
+        // behavioral assertion, a future controller refactor could
+        // silently drop the field and the spec test wouldn't catch
+        // the runtime divergence.
+        //
+        // The vi.mock at the top of this file resolves `query` to
+        // mockResolvedValue([]) — keeps the happy-path tests green.
+        // For this test we need the rejection path; require the
+        // controller, swap query, restore. Both vitest's vi.mock
+        // (CJS finickiness — known limitation in this codebase per
+        // the auth.js _setDbForTesting pattern) and a direct re-mock
+        // are unreliable here, so call the controller via the real
+        // request pipeline and rely on the real db.config rejecting
+        // with whatever pg connection error fires when no DB is up.
+        // The exact message varies (no-password, no-host, etc.); pin
+        // only "field present + string + non-empty".
+        const db = require('../../app/config/db.config.js');
+        const origQuery = db.sequelize.query;
+        db.sequelize.query = () => Promise.reject(new Error('connection refused'));
+        try {
+            const res = await request(app).get('/healthz');
+            expect(res.status).toBe(503);
+            expect(res.body.status).toBe('degraded');
+            expect(res.body.db).toBe('down');
+            expect(typeof res.body.db_error).toBe('string');
+            expect(res.body.db_error.length).toBeGreaterThan(0);
+            // `migration` should still be null when the DB is down — the
+            // SequelizeMeta query never gets a chance to run.
+            expect(res.body.migration).toBeNull();
+        } finally {
+            db.sequelize.query = origQuery;
+        }
+    });
 });
