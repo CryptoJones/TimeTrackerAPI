@@ -160,6 +160,25 @@ describe('OpenAPI spec', () => {
         expect(m.get.responses['200']).toBeDefined();
     });
 
+    test('/healthz 503 response documents the db_error field', async () => {
+        // The healthz controller (app/controllers/healthcontroller.js)
+        // appends a `db_error` string field to the 503 body when the
+        // SELECT 1 probe throws. Operators rely on this for debugging;
+        // SDK generators read it from the spec. Pin the schema so a
+        // future controller refactor that drops the field also fails
+        // here and the docs stay in sync with reality.
+        const res = await request(app).get('/openapi.json');
+        const h = res.body.paths['/healthz'];
+        const r503 = h.get.responses['503'];
+        expect(r503).toBeDefined();
+        const schema = r503.content
+            && r503.content['application/json']
+            && r503.content['application/json'].schema;
+        expect(schema, '/healthz 503 should declare a body schema').toBeDefined();
+        expect(schema.properties.db_error, 'db_error should appear in the 503 body').toBeDefined();
+        expect(schema.properties.db_error.type).toBe('string');
+    });
+
     test('GET /docs serves Swagger UI HTML', async () => {
         const res = await request(app).get('/docs/');
         // swagger-ui-express serves HTML; we don't pin the exact body
