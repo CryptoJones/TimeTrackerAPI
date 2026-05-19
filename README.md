@@ -79,6 +79,18 @@ The `/healthz` endpoint is intentionally unauthenticated so it can be
 hit by orchestrators (Docker `HEALTHCHECK`, Kubernetes liveness, uptime
 monitors) without sharing a credential.
 
+### Secure-404 on cross-tenant access
+
+Single-row GET / PATCH / DELETE endpoints return `404 Not Found` —
+not `403 Forbidden` — when a non-master key references a row in a
+different company's scope. The two outcomes look identical from the
+client's side so a scoped caller can't probe sequential IDs to
+enumerate the size of another tenant's table by status code. Master
+keys still see all rows. The same pattern applies across all 16
+single-row entity endpoints; the auth-scope check that produces it
+is the same `getCompanyId(...) !== row.<entity>CompId` comparison
+the controllers use for the 403 paths on other surfaces.
+
 ![example image](https://github.com/CryptoJones/TimeTrackerAPI/blob/master/setup/postman_example.PNG?raw=true)
 
 *(authKey example using Postman)*
