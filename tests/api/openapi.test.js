@@ -70,6 +70,24 @@ describe('OpenAPI spec', () => {
         expect(schemas.TimeEntry.properties.teStartedAt).toBeDefined();
     });
 
+    test('GET /v1/customer/{id} 200 declares the {message, customer, customers} envelope', async () => {
+        // Pre-#292 the spec said the body was a bare Customer. The
+        // controller actually returns a `{message, customer, customers}`
+        // envelope (the dual key is the backward-compat wart documented
+        // in customercontroller.js). SDK code-gen builds the wrong type
+        // unless the spec mirrors the runtime shape.
+        const res = await request(app).get('/openapi.json');
+        const r200 = res.body.paths['/v1/customer/{id}'].get.responses['200'];
+        const schema = r200.content['application/json'].schema;
+        expect(schema.type).toBe('object');
+        expect(schema.properties.message).toBeDefined();
+        expect(schema.properties.customer.$ref).toBe('#/components/schemas/Customer');
+        expect(schema.properties.customers.$ref).toBe('#/components/schemas/Customer');
+        // 404 is documented now too (controller short-circuits on missing rows).
+        expect(r200).toBeDefined();
+        expect(res.body.paths['/v1/customer/{id}'].get.responses['404']).toBeDefined();
+    });
+
     test('VersionInfo.viVersion pins the 1..255 bound from the validator', async () => {
         // Mirrors versioninfo.schema.js. SDK generators expose viVersion
         // as `string`; without minLength/maxLength they can't catch a
