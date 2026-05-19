@@ -388,6 +388,30 @@ function bulkPath(bodyKey, schemaName) {
                 201: {
                     description: 'All entries created (or a replay of a previously-cached create)',
                     headers: idempotencyReplayResponseHeader,
+                    // Controller (`_bulk-helpers.makeBulkCreate` /
+                    // `makeBulkCreateIndirect`) emits {message, count,
+                    // [bodyKey]: <created rows>}. Same envelope every
+                    // bulk endpoint uses — the convention is that the
+                    // response's array key matches the request's
+                    // bodyKey. Declaring the shape here means all 12
+                    // factory-driven bulk endpoints get the content
+                    // schema in one place, parallel to the
+                    // customer/bulk fix in #332.
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    message: { type: 'string' },
+                                    count: { type: 'integer' },
+                                    [bodyKey]: {
+                                        type: 'array',
+                                        items: { $ref: `#/components/schemas/${schemaName}` },
+                                    },
+                                },
+                            },
+                        },
+                    },
                 },
                 400: { description: 'Validation failure (array empty/capped, missing parent FK, master without scope)' },
                 403: { description: 'Missing authKey or cross-tenant create attempt' },
