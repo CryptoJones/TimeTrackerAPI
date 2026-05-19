@@ -33,18 +33,38 @@ function buildLinkHeader({ req, limit, offset, count }) {
 
     // Resolve the URL minus the query string. req.originalUrl is "/path?qs";
     // strip the qs portion deterministically.
-    const proto = (req.protocol || 'http');
-    const host = (req.get && req.get('host')) || 'localhost';
     const url = req.originalUrl || '/';
     const qIdx = url.indexOf('?');
     const basePath = qIdx === -1 ? url : url.slice(0, qIdx);
     const existingQs = qIdx === -1 ? '' : url.slice(qIdx + 1);
 
+    // Base URL resolution, in priority order:
+    //   1. PUBLIC_BASE_URL env var — operator-pinned canonical hostname.
+    //      Use this in production behind a reverse proxy that may
+    //      receive arbitrary Host headers; pinning here prevents a
+    //      client that sends `Host: evil.com` from getting evil.com
+    //      echoed back into the Link header (next/prev/first/last)
+    //      and influencing how its own paginating client walks the
+    //      result set.
+    //   2. req.protocol + req.get('host') — the express defaults.
+    //      Useful for local development and for deployments where the
+    //      Host header is already filtered upstream (Caddy with a
+    //      pinned TLS_DOMAIN, nginx with a server_name match, etc.).
+    let baseUrl;
+    const envBase = (process.env.PUBLIC_BASE_URL || '').trim().replace(/\/+$/, '');
+    if (envBase) {
+        baseUrl = envBase;
+    } else {
+        const proto = (req.protocol || 'http');
+        const host = (req.get && req.get('host')) || 'localhost';
+        baseUrl = `${proto}://${host}`;
+    }
+
     const buildLink = (newOffset) => {
         const params = new URLSearchParams(existingQs);
         params.set('limit', String(lim));
         params.set('offset', String(newOffset));
-        return `${proto}://${host}${basePath}?${params.toString()}`;
+        return `${baseUrl}${basePath}?${params.toString()}`;
     };
 
     const links = [];

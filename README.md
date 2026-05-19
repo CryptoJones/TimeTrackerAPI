@@ -208,6 +208,7 @@ production). See `.env.example` for the canonical reference.
 | `DB_NAME` | `timetracker` | Database name. |
 | `DB_USER` | `timetracker` | Database user (must have access to the `dbo` schema). |
 | `DB_PASSWORD` | (empty) | Database password. **Required.** Setting it empty will cause connection failures and a startup warning. |
+| `PUBLIC_BASE_URL` | (unset) | Canonical `scheme://host` the API is publicly reachable at. Used as the base for absolute URLs in the RFC 5988 `Link` header (pagination next/prev/first/last). Pin in production so a client sending a malicious `Host` header can't get it echoed back. Unset = derive from `req.protocol` + `req.get('host')`. |
 
 `.env` is gitignored. Never commit a populated `.env`.
 

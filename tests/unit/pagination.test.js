@@ -3,7 +3,7 @@
 //
 // Unit tests for the RFC 5988 Link header builder.
 
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, afterEach } from 'vitest';
 import { buildLinkHeader } from '../../app/middleware/pagination.js';
 
 function fakeReq({ originalUrl = '/v1/customer/bycompany/1', host = 'api.example.com', protocol = 'https' } = {}) {
@@ -72,5 +72,44 @@ describe('buildLinkHeader', () => {
         // count=100, limit=30: pages are at offsets 0, 30, 60, 90. Last page = 90.
         const link = buildLinkHeader({ req: fakeReq(), limit: 30, offset: 0, count: 100 });
         expect(link).toContain('offset=90'); // last page anchor
+    });
+
+    describe('PUBLIC_BASE_URL pins the Link header base', () => {
+        // Save + restore env so we don't leak into sibling tests.
+        const ORIG = process.env.PUBLIC_BASE_URL;
+        afterEach(() => {
+            if (ORIG === undefined) delete process.env.PUBLIC_BASE_URL;
+            else process.env.PUBLIC_BASE_URL = ORIG;
+        });
+
+        test('when set, builds Links against PUBLIC_BASE_URL (ignoring Host header)', () => {
+            process.env.PUBLIC_BASE_URL = 'https://node.timetrackerapi.com';
+            // Malicious Host header should be ignored entirely.
+            const link = buildLinkHeader({
+                req: fakeReq({ host: 'evil.example', protocol: 'http' }),
+                limit: 10, offset: 0, count: 50,
+            });
+            expect(link).toContain('https://node.timetrackerapi.com/v1/customer/bycompany/1');
+            expect(link).not.toContain('evil.example');
+        });
+
+        test('trailing slash on PUBLIC_BASE_URL is stripped to prevent `//path`', () => {
+            process.env.PUBLIC_BASE_URL = 'https://api.example.com//';
+            const link = buildLinkHeader({
+                req: fakeReq(),
+                limit: 10, offset: 0, count: 50,
+            });
+            expect(link).toContain('https://api.example.com/v1/customer/bycompany/1');
+            expect(link).not.toContain('//v1/customer');
+        });
+
+        test('empty / whitespace PUBLIC_BASE_URL falls back to req-based default', () => {
+            process.env.PUBLIC_BASE_URL = '   ';
+            const link = buildLinkHeader({
+                req: fakeReq({ host: 'api.example.com', protocol: 'https' }),
+                limit: 10, offset: 0, count: 50,
+            });
+            expect(link).toContain('https://api.example.com/v1/customer/bycompany/1');
+        });
     });
 });
