@@ -35,8 +35,11 @@
         header_up Host {host}
     }
 
-    # Compress responses. Skip for /openapi.json since it's already
-    # small and aggressive compression on JSON adds a few ms.
+    # Compress responses. Applies to everything Caddy serves — the
+    # JSON payloads in this API are mostly small list bodies where
+    # gzip's wins still beat the negligible CPU cost, and /openapi.json
+    # is rare enough not to matter. (An earlier comment here implied
+    # we skipped /openapi.json; the config never actually did that.)
     encode gzip
 
     # Structured access logs to stdout in JSON. Matches the app's
