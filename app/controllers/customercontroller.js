@@ -560,8 +560,16 @@ async function findAndRespond(customerId, res) {
             // customers — soft-deletes correctly surface as 404 too.
             return res.status(404).json({ message: "Not found." });
         }
+        // The historical key is `customers` (plural) wrapping a single
+        // customer — a wart from before the codebase standardized on
+        // singular-for-single-row across the other 15 entities. Add
+        // the consistent `customer` key alongside it so SDK clients
+        // can read the same shape they get from /v1/worker/:id et al.
+        // The `customers` key stays for backward compat; remove in a
+        // future major version.
         return res.status(200).json({
             message: "Successfully retrieved the customer with CustomerId " + customerId,
+            customer,
             customers: customer,
         });
     } catch (error) {
