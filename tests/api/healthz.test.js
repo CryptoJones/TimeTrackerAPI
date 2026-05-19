@@ -78,4 +78,18 @@ describe('GET /healthz', () => {
         const m = res.body.migration;
         expect(m === null || typeof m === 'string').toBe(true);
     });
+
+    test('`version` is read from package.json, not npm_package_version', async () => {
+        // Production Dockerfile launches `node server.js` directly — no
+        // npm wrapper, so process.env.npm_package_version is undefined.
+        // The controller must read package.json directly so /healthz
+        // reports a real version regardless of how the process started.
+        const pkg = require('../../package.json');
+        const res = await request(app).get('/healthz');
+        expect(res.body.version).toBe(pkg.version);
+        // Defensive: the version must NEVER fall back to 'unknown' when
+        // package.json is readable — that fallback path is only for the
+        // exotic case of a broken install.
+        expect(res.body.version).not.toBe('unknown');
+    });
 });

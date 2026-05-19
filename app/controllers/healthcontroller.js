@@ -2,7 +2,24 @@
 // Copyright 2026 Aaron K. Clark
 "use strict";
 
+const path = require('node:path');
 const db = require('../config/db.config.js');
+
+// Read the version from package.json once at module load. `npm_package_version`
+// is only set when the process is started via an npm script — production
+// deployments that launch `node server.js` directly (including the Dockerfile
+// in this repo, CMD ["node", "server.js"]) get `undefined` there and the
+// /healthz response degrades to `version: "unknown"`. Reading the manifest
+// gives operators a real version string regardless of how the process started.
+let PACKAGE_VERSION = 'unknown';
+try {
+    PACKAGE_VERSION = require(path.resolve(__dirname, '../../package.json')).version
+        || PACKAGE_VERSION;
+} catch (_err) {
+    // package.json missing or malformed — keep the 'unknown' fallback rather
+    // than crashing module load. /healthz is operationally important and
+    // must come up even on a broken install.
+}
 
 /**
  * GET /healthz
@@ -83,7 +100,7 @@ exports.healthz = async (req, res) => {
         status: dbOk ? 'ok' : 'degraded',
         db: dbOk ? 'ok' : 'down',
         uptime_s: Math.round(process.uptime()),
-        version: process.env.npm_package_version || 'unknown',
+        version: PACKAGE_VERSION,
         elapsed_ms: Math.round(elapsedMs * 100) / 100,
         migration,
     };
