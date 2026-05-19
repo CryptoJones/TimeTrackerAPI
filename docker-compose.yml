@@ -93,6 +93,14 @@ services:
       migrate:
         condition: service_completed_successfully
     environment:
+      # Default to production mode in compose. Several libraries
+      # (Express, Sequelize, pg) gate performance optimizations on
+      # NODE_ENV === 'production'; without it the api was running
+      # with dev-mode defaults inside what an operator would assume
+      # is a production deployment. Operators who explicitly want
+      # dev compose (e.g. for live-reload testing) can override via
+      # `NODE_ENV=development` in .env.
+      NODE_ENV: ${NODE_ENV:-production}
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: ${DB_NAME:-timetracker}
