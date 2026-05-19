@@ -23,7 +23,7 @@ sudo docker compose up -d postgres setup migrate
 sudo docker compose ps -a   # postgres: healthy, setup/migrate: Exited (0)
 
 # 3. Run the integration suite with DB vars set.
-export DB_HOST=localhost DB_PORT=5432 DB_NAME=timetracker DB_USERNAME=timetracker
+export DB_HOST=localhost DB_PORT=5432 DB_NAME=timetracker DB_USER=timetracker
 export DB_PASSWORD=$(grep '^DB_PASSWORD=' .env | cut -d= -f2-)
 npx vitest run tests/integration
 
