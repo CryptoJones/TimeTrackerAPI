@@ -132,7 +132,11 @@ const jobSchema = {
     properties: {
         jobId: { type: 'integer', readOnly: true },
         jobCustId: { type: 'integer' },
-        jobDesc: { type: 'string' },
+        // jobDesc mirrors job.schema.js: z.string().min(1).max(10000).
+        // 10000 chars is the same generous limit used for other
+        // free-text fields (teDescription, polItemDesc) — big enough
+        // for a paragraph or two without enabling unbounded payloads.
+        jobDesc: { type: 'string', minLength: 1, maxLength: 10000 },
         jobInvoiced: { type: 'boolean' },
         jobArch: { type: 'boolean', readOnly: true },
     },
