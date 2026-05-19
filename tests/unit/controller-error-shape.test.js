@@ -56,10 +56,28 @@ describe('server code does not leak raw error details in error responses', () =>
             // surface error detail emerges, prefer `next(err)` with
             // `err.expose = true` and let the global error-handler do it
             // under controlled conditions.
+            //
+            // Two field names to defend: `error:` (the original leak
+            // location pre-#140) and `message:` (the standard
+            // response-shape key — controllers MUST emit a hardcoded
+            // generic string here, never the raw error.message or
+            // String(err)). The global error-handler is the ONE place
+            // allowed to echo err.message when err.expose === true;
+            // controllers and middleware route errors through it via
+            // `next(err)` instead of building the body themselves.
             expect(content).not.toMatch(/error:\s*String\(\s*error\s*\)/);
             expect(content).not.toMatch(/error:\s*String\(\s*err\s*\)/);
             expect(content).not.toMatch(/error:\s*err\.message/);
             expect(content).not.toMatch(/error:\s*error\.message/);
+            // Same patterns guarded against on the `message:` key.
+            // Controllers emit fixed strings (`"Error!"`, `"Not found."`,
+            // `"Authorization key not sent."`); raw err / error
+            // references slipping in would route around the global
+            // handler.
+            expect(content).not.toMatch(/message:\s*String\(\s*error\s*\)/);
+            expect(content).not.toMatch(/message:\s*String\(\s*err\s*\)/);
+            expect(content).not.toMatch(/message:\s*err\.message/);
+            expect(content).not.toMatch(/message:\s*error\.message/);
             // And the static-string variant the customer controller used to
             // have: `error: "Sequelize Op not available"`. Same principle —
             // anything hardcoded into an error body bypasses the global
