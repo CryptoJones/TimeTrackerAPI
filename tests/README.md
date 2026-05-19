@@ -6,11 +6,10 @@ npm run test:watch  # rerun on file changes
 ```
 
 The suite uses [vitest](https://vitest.dev/) + [supertest](https://github.com/ladjs/supertest).
-At this writing: ~480 cases across 47 files, sub-2-second wall-clock,
-0 net regressions across the audit cycle. The integration suite
-auto-skips locally when no real Postgres is reachable; CI runs a
-live `postgres:16-alpine` service alongside the matrix so the full
-suite runs on every PR.
+Runs in sub-two-second wall-clock across the unit + api tiers. The
+integration suite auto-skips locally when no real Postgres is
+reachable; CI runs a live `postgres:16-alpine` service alongside the
+matrix so the full suite runs on every PR.
 
 ## Three tiers
 
