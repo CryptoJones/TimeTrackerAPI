@@ -152,6 +152,20 @@ describe('OpenAPI spec', () => {
         expect(replay.schema.enum).toContain('true');
     });
 
+    test('customer/bulk also declares Idempotency-Replay on the 201 response', async () => {
+        // Customer/bulk predates the bulkPath() factory and has its
+        // own dedicated path entry in the spec. The factory got the
+        // header in #168; this assertion catches the inconsistent case
+        // where customer/bulk was missed.
+        const res = await request(app).get('/openapi.json');
+        const customer = res.body.paths['/v1/customer/bulk'];
+        const r201 = customer.post.responses['201'];
+        expect(r201.headers, 'customer/bulk 201 should declare response headers').toBeDefined();
+        const replay = r201.headers['Idempotency-Replay'];
+        expect(replay, 'Idempotency-Replay should appear on customer/bulk too').toBeDefined();
+        expect(replay.schema.enum).toContain('true');
+    });
+
     test('/metrics endpoint is documented', async () => {
         const res = await request(app).get('/openapi.json');
         const m = res.body.paths['/metrics'];
