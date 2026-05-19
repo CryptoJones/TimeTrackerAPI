@@ -981,7 +981,14 @@ const spec = {
                 security: [{ authKey: [] }],
                 parameters: [idempotencyKeyHeader],
                 requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/CustomerPayment' } } } },
-                responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } },
+                responses: {
+                    201: {
+                        description: 'Created',
+                        headers: idempotencyReplayResponseHeader,
+                    },
+                    400: { description: 'Bad request' },
+                    403: { description: 'Auth failure' },
+                },
             },
         },
         '/v1/customerpayment/{id}': {
