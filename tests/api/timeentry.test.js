@@ -83,6 +83,82 @@ describe('POST /v1/timeentry auth contract', () => {
     });
 });
 
+describe('POST /v1/timeentry body validation', () => {
+    test('400 when teEndedAt is strictly before teStartedAt', async () => {
+        // Inverted range. Schema runs before auth — this should 400
+        // with a refinement issue on teEndedAt, never reaching the
+        // controller where the silent `teMinutes = null` fallback
+        // would otherwise accept the bad write.
+        const res = await request(app)
+            .post('/v1/timeentry')
+            .send({
+                teCustId: 1,
+                teStartedAt: '2026-05-16T10:00:00Z',
+                teEndedAt:   '2026-05-16T09:00:00Z',
+            });
+        expect(res.status).toBe(400);
+        expect(res.body.issues).toBeDefined();
+        const issue = res.body.issues.find((i) => i.path === 'teEndedAt');
+        expect(issue).toBeDefined();
+        expect(issue.message).toMatch(/at or after teStartedAt/i);
+    });
+
+    test('201-path (schema passes) when teEndedAt equals teStartedAt', async () => {
+        // Exact equality is allowed: a zero-minute entry is a valid
+        // edge case (someone clocking a meeting that ran 0 minutes).
+        // Schema accepts; auth/controller is what decides the final
+        // status — without an authKey it'll 403, but the point is
+        // the schema didn't 400.
+        const res = await request(app)
+            .post('/v1/timeentry')
+            .send({
+                teCustId: 1,
+                teStartedAt: '2026-05-16T09:00:00Z',
+                teEndedAt:   '2026-05-16T09:00:00Z',
+            });
+        expect(res.status).not.toBe(400);
+    });
+
+    test('passes when teEndedAt is omitted (in-flight entry)', async () => {
+        // Open-ended entry is the canonical "clock in but not out yet"
+        // path. Refinement must not fire when teEndedAt is undefined.
+        const res = await request(app)
+            .post('/v1/timeentry')
+            .send({
+                teCustId: 1,
+                teStartedAt: '2026-05-16T09:00:00Z',
+            });
+        expect(res.status).not.toBe(400);
+    });
+});
+
+describe('PATCH /v1/timeentry/:id body validation', () => {
+    test('400 when both bounds are sent and teEndedAt is before teStartedAt', async () => {
+        const res = await request(app)
+            .patch('/v1/timeentry/1')
+            .send({
+                teStartedAt: '2026-05-16T10:00:00Z',
+                teEndedAt:   '2026-05-16T09:00:00Z',
+            });
+        expect(res.status).toBe(400);
+        expect(res.body.issues).toBeDefined();
+        const issue = res.body.issues.find((i) => i.path === 'teEndedAt');
+        expect(issue).toBeDefined();
+    });
+
+    test('single-bound PATCH (only teEndedAt) is not blocked by the schema', async () => {
+        // The cross-field refinement can't validate a single-bound
+        // PATCH without seeing the existing row, so the schema must
+        // not reject it; the controller's `computeMinutes` is the
+        // only thing that sees the merged value. (Tightening that
+        // path is a separate, controller-layer change.)
+        const res = await request(app)
+            .patch('/v1/timeentry/1')
+            .send({ teEndedAt: '2026-05-16T09:00:00Z' });
+        expect(res.status).not.toBe(400);
+    });
+});
+
 describe('GET /v1/timeentry/:id auth contract', () => {
     test('returns 403 when authKey header is missing', async () => {
         const res = await request(app).get('/v1/timeentry/1');
