@@ -29,9 +29,11 @@ beforeAll(async () => {
         logger: log,
         genReqId: (req, res) => {
             const incoming = req.headers['x-request-id'];
-            const reqId = (typeof incoming === 'string' && incoming.length > 0 && incoming.length <= 128)
-                ? incoming
-                : crypto.randomUUID();
+            const valid = typeof incoming === 'string'
+                && incoming.length > 0
+                && incoming.length <= 128
+                && /^[\x21-\x7e]+$/.test(incoming);
+            const reqId = valid ? incoming : crypto.randomUUID();
             res.setHeader('X-Request-Id', reqId);
             return reqId;
         },
@@ -71,5 +73,36 @@ describe('X-Request-Id', () => {
         const r1 = await request(app).get('/healthz');
         const r2 = await request(app).get('/healthz');
         expect(r1.headers['x-request-id']).not.toBe(r2.headers['x-request-id']);
+    });
+
+    test('replaces an incoming value with whitespace with a generated UUID', async () => {
+        // Embedded space (0x20) is outside the printable-ASCII range
+        // [0x21..0x7e] we accept. Without the charset guard, this
+        // value would land in `res.setHeader('X-Request-Id', ...)`
+        // — Node accepts spaces in header values fine, but the
+        // looser check is also a foothold for CR/LF injection
+        // through proxies that don't sanitize. Treat anything
+        // outside the printable-no-space range as invalid.
+        const res = await request(app)
+            .get('/healthz')
+            .set('X-Request-Id', 'has spaces');
+        const id = res.headers['x-request-id'];
+        expect(id).not.toBe('has spaces');
+        expect(id).toMatch(/^[0-9a-f-]+$/i);
+    });
+
+    test('replaces an incoming value with a tab character with a generated UUID', async () => {
+        // Tabs (0x09) are outside the printable-ASCII range and would
+        // be smuggled through some intermediate proxies as a header
+        // continuation. Treat them as invalid like the whitespace case
+        // above. Supertest accepts the byte (unlike NUL or CR/LF
+        // which it rejects pre-flight) so we can drive the path
+        // end-to-end here.
+        const res = await request(app)
+            .get('/healthz')
+            .set('X-Request-Id', 'has\ttab');
+        const id = res.headers['x-request-id'];
+        expect(id).not.toBe('has\ttab');
+        expect(id).toMatch(/^[0-9a-f-]+$/i);
     });
 });
