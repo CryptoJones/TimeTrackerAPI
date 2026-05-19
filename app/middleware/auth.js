@@ -277,24 +277,27 @@ async function attachAuth(req, res, next) {
     req.isMaster = false;
     req.companyId = -1;
     if (!authKey) return next();
-    try {
-        req.isMaster = await isMaster(authKey);
-    } catch (error) {
-        log.error({ err: error }, 'attachAuth: isMaster failed');
-        return res.status(500).json({ message: 'Error!' });
-    }
+    // No try/catch here even though these are DB-touching calls:
+    // both `isMaster` and `getCompanyId` already wrap their query
+    // in try/catch internally and swallow infrastructure errors
+    // into a `false` / `-1` sentinel (with a `log.error`). So a
+    // DB outage surfaces as "auth failed" (403 downstream via
+    // requireAuth or per-controller checks), not "server error"
+    // — and the outer wrappers we had here were unreachable
+    // dead code that misled readers into thinking attachAuth
+    // distinguished the two. If the silent-swallow turns out to
+    // be the wrong behaviour for operators (DB-down looking like
+    // auth-fail), the right fix is to surface the throw from
+    // isMaster / getCompanyId themselves, not to layer a catch
+    // here that the inner function prevents from firing.
+    req.isMaster = await isMaster(authKey);
     if (req.isMaster) {
         // Master keys aren't scoped to a single company. Leave
         // companyId at -1; handlers needing a target scope read
         // it from req.params / req.body / req.query.
         return next();
     }
-    try {
-        req.companyId = await getCompanyId(authKey);
-    } catch (error) {
-        log.error({ err: error }, 'attachAuth: getCompanyId failed');
-        return res.status(500).json({ message: 'Error!' });
-    }
+    req.companyId = await getCompanyId(authKey);
     return next();
 }
 
