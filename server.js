@@ -3,6 +3,7 @@
 
 require('dotenv').config();
 
+const crypto = require('node:crypto');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -14,6 +15,7 @@ const log = require('./app/config/logger.js');
 const router = require('./app/routers/router.js');
 const { errorHandler, notFound } = require('./app/middleware/error-handler.js');
 const { metricsMiddleware } = require('./app/middleware/metrics.js');
+const { redactUrl } = require('./app/middleware/redact-url.js');
 
 const app = express();
 
@@ -51,7 +53,7 @@ app.use(pinoHttp({
         const incoming = req.headers['x-request-id'];
         const reqId = (typeof incoming === 'string' && incoming.length > 0 && incoming.length <= 128)
             ? incoming
-            : require('crypto').randomUUID();
+            : crypto.randomUUID();
         res.setHeader('X-Request-Id', reqId);
         return reqId;
     },
@@ -63,7 +65,7 @@ app.use(pinoHttp({
             // of the header, the raw value still doesn't land in the
             // structured log. Header values are separately covered by
             // logger.js's redact paths.
-            url: require('./app/middleware/redact-url.js').redactUrl(req.url),
+            url: redactUrl(req.url),
             remoteAddress: req.remoteAddress,
         }),
     },
