@@ -44,7 +44,20 @@ function redactUrl(url) {
         if (part.length === 0) continue;
         const eq = part.indexOf('=');
         const rawName = eq === -1 ? part : part.slice(0, eq);
-        const name = decodeURIComponent(rawName).toLowerCase();
+        // decodeURIComponent throws URIError on malformed percent-encoding
+        // (e.g. `?%FF=v` or `?%ZZ=v`). pino-http calls this serializer for
+        // every request, so an unhandled throw here would either skip the
+        // log line entirely or fall back to logging the raw URL — leaking
+        // the very value we're trying to redact. Wrap and treat
+        // undecodable names as non-sensitive (the raw bytes are kept in
+        // the output, so no value is lost; a malformed name almost
+        // certainly isn't a real `authkey=…` anyway).
+        let name;
+        try {
+            name = decodeURIComponent(rawName).toLowerCase();
+        } catch (_err) {
+            name = rawName.toLowerCase();
+        }
         if (SENSITIVE_PARAM_NAMES.has(name)) {
             out.push(`${rawName}=<REDACTED>`);
         } else {
