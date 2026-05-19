@@ -66,6 +66,11 @@ Working example at [node.timetrackerapi.com](http://node.timetrackerapi.com).
   propagate trace context from a reverse proxy / mesh.
 - **`RateLimit-*` (response headers, RFC standard)** — `RateLimit-Limit`,
   `RateLimit-Remaining`, `RateLimit-Reset` on every /v1/* response.
+- **`Retry-After` (response header on 429, RFC 7231)** — seconds the
+  client should wait before retrying when the quota is exhausted.
+  Cross-origin browser JS can read this via the CORS expose-headers
+  list (it's not on the CORS safelist) so SDKs can honor the server's
+  back-off instead of falling back to a fixed-delay retry.
 - Browser JS reading any of the above on a cross-origin response works
   out-of-the-box: the CORS layer's `Access-Control-Expose-Headers` covers them.
 
