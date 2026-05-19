@@ -235,6 +235,45 @@ describe('isInvertedRange helper', () => {
     });
 });
 
+describe('parseDateOrNull helper', () => {
+    // listByCompany + exportCsv use this on ?from / ?to query
+    // params. Before this guard, a `?from=not-a-date` plugged the
+    // string straight into Sequelize's Op.gte, which Postgres
+    // refused to parse as a timestamp — surfacing as a 500 from
+    // the controller's catch. The doc comment on both handlers
+    // promised "bad dates are silently dropped"; the helper makes
+    // that comment match the behavior.
+    let parseDateOrNull;
+    beforeAll(async () => {
+        const ctrl = await import('../../app/controllers/timeentrycontroller.js');
+        parseDateOrNull = ctrl._internals.parseDateOrNull;
+    });
+
+    test('returns a Date for a valid ISO 8601 input', () => {
+        const d = parseDateOrNull('2026-05-15T10:00:00Z');
+        expect(d).toBeInstanceOf(Date);
+        expect(d.toISOString()).toBe('2026-05-15T10:00:00.000Z');
+    });
+
+    test('returns a Date for a valid date-only input', () => {
+        const d = parseDateOrNull('2026-05-15');
+        expect(d).toBeInstanceOf(Date);
+        expect(Number.isFinite(d.getTime())).toBe(true);
+    });
+
+    test('returns null for garbage strings (the silent-drop case)', () => {
+        expect(parseDateOrNull('not-a-date')).toBeNull();
+        expect(parseDateOrNull('totally-bogus')).toBeNull();
+    });
+
+    test('returns null for empty / non-string input', () => {
+        expect(parseDateOrNull('')).toBeNull();
+        expect(parseDateOrNull(undefined)).toBeNull();
+        expect(parseDateOrNull(null)).toBeNull();
+        expect(parseDateOrNull(42)).toBeNull();
+    });
+});
+
 describe('DELETE /v1/timeentry/:id auth contract', () => {
     test('returns 403 when authKey header is missing', async () => {
         const res = await request(app).delete('/v1/timeentry/1');
