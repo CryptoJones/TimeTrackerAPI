@@ -38,6 +38,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **OpenAPI: `Idempotency-Replay` response-header declaration on every
+  single-create POST 201** (#245 sweep — landed across 16 PRs from
+  #246 through #288). Every `/v1/*` POST that flows through the
+  `Idempotency-Key` middleware now advertises the `Idempotency-Replay`
+  header on its 201 response in the spec — SDK generators
+  (openapi-typescript, etc.) carry the replay flag into client-facing
+  types instead of having callers infer it from prose in the request
+  header's description. The bulk endpoints picked this up in #168;
+  this sweep extends it to single-create symmetry.
 - **Real-PG integration coverage for the cascade auth helpers**
   (#121, follow-up to #117). Six new test cases against
   `postgres:16-alpine` for the four `getCompanyIdBy*` helpers in
