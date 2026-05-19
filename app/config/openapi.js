@@ -27,9 +27,20 @@ const securitySchemes = {
 
 const errorResponse = {
     type: 'object',
+    // Shape emitted by the global error handler
+    // (app/middleware/error-handler.js) and every controller's 4xx /
+    // 5xx exit: a `message` string plus an optional `requestId` for
+    // log correlation. The `error` field declared here previously
+    // never appeared at runtime — the handler deliberately suppresses
+    // raw error detail (see tests/unit/controller-error-shape.test.js
+    // for the policy) so SDK code-gen that consumed this schema was
+    // building clients with a field that never landed.
     properties: {
         message: { type: 'string' },
-        error: { type: 'string' },
+        requestId: {
+            type: 'string',
+            description: 'UUID correlator (same value as the X-Request-Id response header); only present when the request reached the request-id middleware.',
+        },
     },
     required: ['message'],
 };
