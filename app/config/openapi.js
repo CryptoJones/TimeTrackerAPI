@@ -79,8 +79,13 @@ const billingTypeSchema = {
     type: 'object',
     properties: {
         btId: { type: 'integer', readOnly: true },
-        btName: { type: 'string' },
-        btHourlyRate: { type: 'number' },
+        // Mirror billingtype.schema.js: min(1).max(255) on btName,
+        // finite + non-negative on btHourlyRate. Pinning the bounds
+        // here lets SDK generators (openapi-typescript et al.) carry
+        // the constraints into client types. Same pattern as Customer
+        // (#270), Company (#272), Worker (#276).
+        btName: { type: 'string', minLength: 1, maxLength: 255 },
+        btHourlyRate: { type: 'number', minimum: 0 },
         btCompId: { type: 'integer' },
         btArch: { type: 'boolean', readOnly: true },
     },
@@ -90,7 +95,10 @@ const inventoryItemSchema = {
     type: 'object',
     properties: {
         invitId: { type: 'integer', readOnly: true },
-        invitDescription: { type: 'string' },
+        // Mirror inventoryitem.schema.js: min(1).max(1000) on
+        // invitDescription, finite on invitQty. Same pattern as the
+        // other entity component-schema pinning PRs.
+        invitDescription: { type: 'string', minLength: 1, maxLength: 1000 },
         invitQty: { type: 'number' },
         invitCompId: { type: 'integer' },
         invitArch: { type: 'boolean', readOnly: true },
