@@ -64,4 +64,41 @@ describe('PurchaseOrderLine body validation', () => {
         });
         expect(res.status).toBe(400);
     });
+
+    test('POST rejects non-finite polQty (string "Infinity" coerces to the float)', async () => {
+        const res = await request(app).post('/v1/purchaseorderline').set('authKey', 'any').send({
+            polpoh: 1, polItemDesc: 'Widget', polQty: 'Infinity', polPrice: 5, polInvtId: 1,
+        });
+        expect(res.status).toBe(400);
+    });
+
+    test('POST rejects non-finite polPrice', async () => {
+        const res = await request(app).post('/v1/purchaseorderline').set('authKey', 'any').send({
+            polpoh: 1, polItemDesc: 'Widget', polQty: 10, polPrice: '-Infinity', polInvtId: 1,
+        });
+        expect(res.status).toBe(400);
+    });
+
+    test('POST accepts zero polQty / polPrice (freebie line)', async () => {
+        // A $0 PO line is a real "free sample included" case; pin
+        // that the .finite() refinement doesn't accidentally block 0.
+        const res = await request(app).post('/v1/purchaseorderline').set('authKey', 'any').send({
+            polpoh: 1, polItemDesc: 'Freebie', polQty: 0, polPrice: 0, polInvtId: 1,
+        });
+        expect(res.status).not.toBe(400);
+    });
+
+    test('POST accepts negative polQty / polPrice (inline credit / discount)', async () => {
+        const res = await request(app).post('/v1/purchaseorderline').set('authKey', 'any').send({
+            polpoh: 1, polItemDesc: 'Volume discount', polQty: -1, polPrice: -10, polInvtId: 1,
+        });
+        expect(res.status).not.toBe(400);
+    });
+
+    test('PATCH rejects non-finite polPrice', async () => {
+        const res = await request(app).patch('/v1/purchaseorderline/1').set('authKey', 'any').send({
+            polPrice: 'Infinity',
+        });
+        expect(res.status).toBe(400);
+    });
 });
