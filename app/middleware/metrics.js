@@ -79,12 +79,13 @@ function metricsMiddleware(req, res, next) {
     res.on('finish', () => {
         const elapsedSec = Number(process.hrtime.bigint() - start) / 1e9;
         // After Express has matched, req.route?.path is the route
-        // pattern. For 404s req.route is undefined; bucket those
-        // into a single label so the metric doesn't grow per
-        // distinct mistyped URL.
-        const route = (req.route && req.route.path)
-            || (req.baseUrl && req.route && req.baseUrl + req.route.path)
-            || '<unknown>';
+        // pattern (e.g. `/v1/customer/:id`). For 404s req.route is
+        // undefined; bucket those into a single `<unknown>` label so
+        // cardinality doesn't grow per distinct mistyped URL. Every
+        // route in this codebase is mounted at the top-level router
+        // with its full path, so the pattern already includes the
+        // /v1 prefix — there is no `req.baseUrl` to prepend.
+        const route = (req.route && req.route.path) || '<unknown>';
         const labels = {
             method: req.method,
             route,
