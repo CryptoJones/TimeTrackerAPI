@@ -32,6 +32,23 @@ const SENSITIVE_PARAM_NAMES = new Set([
     'refresh_token',
     'id_token',
     'client_secret',
+    // OAuth authorization code (RFC 6749 §4.1) and the RFC 7521
+    // generic-assertion / RFC 7523 JWT-bearer client-assertion
+    // params. The auth code rides on the redirect URI's query
+    // string in the standard browser flow; on error redirects it
+    // occasionally lands back on an arbitrary path with the value
+    // still attached. The code is single-use and short-lived, but
+    // a leaked log line with one in it is enough to attempt a
+    // replay before the legitimate exchange completes. The
+    // assertion params carry signed JWT/SAML credentials that
+    // don't expire for minutes to hours and are unambiguously
+    // sensitive. We don't issue OAuth tokens ourselves, but if an
+    // operator fronts this API with an OAuth proxy whose error
+    // handlers bounce through /v1/* we shouldn't be the source of
+    // the leak.
+    'code',
+    'assertion',
+    'client_assertion',
     'password',
     'secret',
 ]);

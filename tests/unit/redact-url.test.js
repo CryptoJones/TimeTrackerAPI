@@ -70,6 +70,28 @@ describe('redactUrl', () => {
         expect(redactUrl(42)).toBe(42);
     });
 
+    test('redacts OAuth authorization code on a redirect-bounce URL', () => {
+        // OAuth `code` parameter is single-use but a leaked log line
+        // containing one can be replayed before the legitimate
+        // exchange completes. RFC 6749 §4.1 puts it on the redirect
+        // URI's query string verbatim.
+        const out = redactUrl('/v1/whoami?code=AUTH_CODE_VALUE&state=xyz');
+        expect(out).toContain('code=<REDACTED>');
+        expect(out).not.toContain('AUTH_CODE_VALUE');
+        // state is a CSRF nonce, not sensitive itself — leave it alone
+        expect(out).toContain('state=xyz');
+    });
+
+    test('redacts the RFC 7521 / 7523 client-assertion JWT', () => {
+        // RFC 7523 puts a signed JWT in `client_assertion` and
+        // `assertion`; both are credential-bearing and don't expire
+        // for minutes to hours.
+        expect(redactUrl('/x?client_assertion=eyJ.signed.jwt&grant_type=client_credentials'))
+            .toContain('client_assertion=<REDACTED>');
+        expect(redactUrl('/x?assertion=eyJ.SAML.creds'))
+            .toBe('/x?assertion=<REDACTED>');
+    });
+
     test('does not throw on malformed percent-encoding in param name', () => {
         // decodeURIComponent throws URIError on `%FF` (incomplete UTF-8
         // sequence) or `%ZZ` (invalid hex). pino-http would invoke this
