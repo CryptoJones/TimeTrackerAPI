@@ -32,6 +32,22 @@ function computeMinutes(startedAt, endedAt) {
 }
 
 /**
+ * Parse a date-ish query-string value (e.g. ?from=, ?to=) into a Date,
+ * or return null if it can't be parsed. The list + export handlers
+ * previously plugged the raw string straight into Sequelize's
+ * Op.gte/Op.lte, which works for ISO 8601 but causes Postgres to
+ * throw on garbage input — which Sequelize then surfaces as a 500
+ * from the controller's catch. The doc comment on those handlers
+ * claimed bad dates are "silently dropped"; this helper makes that
+ * comment true.
+ */
+function parseDateOrNull(s) {
+    if (typeof s !== 'string' || s.length === 0) return null;
+    const t = new Date(s).getTime();
+    return Number.isFinite(t) ? new Date(t) : null;
+}
+
+/**
  * Return true when both bounds are non-empty AND parse cleanly AND
  * endedAt is strictly before startedAt. Used by the PATCH handler to
  * reject single-bound updates whose merged interval would invert.
@@ -180,13 +196,18 @@ exports.listByCompany = async (req, res) => {
     }
     // Date range — use Sequelize.Op.gte/lte. Keep it permissive: bad
     // dates are silently dropped rather than 400'd, so a typo in the
-    // query string doesn't break the call.
+    // query string doesn't break the call. parseDateOrNull guards
+    // against `from=not-a-date` reaching Postgres (which would throw
+    // and produce a 500); the silent-drop behavior matches the
+    // documented contract.
     const Op = db.Sequelize && db.Sequelize.Op;
-    if (Op && req.query.from) {
-        where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.gte]: req.query.from });
+    const fromDate = parseDateOrNull(req.query.from);
+    const toDate = parseDateOrNull(req.query.to);
+    if (Op && fromDate) {
+        where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.gte]: fromDate });
     }
-    if (Op && req.query.to) {
-        where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.lte]: req.query.to });
+    if (Op && toDate) {
+        where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.lte]: toDate });
     }
 
     const requestedLimit = parseInt(req.query.limit, 10);
@@ -400,11 +421,15 @@ exports.exportCsv = async (req, res) => {
         where.teCustId = customerId;
     }
     const Op = db.Sequelize && db.Sequelize.Op;
-    if (Op && req.query.from) {
-        where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.gte]: req.query.from });
+    // Same parseDateOrNull guard as listByCompany — silent-drop on
+    // bad input rather than 500 from Postgres.
+    const fromDate = parseDateOrNull(req.query.from);
+    const toDate = parseDateOrNull(req.query.to);
+    if (Op && fromDate) {
+        where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.gte]: fromDate });
     }
-    if (Op && req.query.to) {
-        where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.lte]: req.query.to });
+    if (Op && toDate) {
+        where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.lte]: toDate });
     }
 
     const HARD_CAP = 5000;
@@ -460,4 +485,4 @@ exports.exportCsv = async (req, res) => {
 };
 
 // Exposed for unit testing.
-exports._internals = { computeMinutes, isInvertedRange, IsMaster, GetCompanyId };
+exports._internals = { computeMinutes, isInvertedRange, parseDateOrNull, IsMaster, GetCompanyId };
