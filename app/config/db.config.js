@@ -3,11 +3,30 @@
 
 const env = require('./env.js');
 const Sequelize = require('sequelize');
+const log = require('./logger.js');
+
+// Sequelize's default `logging` is `console.log`, which dumps every
+// executed SQL statement — INCLUDING bound parameter values — to
+// stdout. In production that means a query like
+// `SELECT * FROM "dbo"."ApiKey" WHERE "akKey" = $1` followed by the
+// bound array containing the raw authKey lands in the operator's
+// log stream alongside our structured JSON output, mixing log
+// formats and surfacing secrets that pino's redact paths never see
+// (those only know about HTTP header structures, not Sequelize SQL
+// strings). Disable by default; let operators opt back in for
+// targeted debugging by setting DB_LOG_QUERIES=1, in which case
+// queries are routed through pino at debug level (silent at the
+// default LOG_LEVEL=info, visible when LOG_LEVEL=debug, and never
+// emitted as bare console.log).
+const dbQueryLog = process.env.DB_LOG_QUERIES === '1'
+    ? (sql, timing) => log.debug({ sql, timing }, 'sequelize query')
+    : false;
 
 const sequelize = new Sequelize(env.database, env.username, env.password, {
     host: env.host,
     port: env.port,
     dialect: 'postgres',
+    logging: dbQueryLog,
     define: {
         schema: 'dbo',
         timestamps: false,
