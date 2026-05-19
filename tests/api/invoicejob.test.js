@@ -87,3 +87,92 @@ describe('InvoiceJob body validation', () => {
         expect(res.status).toBe(400);
     });
 });
+
+describe('InvoiceJob tenant-enumeration defense (secure 404)', () => {
+    // Job-cascade-scoped: injbJobId → Job.jobCustId → Customer.custCompId.
+    // Spy on getCompanyIdByJobId (the helper walks job→customer→company).
+    test('controller getById: existing-but-not-yours returns 404 to non-master', async () => {
+        const auth = require('../../app/middleware/auth.js');
+        const controller = require('../../app/controllers/invoicejobcontroller.js');
+        const isMasterSpy = vi.spyOn(auth, 'isMaster').mockResolvedValue(false);
+        const getCompanyIdSpy = vi.spyOn(auth, 'getCompanyId').mockResolvedValue(7);
+        const getCompanyIdByJobIdSpy = vi.spyOn(auth, 'getCompanyIdByJobId').mockResolvedValue(99);
+        try {
+            const db = require('../../app/config/db.config.js');
+            db.InvoiceJob.findByPk = vi.fn().mockResolvedValue({
+                injbId: 42, injbJobId: 13, injbArch: false,
+            });
+            const req = { get: (h) => (h === 'authKey' ? 'scoped-to-7' : undefined), params: { id: 42 } };
+            let captured = null;
+            const res = {
+                status(code) { this._code = code; return this; },
+                json(body) { captured = { code: this._code, body }; return this; },
+            };
+            await controller.getById(req, res);
+            expect(captured.code).toBe(404);
+            expect(captured.body.message).toMatch(/not found/i);
+        } finally {
+            isMasterSpy.mockRestore();
+            getCompanyIdSpy.mockRestore();
+            getCompanyIdByJobIdSpy.mockRestore();
+        }
+    });
+
+    test('controller update: existing-but-not-yours returns 404 to non-master', async () => {
+        const auth = require('../../app/middleware/auth.js');
+        const controller = require('../../app/controllers/invoicejobcontroller.js');
+        const isMasterSpy = vi.spyOn(auth, 'isMaster').mockResolvedValue(false);
+        const getCompanyIdSpy = vi.spyOn(auth, 'getCompanyId').mockResolvedValue(7);
+        const getCompanyIdByJobIdSpy = vi.spyOn(auth, 'getCompanyIdByJobId').mockResolvedValue(99);
+        try {
+            const db = require('../../app/config/db.config.js');
+            db.InvoiceJob.findByPk = vi.fn().mockResolvedValue({
+                injbId: 42, injbJobId: 13, injbArch: false, update: vi.fn(),
+            });
+            const req = {
+                get: (h) => (h === 'authKey' ? 'scoped-to-7' : undefined),
+                params: { id: 42 },
+                body: { injbAmount: 50 },
+            };
+            let captured = null;
+            const res = {
+                status(code) { this._code = code; return this; },
+                json(body) { captured = { code: this._code, body }; return this; },
+            };
+            await controller.update(req, res);
+            expect(captured.code).toBe(404);
+            expect(captured.body.message).toMatch(/not found/i);
+        } finally {
+            isMasterSpy.mockRestore();
+            getCompanyIdSpy.mockRestore();
+            getCompanyIdByJobIdSpy.mockRestore();
+        }
+    });
+
+    test('controller remove: existing-but-not-yours returns 404 to non-master', async () => {
+        const auth = require('../../app/middleware/auth.js');
+        const controller = require('../../app/controllers/invoicejobcontroller.js');
+        const isMasterSpy = vi.spyOn(auth, 'isMaster').mockResolvedValue(false);
+        const getCompanyIdSpy = vi.spyOn(auth, 'getCompanyId').mockResolvedValue(7);
+        const getCompanyIdByJobIdSpy = vi.spyOn(auth, 'getCompanyIdByJobId').mockResolvedValue(99);
+        try {
+            const db = require('../../app/config/db.config.js');
+            db.InvoiceJob.findByPk = vi.fn().mockResolvedValue({
+                injbId: 42, injbJobId: 13, injbArch: false, update: vi.fn(),
+            });
+            const req = { get: (h) => (h === 'authKey' ? 'scoped-to-7' : undefined), params: { id: 42 } };
+            let captured = null;
+            const res = {
+                status(code) { this._code = code; return this; },
+                json(body) { captured = { code: this._code, body }; return this; },
+            };
+            await controller.remove(req, res);
+            expect(captured.code).toBe(404);
+            expect(captured.body.message).toMatch(/not found/i);
+        } finally {
+            isMasterSpy.mockRestore();
+            getCompanyIdSpy.mockRestore();
+            getCompanyIdByJobIdSpy.mockRestore();
+        }
+    });
+});
