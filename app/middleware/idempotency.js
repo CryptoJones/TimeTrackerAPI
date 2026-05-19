@@ -137,8 +137,9 @@ async function idempotency(req, res, next) {
     const scope = buildScope(req);
     const bodyHash = hashBody(req.body);
 
-    // Best-effort prune. Awaited so we don't pile up overlapping
-    // DELETEs under load; cheap because the index covers it.
+    // Best-effort prune. Fire-and-forget so the request path never
+    // waits on DELETE; errors are swallowed via the .catch(). Cheap
+    // because the index on ikExpiresAt covers it.
     pruneExpired(getDb().sequelize).catch(() => {});
 
     let existing;
