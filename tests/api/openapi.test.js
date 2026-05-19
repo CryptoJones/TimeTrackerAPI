@@ -92,6 +92,43 @@ describe('OpenAPI spec', () => {
         expect(err.required).toEqual(['message']);
     });
 
+    test('bulkPath factory declares the {message, count, [bodyKey]} envelope across all 12 factory-driven endpoints', async () => {
+        // The bulkPath() factory in app/config/openapi.js emits the
+        // schema for the 12 entities that use _bulk-helpers (worker,
+        // billingtype, inventoryitem, inventorytransaction,
+        // purchaseordervendor, job, invoice, customerpayment,
+        // invoicejob, productentry, purchaseorderheader,
+        // purchaseorderline). Customer/bulk uses a hand-rolled spec
+        // entry, fixed separately in #332. Pin the factory-side
+        // contract once so any of the 12 endpoints regressing fails
+        // CI as a group.
+        const res = await request(app).get('/openapi.json');
+        const targets = [
+            ['/v1/worker/bulk',                'workers',              'Worker'],
+            ['/v1/billingtype/bulk',           'billingTypes',         'BillingType'],
+            ['/v1/inventoryitem/bulk',         'inventoryItems',       'InventoryItem'],
+            ['/v1/inventorytransaction/bulk',  'inventoryTransactions','InventoryTransaction'],
+            ['/v1/purchaseordervendor/bulk',   'vendors',              'PurchaseOrderVendor'],
+            ['/v1/job/bulk',                   'jobs',                 'Job'],
+            ['/v1/invoice/bulk',               'invoices',             'Invoice'],
+            ['/v1/customerpayment/bulk',       'customerPayments',     'CustomerPayment'],
+            ['/v1/invoicejob/bulk',            'invoiceJobs',          'InvoiceJob'],
+            ['/v1/productentry/bulk',          'productEntries',       'ProductEntry'],
+            ['/v1/purchaseorderheader/bulk',   'purchaseOrderHeaders', 'PurchaseOrderHeader'],
+            ['/v1/purchaseorderline/bulk',     'purchaseOrderLines',   'PurchaseOrderLine'],
+        ];
+        for (const [path, bodyKey, schemaName] of targets) {
+            const r201 = res.body.paths[path].post.responses['201'];
+            const schema = r201.content['application/json'].schema;
+            expect(schema.type, `${path} 201 should declare object`).toBe('object');
+            expect(schema.properties.message).toBeDefined();
+            expect(schema.properties.count.type).toBe('integer');
+            expect(schema.properties[bodyKey], `${path} should declare ${bodyKey} array`).toBeDefined();
+            expect(schema.properties[bodyKey].type).toBe('array');
+            expect(schema.properties[bodyKey].items.$ref).toBe(`#/components/schemas/${schemaName}`);
+        }
+    });
+
     test('GET /v1/timeentry/bycompany/{id} 200 declares the {message, count, limit, offset, timeEntries} envelope', async () => {
         // Parallel to the customer/bycompany declaration in #340.
         // Pre-fix the spec said only `description: 'OK'`; SDK code-gen
