@@ -61,9 +61,14 @@ const workerSchema = {
     type: 'object',
     properties: {
         workerId: { type: 'integer', readOnly: true },
-        workerFName: { type: 'string' },
-        workerLName: { type: 'string' },
-        workerTitle: { type: 'string' },
+        // Lengths mirror worker.schema.js's zod validators
+        // (min(1).max(255) on the three name fields). Pinning them
+        // here lets openapi-typescript et al. carry the bounds into
+        // client-side types. Same pattern as Customer (#270) and
+        // Company (#272).
+        workerFName: { type: 'string', minLength: 1, maxLength: 255 },
+        workerLName: { type: 'string', minLength: 1, maxLength: 255 },
+        workerTitle: { type: 'string', minLength: 1, maxLength: 255 },
         workerDefaultBillType: { type: 'integer' },
         workerCompId: { type: 'integer' },
         workerArch: { type: 'boolean', readOnly: true },
