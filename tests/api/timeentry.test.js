@@ -269,3 +269,87 @@ describe('computeMinutes helper', () => {
         expect(computeMinutes('not-a-date', 'also-not')).toBe(null);
     });
 });
+
+describe('TimeEntry tenant-enumeration defense (secure 404)', () => {
+    // Direct-company-scoped via teCompId. Spy on auth.isMaster /
+    // auth.getCompanyId so the caller appears scoped to a different
+    // company than the entry's teCompId.
+    test('controller getById: existing-but-not-yours returns 404 to non-master', async () => {
+        const auth = require('../../app/middleware/auth.js');
+        const controller = require('../../app/controllers/timeentrycontroller.js');
+        const isMasterSpy = vi.spyOn(auth, 'isMaster').mockResolvedValue(false);
+        const getCompanyIdSpy = vi.spyOn(auth, 'getCompanyId').mockResolvedValue(7);
+        try {
+            const db = require('../../app/config/db.config.js');
+            db.TimeEntry.findByPk = vi.fn().mockResolvedValue({
+                teId: 42, teCompId: 99, teArch: false,
+            });
+            const req = { get: (h) => (h === 'authKey' ? 'scoped-to-7' : undefined), params: { id: 42 } };
+            let captured = null;
+            const res = {
+                status(code) { this._code = code; return this; },
+                json(body) { captured = { code: this._code, body }; return this; },
+            };
+            await controller.getById(req, res);
+            expect(captured.code).toBe(404);
+            expect(captured.body.message).toMatch(/not found/i);
+        } finally {
+            isMasterSpy.mockRestore();
+            getCompanyIdSpy.mockRestore();
+        }
+    });
+
+    test('controller update: existing-but-not-yours returns 404 to non-master', async () => {
+        const auth = require('../../app/middleware/auth.js');
+        const controller = require('../../app/controllers/timeentrycontroller.js');
+        const isMasterSpy = vi.spyOn(auth, 'isMaster').mockResolvedValue(false);
+        const getCompanyIdSpy = vi.spyOn(auth, 'getCompanyId').mockResolvedValue(7);
+        try {
+            const db = require('../../app/config/db.config.js');
+            db.TimeEntry.findByPk = vi.fn().mockResolvedValue({
+                teId: 42, teCompId: 99, teArch: false, update: vi.fn(),
+            });
+            const req = {
+                get: (h) => (h === 'authKey' ? 'scoped-to-7' : undefined),
+                params: { id: 42 },
+                body: { teDescription: 'X' },
+            };
+            let captured = null;
+            const res = {
+                status(code) { this._code = code; return this; },
+                json(body) { captured = { code: this._code, body }; return this; },
+            };
+            await controller.update(req, res);
+            expect(captured.code).toBe(404);
+            expect(captured.body.message).toMatch(/not found/i);
+        } finally {
+            isMasterSpy.mockRestore();
+            getCompanyIdSpy.mockRestore();
+        }
+    });
+
+    test('controller remove: existing-but-not-yours returns 404 to non-master', async () => {
+        const auth = require('../../app/middleware/auth.js');
+        const controller = require('../../app/controllers/timeentrycontroller.js');
+        const isMasterSpy = vi.spyOn(auth, 'isMaster').mockResolvedValue(false);
+        const getCompanyIdSpy = vi.spyOn(auth, 'getCompanyId').mockResolvedValue(7);
+        try {
+            const db = require('../../app/config/db.config.js');
+            db.TimeEntry.findByPk = vi.fn().mockResolvedValue({
+                teId: 42, teCompId: 99, teArch: false, update: vi.fn(),
+            });
+            const req = { get: (h) => (h === 'authKey' ? 'scoped-to-7' : undefined), params: { id: 42 } };
+            let captured = null;
+            const res = {
+                status(code) { this._code = code; return this; },
+                json(body) { captured = { code: this._code, body }; return this; },
+            };
+            await controller.remove(req, res);
+            expect(captured.code).toBe(404);
+            expect(captured.body.message).toMatch(/not found/i);
+        } finally {
+            isMasterSpy.mockRestore();
+            getCompanyIdSpy.mockRestore();
+        }
+    });
+});
