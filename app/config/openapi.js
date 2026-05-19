@@ -771,7 +771,14 @@ const spec = {
                 security: [{ authKey: [] }],
                 parameters: [idempotencyKeyHeader],
                 requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/BillingType' } } } },
-                responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } },
+                responses: {
+                    201: {
+                        description: 'Created (or a replay of a previously-cached create)',
+                        headers: idempotencyReplayResponseHeader,
+                    },
+                    400: { description: 'Bad request' },
+                    403: { description: 'Auth failure' },
+                },
             },
         },
         '/v1/billingtype/{id}': {
