@@ -277,7 +277,7 @@ const timeEntrySchema = {
         teId: { type: 'integer', readOnly: true },
         teCustId: { type: 'integer' },
         teCompId: { type: 'integer', readOnly: true },
-        teDescription: { type: 'string' },
+        teDescription: { type: 'string', maxLength: 10000 },
         teStartedAt: { type: 'string', format: 'date-time' },
         teEndedAt: { type: 'string', format: 'date-time', nullable: true },
         teMinutes: { type: 'integer', nullable: true, readOnly: true },
