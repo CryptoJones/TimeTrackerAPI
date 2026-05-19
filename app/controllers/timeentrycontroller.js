@@ -6,6 +6,7 @@ const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
+const { escapeCsvCell } = require('./_csv-escape.js');
 const TimeEntry = db.TimeEntry;
 
 // Auth helpers used to live inline here — they now share a single
@@ -437,12 +438,11 @@ exports.exportCsv = async (req, res) => {
         'teStartedAt', 'teEndedAt', 'teMinutes',
         'teBillable', 'teDescription',
     ];
-    const escape = (val) => {
-        if (val === null || val === undefined) return '""';
-        // Date instances serialize to ISO; everything else .toString().
-        const s = (val instanceof Date) ? val.toISOString() : String(val);
-        return '"' + s.replace(/"/g, '""') + '"';
-    };
+    // CSV-formula-injection mitigation lives in the shared helper —
+    // see app/controllers/_csv-escape.js. Pinning it there means
+    // future export endpoints get the same guardrail by default
+    // (customer/export.csv hasn't been migrated yet — separate PR).
+    const escape = escapeCsvCell;
     const lines = [];
     lines.push(FIELDS.join(','));
     for (const r of rows) {
