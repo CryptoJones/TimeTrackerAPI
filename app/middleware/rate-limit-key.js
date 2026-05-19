@@ -19,11 +19,12 @@
  *
  * IPv6 handling: express-rate-limit v8+ refuses to start unless any
  * custom keyGenerator that touches `req.ip` routes the value through
- * `ipKeyGenerator(req, res)`. The helper canonicalizes IPv4 and IPv6
- * addresses (matching them to a /64 prefix on IPv6 to prevent a
- * single client from bypassing limits by rotating through their /64
- * allocation). Without this wrapper, IPv6 clients could each present
- * a unique address and slip past the per-IP budget.
+ * `ipKeyGenerator(ip)`. The helper canonicalizes IPv4 addresses
+ * (returning them verbatim) and IPv6 addresses (collapsing them to
+ * their /56 network prefix — the helper's default `ipv6Subnet`).
+ * Without this wrapper, an IPv6 client could present a fresh address
+ * from anywhere inside their allocation on every request and slip
+ * past the per-IP budget.
  *
  * Exported separately from server.js so unit tests can exercise
  * the keying directly without spinning up an HTTP server.
@@ -39,8 +40,9 @@ function keyByAuthKeyOrIp(req /*, res */) {
     }
     // express-rate-limit v8+ requires the helper. It takes the raw
     // IP string and returns the IPv4 address verbatim or the IPv6
-    // /64 prefix. Fall back to 'unknown' when no source IP is
-    // available (e.g. unit-test fixtures or non-IP transports).
+    // /56 network prefix (the helper's default). Fall back to
+    // 'unknown' when no source IP is available (e.g. unit-test
+    // fixtures or non-IP transports).
     const ip = req.ip || (req.connection && req.connection.remoteAddress);
     if (!ip) return 'ip:unknown';
     return 'ip:' + ipKeyGenerator(ip);
