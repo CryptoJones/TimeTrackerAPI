@@ -38,16 +38,20 @@ const customerSchema = {
     type: 'object',
     properties: {
         custId: { type: 'integer', readOnly: true },
-        custCompanyName: { type: 'string' },
-        custFName: { type: 'string' },
-        custLName: { type: 'string' },
-        custAddress1: { type: 'string' },
-        custAddress2: { type: 'string' },
-        custCity: { type: 'string' },
-        custState: { type: 'string' },
-        custZip: { type: 'string' },
-        custPhone: { type: 'string' },
-        custEmail: { type: 'string', format: 'email' },
+        custCompanyName: { type: 'string', maxLength: 255 },
+        custFName: { type: 'string', maxLength: 255 },
+        custLName: { type: 'string', maxLength: 255 },
+        custAddress1: { type: 'string', maxLength: 255 },
+        custAddress2: { type: 'string', maxLength: 255 },
+        custCity: { type: 'string', maxLength: 255 },
+        // custState matches the DB column varchar(2) — US state codes
+        // (NE, CA) + Canadian province codes (AB, BC). Pinning the
+        // length here so SDK code-gen (openapi-typescript etc.) carries
+        // the constraint into client types. See #265.
+        custState: { type: 'string', minLength: 2, maxLength: 2 },
+        custZip: { type: 'string', maxLength: 32 },
+        custPhone: { type: 'string', maxLength: 64 },
+        custEmail: { type: 'string', format: 'email', maxLength: 255 },
         custCompId: { type: 'integer' },
         custArch: { type: 'boolean', readOnly: true },
     },
