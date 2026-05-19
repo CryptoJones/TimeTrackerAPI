@@ -12,6 +12,25 @@ const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
     message: 'Must be an ISO 8601 date (YYYY-MM-DD).',
 });
 
+// Cross-field refinement: an invoice's due date must be on or
+// after its issue date. Mirrors the teEndedAt >= teStartedAt
+// constraint from #130 — a due-before-issue invoice is operator
+// error worth surfacing at the boundary instead of papering over.
+// Equality (due same day as issue) is allowed: zero-day-net is a
+// real billing term ("Due on Receipt").
+//
+// String comparison is safe here because `isoDate` is the strict
+// `YYYY-MM-DD` regex above; lexicographic order on that shape
+// matches chronological order for any valid input.
+function refineDueDateAfterIssue(data) {
+    if (!data.invDate || !data.invDueDate) return true;
+    return data.invDueDate >= data.invDate;
+}
+const DUE_BEFORE_ISSUE = {
+    message: 'invDueDate must be on or after invDate.',
+    path: ['invDueDate'],
+};
+
 const createInvoiceBody = z.object({
     invCustId: z.coerce.number().int().positive(),
     invDate: isoDate,
@@ -19,7 +38,7 @@ const createInvoiceBody = z.object({
     invPaid: z.boolean().optional(),
 }).strict({
     message: 'Unexpected field in body. Whitelist: invCustId, invDate, invDueDate, invPaid.',
-});
+}).refine(refineDueDateAfterIssue, DUE_BEFORE_ISSUE);
 
 const updateInvoiceBody = z.object({
     invDate: isoDate.optional(),
@@ -27,7 +46,7 @@ const updateInvoiceBody = z.object({
     invPaid: z.boolean().optional(),
 }).strict({
     message: 'Unexpected field in body. Whitelist: invDate, invDueDate, invPaid.',
-});
+}).refine(refineDueDateAfterIssue, DUE_BEFORE_ISSUE);
 
 const listByCustomerQuery = z.object({
     limit: z.coerce.number().int().positive().max(500).optional(),
