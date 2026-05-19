@@ -629,8 +629,32 @@ const spec = {
                     { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
                 ],
                 responses: {
-                    200: { description: 'Found', content: { 'application/json': { schema: { $ref: '#/components/schemas/Customer' } } } },
+                    // The controller wraps the row in a `{message, customer,
+                    // customers}` envelope. The historical `customers`
+                    // (plural) key stays for backward compat; the singular
+                    // `customer` was added in #292 to match the
+                    // singular-for-single-row shape every other entity
+                    // GET uses. Surface both in the spec so SDK
+                    // generators can reach either field — the previous
+                    // `$ref: Customer` declaration was misleading
+                    // (the body is the envelope, not the raw row).
+                    200: {
+                        description: 'Found — wraps the row in a {message, customer, customers} envelope.',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        message: { type: 'string' },
+                                        customer: { $ref: '#/components/schemas/Customer' },
+                                        customers: { $ref: '#/components/schemas/Customer' },
+                                    },
+                                },
+                            },
+                        },
+                    },
                     403: { description: 'Missing or invalid authKey', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+                    404: { description: 'Not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
                 },
             },
         },
