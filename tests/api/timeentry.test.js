@@ -187,6 +187,54 @@ describe('PATCH /v1/timeentry/:id auth contract', () => {
     });
 });
 
+describe('isInvertedRange helper', () => {
+    // The PATCH /v1/timeentry/:id handler uses this to reject the
+    // single-bound update case where the schema-layer refinement
+    // can't see the row's existing other bound. Returning true means
+    // "reject with 400"; false means "let it through".
+    //
+    // Unit-tested in isolation rather than via supertest because the
+    // full PATCH path requires auth + DB mocks that don't compose
+    // cleanly with vitest's per-file vi.mock model for this codebase.
+    // The controller is a 1-line `if (isInvertedRange(a, b)) return
+    // res.status(400)...`, so a unit test on the helper is the
+    // tightest coverage.
+    let isInvertedRange;
+    beforeAll(async () => {
+        const ctrl = await import('../../app/controllers/timeentrycontroller.js');
+        isInvertedRange = ctrl._internals.isInvertedRange;
+    });
+
+    test('false when either bound is missing (open-ended entry, legitimate)', () => {
+        expect(isInvertedRange(null, '2026-05-15T10:00:00Z')).toBe(false);
+        expect(isInvertedRange('2026-05-15T10:00:00Z', null)).toBe(false);
+        expect(isInvertedRange(null, null)).toBe(false);
+        expect(isInvertedRange(undefined, undefined)).toBe(false);
+    });
+
+    test('false when ended >= started (the happy paths)', () => {
+        expect(isInvertedRange('2026-05-15T09:00:00Z', '2026-05-15T10:00:00Z')).toBe(false);
+        // Equality: zero-minute entry is legitimate.
+        expect(isInvertedRange('2026-05-15T09:00:00Z', '2026-05-15T09:00:00Z')).toBe(false);
+    });
+
+    test('true when ended < started (the bug we reject at 400)', () => {
+        expect(isInvertedRange('2026-05-15T10:00:00Z', '2026-05-15T09:00:00Z')).toBe(true);
+        // Even one millisecond difference flips the bit.
+        expect(isInvertedRange('2026-05-15T10:00:00.001Z', '2026-05-15T10:00:00.000Z')).toBe(true);
+    });
+
+    test('false on unparseable input (computeMinutes guards null elsewhere)', () => {
+        // The helper deliberately does NOT 400 on garbage strings — those
+        // get null teMinutes via computeMinutes' NaN guard. Treating them
+        // as "inverted" here would be a false positive flagging input
+        // that's already otherwise-broken.
+        expect(isInvertedRange('not-a-date', '2026-05-15T10:00:00Z')).toBe(false);
+        expect(isInvertedRange('2026-05-15T10:00:00Z', 'also-not-a-date')).toBe(false);
+        expect(isInvertedRange('garbage', 'garbage')).toBe(false);
+    });
+});
+
 describe('DELETE /v1/timeentry/:id auth contract', () => {
     test('returns 403 when authKey header is missing', async () => {
         const res = await request(app).delete('/v1/timeentry/1');
