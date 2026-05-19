@@ -159,8 +159,15 @@ const customerPaymentSchema = {
     properties: {
         cpayId: { type: 'integer', readOnly: true },
         cpayCustId: { type: 'integer' },
-        cpayDescription: { type: 'string' },
+        // customerpayment.schema.js: cpayDescription is optional and
+        // capped at 10000 chars (the same ceiling used for other free-
+        // text fields). Pinning maxLength here matches the validator.
+        cpayDescription: { type: 'string', maxLength: 10000 },
         cpayDate: { type: 'string', format: 'date' },
+        // cpayAmount must be finite + non-zero (a $0 ledger entry is
+        // operator error). The non-zero rule isn't expressible in
+        // OpenAPI's standard vocabulary, but operators can read the
+        // zod source for the full contract.
         cpayAmount: { type: 'number' },
         cpayArch: { type: 'boolean', readOnly: true },
     },
