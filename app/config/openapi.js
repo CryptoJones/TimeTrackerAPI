@@ -1153,7 +1153,20 @@ const spec = {
             },
         },
         '/v1/purchaseorderheader': {
-            post: { summary: 'Create a PO header', security: [{ authKey: [] }], parameters: [idempotencyKeyHeader], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/PurchaseOrderHeader' } } } }, responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } } },
+            post: {
+                summary: 'Create a PO header',
+                security: [{ authKey: [] }],
+                parameters: [idempotencyKeyHeader],
+                requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/PurchaseOrderHeader' } } } },
+                responses: {
+                    201: {
+                        description: 'Created',
+                        headers: idempotencyReplayResponseHeader,
+                    },
+                    400: { description: 'Bad request' },
+                    403: { description: 'Auth failure' },
+                },
+            },
         },
         '/v1/purchaseorderheader/{id}': {
             get: { summary: 'Get one PO header', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
