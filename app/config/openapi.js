@@ -734,6 +734,22 @@ const spec = {
                         // Declare the replay header so SDK generators surface
                         // the field on single-create writes.
                         headers: idempotencyReplayResponseHeader,
+                        // Controller returns `{message, timeEntry}` — same
+                        // envelope drift fixed for /v1/customer in #316.
+                        // Pin the shape so SDK code-gen builds the right
+                        // client type instead of leaving the body
+                        // unspecified.
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        message: { type: 'string' },
+                                        timeEntry: { $ref: '#/components/schemas/TimeEntry' },
+                                    },
+                                },
+                            },
+                        },
                     },
                     400: { description: 'Bad request — missing teCustId or teStartedAt' },
                     403: { description: 'Missing or invalid authKey' },

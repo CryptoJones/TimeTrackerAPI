@@ -70,6 +70,21 @@ describe('OpenAPI spec', () => {
         expect(schemas.TimeEntry.properties.teStartedAt).toBeDefined();
     });
 
+    test('POST /v1/timeentry 201 declares the {message, timeEntry} envelope', async () => {
+        // Same envelope-drift fix as #316 (customer POST) and #312
+        // (customer GET). Pre-fix the timeentry POST 201 had no
+        // content schema at all, so SDK code-gen modeled the body
+        // as a bare untyped 201 — strictly worse than the customer
+        // case because the row inside the envelope was unreachable
+        // from generated client types.
+        const res = await request(app).get('/openapi.json');
+        const r201 = res.body.paths['/v1/timeentry'].post.responses['201'];
+        const schema = r201.content['application/json'].schema;
+        expect(schema.type).toBe('object');
+        expect(schema.properties.message).toBeDefined();
+        expect(schema.properties.timeEntry.$ref).toBe('#/components/schemas/TimeEntry');
+    });
+
     test('POST /v1/customer 201 declares the {message, customer} envelope', async () => {
         // Same envelope-drift fix as the GET endpoint below (#312)
         // but for the create path. The controller responds with
