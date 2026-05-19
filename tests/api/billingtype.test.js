@@ -168,4 +168,42 @@ describe('BillingType body validation', () => {
             .send({ btName: 'Standard' });
         expect(res.status).toBe(400);
     });
+
+    test('POST rejects non-finite btHourlyRate (string "Infinity" coerces past nonnegative())', async () => {
+        // .nonnegative() allows Infinity (Infinity >= 0 is true).
+        // .finite() in the validator catches it before .nonnegative().
+        const res = await request(app)
+            .post('/v1/billingtype')
+            .set('authKey', 'any')
+            .send({ btName: 'Standard', btHourlyRate: 'Infinity' });
+        expect(res.status).toBe(400);
+    });
+
+    test('POST still rejects negative btHourlyRate', async () => {
+        // Pin the existing .nonnegative() guard so .finite() doesn't
+        // accidentally relax the negative-block when refactoring.
+        const res = await request(app)
+            .post('/v1/billingtype')
+            .set('authKey', 'any')
+            .send({ btName: 'Standard', btHourlyRate: -50 });
+        expect(res.status).toBe(400);
+    });
+
+    test('POST accepts zero btHourlyRate (pro-bono / internal billing)', async () => {
+        // Zero is a legitimate rate (pro-bono engagements, internal-only
+        // entries). .finite() + .nonnegative() should let it through.
+        const res = await request(app)
+            .post('/v1/billingtype')
+            .set('authKey', 'any')
+            .send({ btName: 'Pro-bono', btHourlyRate: 0 });
+        expect(res.status).not.toBe(400);
+    });
+
+    test('PATCH rejects non-finite btHourlyRate', async () => {
+        const res = await request(app)
+            .patch('/v1/billingtype/1')
+            .set('authKey', 'any')
+            .send({ btHourlyRate: '-Infinity' });
+        expect(res.status).toBe(400);
+    });
 });
