@@ -326,11 +326,9 @@ function requireAuth(req, res, next) {
  * out of the strict 403 (like /v1/whoami).
  */
 async function resolveAuth(req, res, next) {
-    let attachOk = false;
     await new Promise((resolve) => {
-        attachAuth(req, res, () => { attachOk = true; resolve(); });
+        attachAuth(req, res, () => resolve());
     });
-    if (!attachOk) return; // attachAuth already sent a 500
     return requireAuth(req, res, next);
 }
 
