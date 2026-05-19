@@ -43,7 +43,11 @@ function keyByAuthKeyOrIp(req /*, res */) {
     // /56 network prefix (the helper's default). Fall back to
     // 'unknown' when no source IP is available (e.g. unit-test
     // fixtures or non-IP transports).
-    const ip = req.ip || (req.connection && req.connection.remoteAddress);
+    //
+    // `req.socket.remoteAddress` is the modern accessor — Node has
+    // marked `req.connection` deprecated (legacy alias for socket)
+    // since 13.x. Same value, future-proof name.
+    const ip = req.ip || (req.socket && req.socket.remoteAddress);
     if (!ip) return 'ip:unknown';
     return 'ip:' + ipKeyGenerator(ip);
 }
