@@ -31,6 +31,29 @@ function computeMinutes(startedAt, endedAt) {
 }
 
 /**
+ * Return true when both bounds are non-empty AND parse cleanly AND
+ * endedAt is strictly before startedAt. Used by the PATCH handler to
+ * reject single-bound updates whose merged interval would invert.
+ *
+ * The schema-layer refinement on updateTimeEntryBody (#130) catches
+ * the both-bounds-in-body case; this helper covers the half the
+ * schema can't see — a PATCH that supplies only one of the two
+ * bounds and merges against the row's existing value.
+ *
+ * Equality is NOT inverted (zero-minute entries are legitimate).
+ * Unparseable input is NOT inverted (computeMinutes will surface
+ * the null-result via its own NaN guard; flagging it here would
+ * be a false positive on garbage we'd 400 elsewhere anyway).
+ */
+function isInvertedRange(startedAt, endedAt) {
+    if (!startedAt || !endedAt) return false;
+    const start = new Date(startedAt).getTime();
+    const end = new Date(endedAt).getTime();
+    if (!Number.isFinite(start) || !Number.isFinite(end)) return false;
+    return end < start;
+}
+
+/**
  * POST /v1/timeentry
  *
  * Create a new time entry for a customer in the auth'd company.
@@ -236,10 +259,25 @@ exports.update = async (req, res) => {
     }
     // Recompute minutes if either bound changed.
     if (updates.teStartedAt !== undefined || updates.teEndedAt !== undefined) {
-        updates.teMinutes = computeMinutes(
-            updates.teStartedAt !== undefined ? updates.teStartedAt : entry.teStartedAt,
-            updates.teEndedAt !== undefined ? updates.teEndedAt : entry.teEndedAt,
-        );
+        const mergedStart = updates.teStartedAt !== undefined
+            ? updates.teStartedAt : entry.teStartedAt;
+        const mergedEnd = updates.teEndedAt !== undefined
+            ? updates.teEndedAt : entry.teEndedAt;
+        // Inverted-range guard for the single-bound PATCH case. The
+        // schema-layer refinement in updateTimeEntryBody (#130) only
+        // sees fields present in the request body, so a PATCH that
+        // supplies only one bound can't be validated there — the
+        // row's existing value lives in the DB. Reject merged
+        // end < start at 400 instead of silently dropping `teMinutes`
+        // to null and storing a row whose clocked-out-before-clocked-
+        // in timestamps look correct but whose duration column is
+        // blank.
+        if (isInvertedRange(mergedStart, mergedEnd)) {
+            return res.status(400).json({
+                message: 'teEndedAt must be at or after teStartedAt.',
+            });
+        }
+        updates.teMinutes = computeMinutes(mergedStart, mergedEnd);
     }
     try {
         await entry.update(updates);
@@ -414,4 +452,4 @@ exports.exportCsv = async (req, res) => {
 };
 
 // Exposed for unit testing.
-exports._internals = { computeMinutes, IsMaster, GetCompanyId };
+exports._internals = { computeMinutes, isInvertedRange, IsMaster, GetCompanyId };
