@@ -29,7 +29,17 @@ const sequelize = new Sequelize(env.database, env.username, env.password, {
     logging: dbQueryLog,
     define: {
         schema: 'dbo',
-        timestamps: false,
+        // Match the de facto pattern: every model in app/models/
+        // already sets `timestamps: true` explicitly (the 20260520
+        // migration added `createdAt` / `updatedAt` columns to every
+        // domain table + the auth tables, and the model overrides
+        // were added at the same time). The previous global default
+        // of `false` was misleading because no model honoured it,
+        // and a future model that forgot the explicit override would
+        // silently skip the timestamps Sequelize otherwise auto-
+        // populates. Flip the default so new models inherit the
+        // right behaviour without ceremony.
+        timestamps: true,
     },
 });
 
