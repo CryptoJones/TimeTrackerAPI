@@ -439,9 +439,10 @@ exports.exportCsv = async (req, res) => {
         'teBillable', 'teDescription',
     ];
     // CSV-formula-injection mitigation lives in the shared helper —
-    // see app/controllers/_csv-escape.js. Pinning it there means
-    // future export endpoints get the same guardrail by default
-    // (customer/export.csv hasn't been migrated yet — separate PR).
+    // see app/controllers/_csv-escape.js. Both export endpoints
+    // (timeentry + customer) call into it, so the OWASP mitigation
+    // stays in lockstep across the API; future export endpoints
+    // get the same guardrail by default.
     const escape = escapeCsvCell;
     const lines = [];
     lines.push(FIELDS.join(','));
