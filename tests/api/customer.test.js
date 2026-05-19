@@ -101,4 +101,39 @@ describe('GET /v1/customer/:id', () => {
         // 500 would indicate the error escaped its try/catch.
         expect(res.status).toBe(403);
     });
+
+    test('master key + non-existent customer id returns 404, not 200+null', async () => {
+        // Drive the master-key branch of getCustomerById directly so we
+        // can pin findAndRespond's null-row path. Before the fix, a
+        // null-returning findByPk emitted `200 { customers: null }` —
+        // a success envelope wrapping an empty body that any client
+        // checking `body.customers.custId` would crash on.
+        //
+        // Use the P5-M _setDbForTesting seam on auth.js: stub
+        // ApiMaster.findOne to return a row so real `IsMaster(authKey)`
+        // resolves true. vi.spyOn(auth.isMaster) doesn't intercept the
+        // captured `const IsMaster = auth.isMaster` reference in the
+        // controller — the seam is the documented hook.
+        const auth = require('../../app/middleware/auth.js');
+        const customer = require('../../app/controllers/customercontroller.js');
+        auth._setDbForTesting({
+            ApiMaster: { findOne: vi.fn().mockResolvedValue({ amId: 1 }) },
+            ApiKey: { findOne: vi.fn() },
+        });
+        try {
+            const db = require('../../app/config/db.config.js');
+            db.Customer.findByPk = vi.fn().mockResolvedValue(null);
+            const req = { get: (h) => (h === 'authKey' ? 'master' : undefined), params: { id: 999999 } };
+            let captured = null;
+            const res = {
+                status(code) { this._code = code; return this; },
+                json(body) { captured = { code: this._code, body }; return this; },
+            };
+            await customer.getCustomerById(req, res);
+            expect(captured.code).toBe(404);
+            expect(captured.body.message).toMatch(/not found/i);
+        } finally {
+            auth._setDbForTesting(null);
+        }
+    });
 });

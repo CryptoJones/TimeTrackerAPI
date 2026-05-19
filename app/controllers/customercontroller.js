@@ -539,6 +539,23 @@ exports.search = async (req, res) => {
 async function findAndRespond(customerId, res) {
     try {
         const customer = await Customer.findByPk(customerId);
+        if (!customer) {
+            // The master-key branch in getCustomerById calls
+            // findAndRespond without first verifying the row exists,
+            // so a non-existent customerId used to land here and
+            // return `200 { customers: null }` — a confusing
+            // success envelope wrapping an empty body. The scoped
+            // (non-master) branch already short-circuits to 403 on
+            // `GetCustomerCompanyId(id) === -1`, so it never hit this
+            // fallthrough. Make the master path return a proper 404
+            // so both paths agree that "no such customer id" is
+            // a not-found, not a success.
+            //
+            // The `defaultScope` on the Customer model filters archived
+            // rows, so findByPk also returns null for soft-deleted
+            // customers — soft-deletes correctly surface as 404 too.
+            return res.status(404).json({ message: "Not found." });
+        }
         return res.status(200).json({
             message: "Successfully retrieved the customer with CustomerId " + customerId,
             customers: customer,
