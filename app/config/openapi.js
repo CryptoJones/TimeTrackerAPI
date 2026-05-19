@@ -610,7 +610,17 @@ const spec = {
                     },
                 },
                 responses: {
-                    201: { description: 'Created', content: { 'application/json': { schema: { $ref: '#/components/schemas/Customer' } } } },
+                    201: {
+                        description: 'Created (or a replay of a previously-cached create)',
+                        // The single-create POST flows through the same
+                        // idempotency middleware as the bulk endpoints
+                        // (see #168 and #240), so it emits the same
+                        // Idempotency-Replay: true on a cached replay.
+                        // Declare it so SDK generators surface the field
+                        // on the client side.
+                        headers: idempotencyReplayResponseHeader,
+                        content: { 'application/json': { schema: { $ref: '#/components/schemas/Customer' } } },
+                    },
                     400: { description: 'Bad request' },
                     403: { description: 'Missing or invalid authKey' },
                 },
