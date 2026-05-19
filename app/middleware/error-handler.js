@@ -3,6 +3,7 @@
 "use strict";
 
 const log = require('../config/logger.js');
+const { redactUrl } = require('./redact-url.js');
 
 /**
  * Global error handler. Mounted AFTER all routes in server.js.
@@ -108,12 +109,21 @@ function errorHandler(err, req, res, next) {
 /**
  * 404 fallthrough. Mounted right before the error handler so any
  * unmatched route emits a structured 404 instead of Express's HTML.
+ *
+ * `path` is redacted through `redactUrl` to strip sensitive query
+ * parameters (authKey, token, password, …) before echoing the request
+ * back to the client. The pino-http request logger already redacts the
+ * same way; without this step, an SDK bug that puts the authKey on the
+ * query string (`GET /v1/foo?authKey=...` instead of in the header)
+ * would have its secret echoed back in the response body — and any
+ * upstream proxy / client-side error logger capturing the body
+ * would persist the secret.
  */
 function notFound(req, res) {
     return res.status(404).json({
         message: 'Not found.',
         method: req.method,
-        path: req.originalUrl,
+        path: redactUrl(req.originalUrl),
     });
 }
 
