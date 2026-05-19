@@ -69,4 +69,19 @@ describe('redactUrl', () => {
         expect(redactUrl(null)).toBe(null);
         expect(redactUrl(42)).toBe(42);
     });
+
+    test('does not throw on malformed percent-encoding in param name', () => {
+        // decodeURIComponent throws URIError on `%FF` (incomplete UTF-8
+        // sequence) or `%ZZ` (invalid hex). pino-http would invoke this
+        // serializer once per request, so an unhandled URIError here would
+        // either skip the log line or fall back to logging the raw URL —
+        // leaking the very value we're meant to redact. Wrap + recover.
+        expect(() => redactUrl('/x?%FF=bar')).not.toThrow();
+        expect(() => redactUrl('/x?%ZZ=bar&authkey=secret')).not.toThrow();
+        // And the sensitive param that follows the malformed one must
+        // still be redacted — recovery doesn't abort the loop.
+        const out = redactUrl('/x?%ZZ=bar&authkey=secret');
+        expect(out).not.toContain('secret');
+        expect(out).toContain('authkey=<REDACTED>');
+    });
 });
