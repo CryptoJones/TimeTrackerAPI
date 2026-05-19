@@ -513,7 +513,15 @@ const spec = {
                     },
                 },
                 responses: {
-                    201: { description: 'All customers created' },
+                    201: {
+                        description: 'All customers created (or a replay of a previously-cached create)',
+                        // Customer/bulk predates the bulkPath() factory but
+                        // shares the same Idempotency-Key middleware path.
+                        // Declare the replay header here too so SDK generators
+                        // see it on all 13 bulk endpoints, not 12-of-13.
+                        // Matches the factory output from #168.
+                        headers: idempotencyReplayResponseHeader,
+                    },
                     400: { description: 'Validation failure (array empty / master without custCompId on some entry)' },
                     403: { description: 'Missing authKey or cross-tenant create attempt' },
                     500: { description: 'Transaction rolled back due to DB error' },
