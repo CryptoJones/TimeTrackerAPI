@@ -70,6 +70,20 @@ describe('OpenAPI spec', () => {
         expect(schemas.TimeEntry.properties.teStartedAt).toBeDefined();
     });
 
+    test('POST /v1/customer 201 declares the {message, customer} envelope', async () => {
+        // Same envelope-drift fix as the GET endpoint below (#312)
+        // but for the create path. The controller responds with
+        // `{message, customer}` on a successful 201; the spec
+        // previously said the body was a bare Customer, so SDK
+        // generators built clients that failed to find the row.
+        const res = await request(app).get('/openapi.json');
+        const r201 = res.body.paths['/v1/customer'].post.responses['201'];
+        const schema = r201.content['application/json'].schema;
+        expect(schema.type).toBe('object');
+        expect(schema.properties.message).toBeDefined();
+        expect(schema.properties.customer.$ref).toBe('#/components/schemas/Customer');
+    });
+
     test('GET /v1/customer/{id} 200 declares the {message, customer, customers} envelope', async () => {
         // Pre-#292 the spec said the body was a bare Customer. The
         // controller actually returns a `{message, customer, customers}`
