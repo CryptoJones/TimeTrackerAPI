@@ -70,6 +70,22 @@ describe('OpenAPI spec', () => {
         expect(schemas.TimeEntry.properties.teStartedAt).toBeDefined();
     });
 
+    test('POST /v1/customer/bulk 201 declares the {message, count, customers} envelope', async () => {
+        // makeBulkCreate (app/controllers/_bulk-helpers.js) emits
+        // {message, count, <createdKey>}. The spec previously had
+        // description + headers but no content schema, so SDK
+        // code-gen modeled the response as untyped. Same drift
+        // pattern as #316 / #326 but for the bulk variant.
+        const res = await request(app).get('/openapi.json');
+        const r201 = res.body.paths['/v1/customer/bulk'].post.responses['201'];
+        const schema = r201.content['application/json'].schema;
+        expect(schema.type).toBe('object');
+        expect(schema.properties.message).toBeDefined();
+        expect(schema.properties.count.type).toBe('integer');
+        expect(schema.properties.customers.type).toBe('array');
+        expect(schema.properties.customers.items.$ref).toBe('#/components/schemas/Customer');
+    });
+
     test('POST /v1/timeentry 201 declares the {message, timeEntry} envelope', async () => {
         // Same envelope-drift fix as #316 (customer POST) and #312
         // (customer GET). Pre-fix the timeentry POST 201 had no
