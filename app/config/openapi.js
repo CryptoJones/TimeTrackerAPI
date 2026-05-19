@@ -405,7 +405,28 @@ const spec = {
                             },
                         },
                     },
-                    503: { description: 'Degraded — DB unreachable' },
+                    503: {
+                        description: 'Degraded — DB unreachable',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: { type: 'string', enum: ['degraded'] },
+                                        db: { type: 'string', enum: ['down'] },
+                                        uptime_s: { type: 'integer' },
+                                        version: { type: 'string' },
+                                        elapsed_ms: { type: 'number' },
+                                        migration: { type: 'string', nullable: true },
+                                        db_error: {
+                                            type: 'string',
+                                            description: 'The underlying DB connection error message (e.g. "ECONNREFUSED 127.0.0.1:5432"). Useful for operator debugging; never includes credentials. Present only on the 503 path.',
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
                 },
             },
         },
