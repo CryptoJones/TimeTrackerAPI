@@ -20,7 +20,18 @@ const common = {
     dialect: 'postgres',
     define: {
         schema: 'dbo',
-        timestamps: false,
+        // Keep in sync with db.config.js's `define.timestamps`.
+        // The runtime flipped this to `true` in PR #148 so every
+        // domain model inherits auto-populated createdAt/updatedAt
+        // instead of carrying an explicit per-model override.
+        // sequelize-cli's migration runner doesn't currently exercise
+        // this default (migrations use queryInterface directly, not
+        // models), but a future contributor adding model-based code
+        // paths to a migration would otherwise get silently
+        // inconsistent behavior between `npm start` and
+        // `npm run migrate`. tests/unit/sequelize-cli-config.test.js
+        // pins the two configs in agreement.
+        timestamps: true,
     },
     // Migrations land in the dbo schema's SequelizeMeta table so we
     // don't pollute the public schema with framework bookkeeping.
