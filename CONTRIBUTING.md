@@ -23,10 +23,10 @@ npm start                                  # serves on PORT (default 3000)
 npm run dev                                # same, but auto-reloads on app/ + server.js edits
 ```
 
-`npm test` runs the full vitest suite (45+ files, 479+ cases at this
-writing). The integration suite (`tests/integration/`) auto-skips when
-no Postgres is reachable, so a fresh `npm test` without docker still
-passes the unit + api tiers.
+`npm test` runs the full vitest suite — unit + api + integration
+tiers across `tests/`. The integration suite (`tests/integration/`)
+auto-skips when no Postgres is reachable, so a fresh `npm test`
+without docker still passes the unit + api tiers.
 
 ## Before you open a PR
 
