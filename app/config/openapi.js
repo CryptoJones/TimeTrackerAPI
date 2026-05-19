@@ -221,8 +221,12 @@ const purchaseOrderHeaderSchema = {
     properties: {
         pohId: { type: 'integer', readOnly: true },
         pohDate: { type: 'string', format: 'date-time' },
-        pohReference: { type: 'string' },
-        pohTerms: { type: 'string' },
+        // Lengths mirror purchaseorderheader.schema.js: pohReference is
+        // 1-255 chars, pohTerms is 1-1000 chars (the longer cap suits
+        // free-text "net 30, late fees per §2.3, …" payment-terms
+        // strings).
+        pohReference: { type: 'string', minLength: 1, maxLength: 255 },
+        pohTerms: { type: 'string', minLength: 1, maxLength: 1000 },
         pohPovId: { type: 'integer' },
         pohArch: { type: 'boolean', readOnly: true },
     },
@@ -233,7 +237,10 @@ const purchaseOrderLineSchema = {
     properties: {
         polId: { type: 'integer', readOnly: true },
         polpoh: { type: 'integer' },
-        polItemDesc: { type: 'string' },
+        // Mirrors purchaseorderline.schema.js: 1-1000 chars. Same
+        // free-text rationale as pohTerms above — line items often
+        // carry SKU + brief description on one line.
+        polItemDesc: { type: 'string', minLength: 1, maxLength: 1000 },
         polQty: { type: 'number' },
         polPrice: { type: 'number' },
         polInvtId: { type: 'integer' },
