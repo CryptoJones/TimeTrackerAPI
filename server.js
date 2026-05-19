@@ -228,7 +228,15 @@ const server = app.listen(port, host, () => {
 // window), we force-exit with code 1. SIGINT (Ctrl-C in dev) follows
 // the same path so dev shutdowns aren't dirty either.
 
-const shutdownTimeoutMs = parseInt(process.env.SHUTDOWN_TIMEOUT_MS, 10) || 25_000;
+// `parseInt(...) || 25_000` accepts negative integers (parseInt('-100')
+// = -100 is truthy, so it'd be used as the timeout — setTimeout(-100)
+// fires immediately, force-exiting before the drain has a chance to
+// run). Guard with the same Number.isFinite + >= 0 check used for
+// PORT (#124) so only NaN and negatives fall back to the default.
+const shutdownTimeoutRaw = parseInt(process.env.SHUTDOWN_TIMEOUT_MS, 10);
+const shutdownTimeoutMs = Number.isFinite(shutdownTimeoutRaw) && shutdownTimeoutRaw >= 0
+    ? shutdownTimeoutRaw
+    : 25_000;
 let shuttingDown = false;
 
 async function shutdown(signal) {
