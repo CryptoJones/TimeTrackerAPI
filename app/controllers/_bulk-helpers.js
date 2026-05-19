@@ -4,15 +4,15 @@
 
 /**
  * Shared factory for bulk-create controllers on entities that scope
- * directly to a single company via a *CompId column. Customer's
- * bulkCreate predates this helper and has the same shape baked in;
- * we don't migrate it here to keep the diff focused on the new
- * endpoints (P3-H), but a follow-up should consolidate them.
+ * directly to a single company via a *CompId column.
  *
- * What this factory replaces: 5 near-identical controllers
- * (worker/billingtype/inventoryitem/inventorytransaction/
+ * What this factory replaces: 6 near-identical controllers
+ * (customer/worker/billingtype/inventoryitem/inventorytransaction/
  *  purchaseordervendor) each repeating the same auth-scope-loop-
- *  transaction-bulkCreate-handle-error scaffold.
+ *  transaction-bulkCreate-handle-error scaffold. Customer was the
+ *  original hand-rolled implementation; the factory replaced 5
+ *  later-added clones in P3-H and Customer was migrated to use the
+ *  factory in a follow-up.
  *
  * What varies between entities — passed as config:
  *   - Model         the sequelize model (db.Worker etc.)
