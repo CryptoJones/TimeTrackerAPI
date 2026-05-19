@@ -49,6 +49,22 @@ describe('VersionInfo auth contract', () => {
     test('DELETE 403 for non-master key', async () => {
         expect((await request(app).delete('/v1/versioninfo/1').set('authKey', 'not-master')).status).toBe(403);
     });
+
+    test('GET 403 for unknown authKey (header present but not in DB)', async () => {
+        // VersionInfo reads previously gated only on header-present, so any
+        // non-empty string in `authKey` returned 200. The README's endpoint
+        // table says "yes (authKey)" for reads, which the rest of the API
+        // consistently means "any VALID authKey". Pin the tightening so a
+        // future refactor can't accidentally drop the validation check.
+        const res = await request(app).get('/v1/versioninfo/1').set('authKey', 'unknown');
+        expect(res.status).toBe(403);
+        expect(res.body.message).toMatch(/Invalid Authorization Key/i);
+    });
+    test('GET list 403 for unknown authKey', async () => {
+        const res = await request(app).get('/v1/versioninfo').set('authKey', 'unknown');
+        expect(res.status).toBe(403);
+        expect(res.body.message).toMatch(/Invalid Authorization Key/i);
+    });
 });
 
 describe('VersionInfo route mounting', () => {

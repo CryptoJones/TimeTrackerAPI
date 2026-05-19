@@ -33,6 +33,37 @@ async function requireMaster(authKey, res) {
     return true;
 }
 
+/**
+ * Reject reads whose authKey header is missing OR present-but-unknown.
+ *
+ * VersionInfo reads were originally gated purely on "header present"
+ * — `getById` and `list` accepted any non-empty string in `authKey`
+ * and returned 200. The README's endpoint table says "yes (authKey)"
+ * for these endpoints, which the rest of the codebase consistently
+ * treats as "any VALID authKey, master or scoped"; a literal
+ * presence-check breaks that contract.
+ *
+ * attachAuth (mounted at /v1/*) has already populated req.isMaster
+ * and req.companyId from the supplied header, so this helper just
+ * reads the resolved state without a second DB round-trip.
+ *
+ * Master keys pass (isMaster=true, companyId=-1 by convention).
+ * Non-master keys pass when they resolved to a real company. An
+ * unknown header is the case we want to reject — !isMaster AND
+ * companyId===-1.
+ */
+function requireValidAuth(req, res) {
+    if (!req.authKey) {
+        res.status(403).json({ message: "Authorization key not sent." });
+        return false;
+    }
+    if (!req.isMaster && req.companyId === -1) {
+        res.status(403).json({ message: "Invalid Authorization Key." });
+        return false;
+    }
+    return true;
+}
+
 exports.create = async (req, res) => {
     const authKey = req.get('authKey');
     if (!(await requireMaster(authKey, res))) return;
@@ -52,10 +83,7 @@ exports.create = async (req, res) => {
 };
 
 exports.getById = async (req, res) => {
-    const authKey = req.get('authKey');
-    if (!authKey) {
-        return res.status(403).json({ message: "Authorization key not sent." });
-    }
+    if (!requireValidAuth(req, res)) return;
     try {
         const v = await VersionInfo.findByPk(req.params.id);
         if (!v) return res.status(404).json({ message: "Not found." });
@@ -67,10 +95,7 @@ exports.getById = async (req, res) => {
 };
 
 exports.list = async (req, res) => {
-    const authKey = req.get('authKey');
-    if (!authKey) {
-        return res.status(403).json({ message: "Authorization key not sent." });
-    }
+    if (!requireValidAuth(req, res)) return;
 
     const requestedLimit = parseInt(req.query.limit, 10);
     const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
