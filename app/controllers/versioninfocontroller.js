@@ -75,7 +75,7 @@ exports.create = async (req, res) => {
     }
     try {
         const created = await VersionInfo.create(payload);
-        return res.status(201).json({ message: "VersionInfo created.", versionInfo: created });
+        return res.status(201).json({ message: "Version info created.", versionInfo: created });
     } catch (error) {
         log.error({ err: error }, 'VersionInfo.create failed');
         return res.status(500).json({ message: "Error!" });
