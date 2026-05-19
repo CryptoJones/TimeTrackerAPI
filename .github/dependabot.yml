@@ -4,7 +4,7 @@
 # Dependabot configuration. Automates dependency updates so the
 # `npm audit` CI gate doesn't surprise us at release time.
 #
-# Two ecosystems get watched:
+# Three ecosystems get watched:
 #   1. npm — the production + dev tree in package.json.
 #   2. github-actions — workflow action versions in .github/workflows/.
 #   3. docker — base images in Dockerfile / docker-compose.yml.
