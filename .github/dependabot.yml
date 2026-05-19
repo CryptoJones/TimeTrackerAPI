@@ -49,6 +49,16 @@ updates:
       - ci
     commit-message:
       prefix: "chore(actions)"
+    groups:
+      # Same rationale as the npm group: bundle non-major action
+      # bumps into a single weekly PR so the queue doesn't fragment.
+      # Majors stay separate (e.g. actions/checkout v4 → v5 deserves
+      # a focused review).
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: docker
     directory: "/"
@@ -62,3 +72,13 @@ updates:
       - docker
     commit-message:
       prefix: "chore(docker)"
+    groups:
+      # Base-image patch/minor bumps (node:26-bookworm-slim point
+      # releases, postgres:16-alpine point releases) bundle so we
+      # get one weekly Docker PR. Major-version base-image bumps
+      # remain isolated.
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
