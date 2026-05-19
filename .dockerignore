@@ -39,7 +39,9 @@ Thumbs.db
 # §4(c) requires distributions of derivative works (including container
 # images) to include the License notice. Keep LICENSE in.
 CHANGELOG.md
+CONTRIBUTING.md
 README.md
+SECURITY.md
 docs
 
 # Env files — secrets should be passed via -e flags or compose, never
