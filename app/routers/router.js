@@ -6,6 +6,7 @@ const router = express.Router();
 const swaggerUi = require('swagger-ui-express');
 const { attachAuth } = require('../middleware/auth.js');
 const { idempotency } = require('../middleware/idempotency.js');
+const { metricsHandler } = require('../middleware/metrics.js');
 
 const customer = require('../controllers/customercontroller.js');
 const health = require('../controllers/healthcontroller.js');
@@ -51,7 +52,6 @@ router.get('/healthz', health.healthz);
 // Prometheus scrape endpoint. Auth is optional, gated by
 // METRICS_BEARER_TOKEN env var; unset => unauthenticated, the
 // usual private-network deployment pattern.
-const { metricsHandler } = require('../middleware/metrics.js');
 router.get('/metrics', metricsHandler);
 
 // attachAuth runs on every /v1/* request and populates
