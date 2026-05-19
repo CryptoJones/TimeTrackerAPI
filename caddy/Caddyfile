@@ -39,9 +39,18 @@
     # small and aggressive compression on JSON adds a few ms.
     encode gzip
 
-    # Structured access logs to stdout.
+    # Structured access logs to stdout in JSON. Matches the app's
+    # pino output (one JSON object per line) so log shippers like
+    # Vector / Loki / CloudWatch see a single uniform format on
+    # the container's stdout fd rather than having to handle a mix
+    # of free-text `console` lines from Caddy and JSON lines from
+    # the api. Both contribute usable fields:
+    #   - request.headers.X-Request-Id correlates back to a pino
+    #     request log line (the API echoes / forwards it).
+    #   - duration / size let Caddy participate in the same
+    #     dashboards as the application metrics endpoint.
     log {
         output stdout
-        format console
+        format json
     }
 }
