@@ -182,8 +182,19 @@ app.use(express.json({
 //     express-rate-limit default. This is the brute-force path —
 //     someone trying keys to find a valid one — and per-IP is the
 //     right granularity there.
-const rateLimitMax = parseInt(process.env.RATE_LIMIT_MAX, 10);
-const rateLimitWindowMs = parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10);
+// Same parseInt-leniency caveat as PORT (#124) and DB_PORT (#293):
+// `parseInt('100abc')` returns 100, so an operator typo silently
+// turns into a different-than-expected setting. Validate the raw
+// string with a strict regex first so only clean integer-looking
+// values reach parseInt; anything else falls through to the env
+// var being treated as unset (which lets the inner finite-+>0
+// fallback below pick the default).
+function strictParseIntEnv(raw) {
+    if (typeof raw !== 'string') return NaN;
+    return /^-?\d+$/.test(raw) ? parseInt(raw, 10) : NaN;
+}
+const rateLimitMax = strictParseIntEnv(process.env.RATE_LIMIT_MAX);
+const rateLimitWindowMs = strictParseIntEnv(process.env.RATE_LIMIT_WINDOW_MS);
 if (rateLimitMax !== 0) {
     const { keyByAuthKeyOrIp } = require('./app/middleware/rate-limit-key.js');
     const v1Limiter = rateLimit({
