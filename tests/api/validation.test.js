@@ -85,7 +85,10 @@ describe('body validation — POST /v1/customer', () => {
         const res = await request(app)
             .post('/v1/customer')
             .set('authKey', 'unknown-key')  // will still 403 at controller
-            .send({ custCompanyName: 'Acme', custCompId: 1 });
+            // Full required-field body — custCompanyName / custFName /
+            // custLName are NOT NULL in the DB and required in the
+            // zod schema.
+            .send({ custCompanyName: 'Acme', custFName: 'Test', custLName: 'User', custCompId: 1 });
         // After zod passes, the controller's auth check 403s on the
         // unknown key — that's the expected post-validation path.
         // We just need to confirm we got past the 400 validator.

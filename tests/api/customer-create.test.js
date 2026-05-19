@@ -36,9 +36,12 @@ beforeAll(async () => {
 
 describe('POST /v1/customer', () => {
     test('returns 403 when authKey header is missing', async () => {
+        // Send a full required-field body so we exit body validation
+        // and reach the controller's authKey check. custCompanyName /
+        // custFName / custLName are required (NOT NULL in the DB).
         const res = await request(app)
             .post('/v1/customer')
-            .send({ custCompanyName: 'Acme' });
+            .send({ custCompanyName: 'Acme', custFName: 'Test', custLName: 'User' });
         expect(res.status).toBe(403);
         expect(res.body).toMatchObject({
             message: expect.stringMatching(/Authorization key not sent/i),
@@ -59,7 +62,7 @@ describe('POST /v1/customer', () => {
         const res = await request(app)
             .post('/v1/customer')
             .set('authKey', 'definitely-not-a-real-key')
-            .send({ custCompanyName: 'Acme', custCompId: 1 });
+            .send({ custCompanyName: 'Acme', custFName: 'Test', custLName: 'User', custCompId: 1 });
         // With no DB, IsMaster returns false, GetCompanyId returns -1,
         // and the controller emits 403 "Invalid Authorization Key."
         expect(res.status).toBe(403);

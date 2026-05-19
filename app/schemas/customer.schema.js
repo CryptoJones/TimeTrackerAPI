@@ -22,9 +22,15 @@ const intIdParam = z.object({
  * zod issue.
  */
 const createCustomerBody = z.object({
-    custCompanyName: z.string().max(255).optional(),
-    custFName: z.string().max(255).optional(),
-    custLName: z.string().max(255).optional(),
+    // custCompanyName / custFName / custLName mirror the DB columns
+    // (text NOT NULL on each — see setup/TimeTracker.sql). Without
+    // the required flag, callers omitting them passed zod and tripped
+    // the postgres "null value violates not-null constraint" path,
+    // surfacing as a 500 instead of a clean 400. Same drift class as
+    // #265's custState fix.
+    custCompanyName: z.string().max(255),
+    custFName: z.string().max(255),
+    custLName: z.string().max(255),
     custAddress1: z.string().max(255).optional(),
     custAddress2: z.string().max(255).optional(),
     custCity: z.string().max(255).optional(),
