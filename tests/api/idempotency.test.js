@@ -78,7 +78,10 @@ describe('Idempotency middleware: mounted on POST routes', () => {
             .post('/v1/customer')
             .set('authKey', 'any')
             .set('Idempotency-Key', '01HFTESTKEY12345')
-            .send({ custCompanyName: 'Acme' });
+            // Full required-field body so the schema validator passes
+            // and we exercise the idempotency middleware itself rather
+            // than short-circuiting on a 400 from zod.
+            .send({ custCompanyName: 'Acme', custFName: 'Test', custLName: 'User' });
         // Whatever the controller decides (likely 403 from inline
         // auth, since the mock returns []), the idempotency layer
         // should NOT have short-circuited with 400/409. That's the

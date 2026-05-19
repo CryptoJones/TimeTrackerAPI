@@ -50,9 +50,11 @@ beforeAll(async () => {
 
 describe('POST /v1/customer/bulk auth contract', () => {
     test('returns 403 when authKey header is missing', async () => {
+        // Full required-field body so body-validation passes and the
+        // authKey check inside makeBulkCreate is reached.
         const res = await request(app)
             .post('/v1/customer/bulk')
-            .send({ customers: [{ custCompanyName: 'Acme' }] });
+            .send({ customers: [{ custCompanyName: 'Acme', custFName: 'Test', custLName: 'User' }] });
         expect(res.status).toBe(403);
     });
 });
