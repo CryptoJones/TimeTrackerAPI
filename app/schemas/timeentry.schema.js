@@ -21,6 +21,12 @@ const isoDatetime = z.string().datetime({
  *
  * Server-managed fields (teId, teMinutes, teArch) are not accepted
  * from the body.
+ *
+ * Cross-field refinement: when both teStartedAt and teEndedAt are
+ * present, teEndedAt must be at or after teStartedAt. The controller
+ * already maps an inverted range to `teMinutes = null` silently, but
+ * the user has no signal that their request was nonsense — they
+ * still get a 201 with bad data. Reject at the boundary instead.
  */
 const createTimeEntryBody = z.object({
     teCustId: z.coerce.number().int().positive(),
@@ -31,13 +37,26 @@ const createTimeEntryBody = z.object({
     teBillable: z.boolean().optional(),
 }).strict({
     message: 'Unexpected field in body. Whitelist: teCustId, teCompId, teDescription, teStartedAt, teEndedAt, teBillable.',
-});
+}).refine(
+    (data) => !data.teEndedAt || new Date(data.teEndedAt) >= new Date(data.teStartedAt),
+    {
+        message: 'teEndedAt must be at or after teStartedAt.',
+        path: ['teEndedAt'],
+    },
+);
 
 /**
  * PATCH /v1/timeentry/:id body. None of the fields are required —
  * a PATCH is a partial update — but at least one must be present.
  * The controller already handles the "no updatable fields" case
  * with a 400; the schema just enforces shape.
+ *
+ * Cross-field refinement: when both teStartedAt and teEndedAt are
+ * present in the same PATCH, the same end >= start constraint as
+ * CREATE applies. (The single-field PATCH case — updating only one
+ * bound against the DB's existing value — has to be enforced at
+ * the controller layer because the schema doesn't see the existing
+ * row; controller already returns `teMinutes = null` there.)
  */
 const updateTimeEntryBody = z.object({
     teDescription: z.string().max(10000).optional(),
@@ -46,7 +65,14 @@ const updateTimeEntryBody = z.object({
     teBillable: z.boolean().optional(),
 }).strict({
     message: 'Unexpected field in body. Whitelist: teDescription, teStartedAt, teEndedAt, teBillable.',
-});
+}).refine(
+    (data) => !(data.teStartedAt && data.teEndedAt) ||
+        new Date(data.teEndedAt) >= new Date(data.teStartedAt),
+    {
+        message: 'teEndedAt must be at or after teStartedAt.',
+        path: ['teEndedAt'],
+    },
+);
 
 /**
  * GET /v1/timeentry/export.csv query schema. Like listByCompanyQuery
