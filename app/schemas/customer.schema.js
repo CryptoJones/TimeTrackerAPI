@@ -28,7 +28,12 @@ const createCustomerBody = z.object({
     custAddress1: z.string().max(255).optional(),
     custAddress2: z.string().max(255).optional(),
     custCity: z.string().max(255).optional(),
-    custState: z.string().max(255).optional(),
+    // custState matches the DB column: varchar(2) — US state codes
+    // ("NE", "CA", etc.) and Canadian province codes ("AB", "BC").
+    // Without this length constraint, anything ≤ 255 chars passed zod
+    // and surfaced as a 500 at the postgres INSERT layer ("value too
+    // long for type character varying(2)") instead of a clean 400.
+    custState: z.string().length(2).optional(),
     custZip: z.string().max(32).optional(),
     custPhone: z.string().max(64).optional(),
     custEmail: z.string().email().max(255).optional(),
