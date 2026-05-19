@@ -79,8 +79,13 @@ exports.getById = async (req, res) => {
     if (!isMaster) {
         const authCompanyId = await GetCompanyId(authKey);
         const headerCompanyId = await GetCompanyIdByPohId(line.polpoh);
+        // Cross-tenant access is reported as 404, not 403 — otherwise
+        // a scoped caller can enumerate which PurchaseOrderLine ids
+        // are populated across the whole tenant table by status code.
+        // Same secure-404 pattern as the prior 7 entities (#174 / #188
+        // / #192 / #196 / #200 / #204 / #210).
         if (authCompanyId === -1 || headerCompanyId === -1 || authCompanyId !== headerCompanyId) {
-            return res.status(403).json({ message: "Invalid Authorization Key." });
+            return res.status(404).json({ message: "Not found." });
         }
     }
     return res.status(200).json({ message: "Found.", purchaseOrderLine: line });
@@ -152,8 +157,9 @@ exports.update = async (req, res) => {
     if (!isMaster) {
         const authCompanyId = await GetCompanyId(authKey);
         const headerCompanyId = await GetCompanyIdByPohId(line.polpoh);
+        // Secure-404 on PATCH for the same reason as GET.
         if (authCompanyId === -1 || headerCompanyId === -1 || authCompanyId !== headerCompanyId) {
-            return res.status(403).json({ message: "Invalid Authorization Key." });
+            return res.status(404).json({ message: "Not found." });
         }
     }
 
@@ -196,8 +202,9 @@ exports.remove = async (req, res) => {
     if (!isMaster) {
         const authCompanyId = await GetCompanyId(authKey);
         const headerCompanyId = await GetCompanyIdByPohId(line.polpoh);
+        // Secure-404 on DELETE for the same reason as GET / PATCH.
         if (authCompanyId === -1 || headerCompanyId === -1 || authCompanyId !== headerCompanyId) {
-            return res.status(403).json({ message: "Invalid Authorization Key." });
+            return res.status(404).json({ message: "Not found." });
         }
     }
 
