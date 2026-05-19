@@ -428,10 +428,25 @@ const spec = {
         title: 'TimeTrackerAPI',
         version: pkg.version || '1.0.0',
         description:
-            'Open-source Node.js + PostgreSQL TimeTrackerAPI. Customer and ' +
-            'time-entry records, scoped by company via an `authKey` header. ' +
+            'Open-source Node.js + PostgreSQL TimeTrackerAPI. 16 ' +
+            'company-scoped entities (Customer, TimeEntry, Worker, ' +
+            'BillingType, InventoryItem, Company, Job, Invoice, ' +
+            'CustomerPayment, InvoiceJob, ProductEntry, VersionInfo, ' +
+            'PurchaseOrderVendor, PurchaseOrderHeader, ' +
+            'PurchaseOrderLine, InventoryTransaction), Stripe-style ' +
+            'idempotency on every POST, RFC 5988 Link-header ' +
+            'pagination, Prometheus `/metrics`, CSV export with OWASP ' +
+            'formula-injection mitigation. Auth via `authKey` header. ' +
             'Source: https://github.com/CryptoJones/TimeTrackerAPI / ' +
             'https://codeberg.org/CryptoJones/TimeTrackerAPI.',
+        // Security-vulnerability reports route through the
+        // private channels in SECURITY.md — link surfaces in
+        // Swagger UI's info panel so docs consumers can find the
+        // policy without leaving the spec.
+        contact: {
+            name: 'Security policy (private vuln reports)',
+            url: 'https://github.com/CryptoJones/TimeTrackerAPI/security/policy',
+        },
         license: {
             name: 'Apache 2.0',
             url: 'https://www.apache.org/licenses/LICENSE-2.0',
