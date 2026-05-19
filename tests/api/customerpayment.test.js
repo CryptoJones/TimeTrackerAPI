@@ -55,4 +55,25 @@ describe('CustomerPayment body validation', () => {
         const res = await request(app).post('/v1/customerpayment').set('authKey', 'any').send({ cpayCustId: 1, cpayDate: '2026-01-01' });
         expect(res.status).toBe(400);
     });
+
+    test('POST rejects zero cpayAmount', async () => {
+        const res = await request(app).post('/v1/customerpayment').set('authKey', 'any')
+            .send({ cpayCustId: 1, cpayDate: '2026-01-01', cpayAmount: 0 });
+        expect(res.status).toBe(400);
+    });
+
+    test('POST accepts a negative cpayAmount (refund model)', async () => {
+        // Some operators record refunds as negative payments. The
+        // schema only blocks 0 and the infinities, not negatives —
+        // pin that so a future tightening surfaces here.
+        const res = await request(app).post('/v1/customerpayment').set('authKey', 'any')
+            .send({ cpayCustId: 1, cpayDate: '2026-01-01', cpayAmount: -50 });
+        expect(res.status).not.toBe(400);
+    });
+
+    test('PATCH rejects zero cpayAmount', async () => {
+        const res = await request(app).patch('/v1/customerpayment/1').set('authKey', 'any')
+            .send({ cpayAmount: 0 });
+        expect(res.status).toBe(400);
+    });
 });
