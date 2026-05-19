@@ -694,7 +694,21 @@ const spec = {
                         // Declare it so SDK generators surface the field
                         // on the client side.
                         headers: idempotencyReplayResponseHeader,
-                        content: { 'application/json': { schema: { $ref: '#/components/schemas/Customer' } } },
+                        // Controller wraps the row in {message, customer} —
+                        // same envelope pattern fixed for GET in #312.
+                        // Surface the envelope here so SDK code-gen
+                        // doesn't model the body as a bare Customer.
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        message: { type: 'string' },
+                                        customer: { $ref: '#/components/schemas/Customer' },
+                                    },
+                                },
+                            },
+                        },
                     },
                     400: { description: 'Bad request' },
                     403: { description: 'Missing or invalid authKey' },
