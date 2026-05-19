@@ -3,8 +3,18 @@
 # it. NOT for production / shared environments — leaving 5432 open
 # on a public host is a credential-brute-force invitation.
 #
-# This file is local; do not commit. The .dockerignore already
-# excludes it from the runtime image build context.
+# This file IS committed (PR #56) as the canonical dev override —
+# docker compose auto-loads docker-compose.override.yml whenever
+# no explicit -f flags are passed, and shipping it in-tree means
+# every contributor running `docker compose up` from the repo root
+# gets a consistent integration-friendly bring-up. `.dockerignore`
+# still excludes it from the runtime image build context so the
+# host-only port binding never bakes into a deployed container.
+#
+# Production deployments use explicit -f files
+# (`docker compose -f docker-compose.yml -f docker-compose.tls.yml ...`),
+# which suppresses the auto-load and keeps this override out of the
+# production network stack.
 services:
   postgres:
     ports:
