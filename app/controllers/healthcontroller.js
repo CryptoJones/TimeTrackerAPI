@@ -62,12 +62,14 @@ exports.healthz = async (req, res) => {
     try {
         // Cheapest possible DB-roundtrip: `SELECT 1`. Confirms the
         // pool can hand us a connection AND that Postgres responds.
+        // NOTE: there's no per-query timeout here — Sequelize doesn't
+        // expose one for postgres at this layer. A hung backend will
+        // hang the probe until the orchestrator's own probe timeout
+        // (typically 5–10s) fires. If that turns out to be a problem
+        // in practice, set pg's statement_timeout via dialectOptions
+        // in db.config.js so it applies pool-wide.
         await db.sequelize.query('SELECT 1 AS ok;', {
             type: db.sequelize.QueryTypes.SELECT,
-            // Short timeout so a hung DB doesn't drag the probe out.
-            // Sequelize uses pg's `query_timeout` for this on Postgres.
-            // 2s is well over the expected sub-ms response, well under
-            // a typical orchestrator probe timeout (usually 5–10s).
             raw: true,
         });
         dbOk = true;
