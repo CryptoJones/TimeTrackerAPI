@@ -166,6 +166,20 @@ describe('OpenAPI spec', () => {
         expect(replay.schema.enum).toContain('true');
     });
 
+    test('single-create POST /v1/customer declares Idempotency-Replay on the 201', async () => {
+        // Single-create POSTs flow through the same idempotency
+        // middleware as the bulk endpoints. Without the response-header
+        // declaration on the 201, SDKs generated from the spec can't
+        // surface the replay flag for non-bulk creates.
+        const res = await request(app).get('/openapi.json');
+        const customer = res.body.paths['/v1/customer'];
+        const r201 = customer.post.responses['201'];
+        expect(r201.headers, 'POST /v1/customer 201 should declare headers').toBeDefined();
+        const replay = r201.headers['Idempotency-Replay'];
+        expect(replay, 'Idempotency-Replay should appear on POST /v1/customer 201').toBeDefined();
+        expect(replay.schema.enum).toContain('true');
+    });
+
     test('/metrics endpoint is documented', async () => {
         const res = await request(app).get('/openapi.json');
         const m = res.body.paths['/metrics'];
