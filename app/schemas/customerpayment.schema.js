@@ -12,11 +12,23 @@ const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
     message: 'Must be an ISO 8601 date (YYYY-MM-DD).',
 });
 
+// A payment amount must be a real, non-zero number. Zero is operator
+// error (recording a "$0 payment" against a customer ledger has no
+// business meaning); Infinity/-Infinity is data-quality error from
+// pathological clients — `z.number()` rejects NaN but allows the
+// infinities by default, and a DOUBLE column will happily store them.
+// Negative values pass — some operators model refunds that way.
+const cpayAmountField = z.coerce.number().finite({
+    message: 'cpayAmount must be a finite number.',
+}).refine((n) => n !== 0, {
+    message: 'cpayAmount must not be zero.',
+});
+
 const createCustomerPaymentBody = z.object({
     cpayCustId: z.coerce.number().int().positive(),
     cpayDescription: z.string().max(10000).optional(),
     cpayDate: isoDate,
-    cpayAmount: z.coerce.number(),
+    cpayAmount: cpayAmountField,
 }).strict({
     message: 'Unexpected field in body. Whitelist: cpayCustId, cpayDescription, cpayDate, cpayAmount.',
 });
@@ -24,7 +36,7 @@ const createCustomerPaymentBody = z.object({
 const updateCustomerPaymentBody = z.object({
     cpayDescription: z.string().max(10000).optional(),
     cpayDate: isoDate.optional(),
-    cpayAmount: z.coerce.number().optional(),
+    cpayAmount: cpayAmountField.optional(),
 }).strict({
     message: 'Unexpected field in body. Whitelist: cpayDescription, cpayDate, cpayAmount.',
 });
