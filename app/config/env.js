@@ -9,12 +9,21 @@
 // file in development; in production set them via your process manager,
 // container orchestrator, or shell.
 
+// Same parseInt-leniency caveat as `PORT` in server.js (#124):
+// `parseInt("5432abc")` returns 5432, so a typo'd DB_PORT silently
+// turns into the implicit default. Guard with Number.isFinite + > 0
+// so only NaN / non-positive values fall through to 5432. Port 0
+// is not a valid postgres listen port; trying to connect there
+// would just fail at the socket layer.
+const dbPortRaw = parseInt(process.env.DB_PORT, 10);
+const dbPort = Number.isFinite(dbPortRaw) && dbPortRaw > 0 ? dbPortRaw : 5432;
+
 const env = {
     database: process.env.DB_NAME || 'timetracker',
     username: process.env.DB_USER || 'timetracker',
     password: process.env.DB_PASSWORD || '',
     host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT, 10) || 5432,
+    port: dbPort,
 };
 
 if (!env.password) {
