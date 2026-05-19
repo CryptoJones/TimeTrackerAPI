@@ -38,7 +38,7 @@ exports.create = async (req, res) => {
         isAuthKeyMasterKey = await IsMaster(authKey);
     } catch (error) {
         log.error({ err: error }, 'IsMaster failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 
     const body = req.body || {};
@@ -53,7 +53,7 @@ exports.create = async (req, res) => {
             authKeyCompanyId = await GetCompanyId(authKey);
         } catch (error) {
             log.error({ err: error }, 'GetCompanyId failed');
-            return res.status(500).json({ message: "Error!", error: String(error) });
+            return res.status(500).json({ message: "Error!" });
         }
         if (authKeyCompanyId === -1) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
@@ -82,7 +82,7 @@ exports.create = async (req, res) => {
         });
     } catch (error) {
         log.error({ err: error }, 'Worker.create failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -103,7 +103,7 @@ exports.getById = async (req, res) => {
         worker = await Worker.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'Worker.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!worker || worker.workerArch) {
         return res.status(404).json({ message: "Not found." });
@@ -170,7 +170,7 @@ exports.listByCompany = async (req, res) => {
         });
     } catch (error) {
         log.error({ err: error }, 'Worker.findAndCountAll failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -190,7 +190,7 @@ exports.update = async (req, res) => {
         worker = await Worker.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'Worker.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!worker || worker.workerArch) {
         return res.status(404).json({ message: "Not found." });
@@ -218,7 +218,7 @@ exports.update = async (req, res) => {
         return res.status(200).json({ message: "Updated.", worker });
     } catch (error) {
         log.error({ err: error }, 'Worker.update failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -238,7 +238,7 @@ exports.remove = async (req, res) => {
         worker = await Worker.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'Worker.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!worker || worker.workerArch) {
         return res.status(404).json({ message: "Not found." });
@@ -257,7 +257,7 @@ exports.remove = async (req, res) => {
         return res.status(200).json({ message: "Archived.", id: worker.workerId });
     } catch (error) {
         log.error({ err: error }, 'Worker archive failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 

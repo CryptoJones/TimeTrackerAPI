@@ -51,7 +51,7 @@ exports.create = async (req, res) => {
         return res.status(201).json({ message: "Company created.", company: created });
     } catch (error) {
         log.error({ err: error }, 'Company.create failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -66,7 +66,7 @@ exports.getById = async (req, res) => {
         company = await Company.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'Company.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!company || company.compArch) {
         return res.status(404).json({ message: "Not found." });
@@ -118,7 +118,7 @@ exports.list = async (req, res) => {
         });
     } catch (error) {
         log.error({ err: error }, 'Company.findAndCountAll failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -133,7 +133,7 @@ exports.update = async (req, res) => {
         company = await Company.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'Company.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!company || company.compArch) {
         return res.status(404).json({ message: "Not found." });
@@ -161,7 +161,7 @@ exports.update = async (req, res) => {
         return res.status(200).json({ message: "Updated.", company });
     } catch (error) {
         log.error({ err: error }, 'Company.update failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -180,7 +180,7 @@ exports.remove = async (req, res) => {
         company = await Company.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'Company.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!company || company.compArch) {
         return res.status(404).json({ message: "Not found." });
@@ -191,7 +191,7 @@ exports.remove = async (req, res) => {
         return res.status(200).json({ message: "Archived.", id: company.compId });
     } catch (error) {
         log.error({ err: error }, 'Company archive failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 

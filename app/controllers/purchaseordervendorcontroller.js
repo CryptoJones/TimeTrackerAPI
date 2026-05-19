@@ -41,7 +41,7 @@ exports.create = async (req, res) => {
         isAuthKeyMasterKey = await IsMaster(authKey);
     } catch (error) {
         log.error({ err: error }, 'IsMaster failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 
     const body = req.body || {};
@@ -56,7 +56,7 @@ exports.create = async (req, res) => {
             authKeyCompanyId = await GetCompanyId(authKey);
         } catch (error) {
             log.error({ err: error }, 'GetCompanyId failed');
-            return res.status(500).json({ message: "Error!", error: String(error) });
+            return res.status(500).json({ message: "Error!" });
         }
         if (authKeyCompanyId === -1) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
@@ -82,7 +82,7 @@ exports.create = async (req, res) => {
         return res.status(201).json({ message: "PO vendor created.", purchaseOrderVendor: created });
     } catch (error) {
         log.error({ err: error }, 'PurchaseOrderVendor.create failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -97,7 +97,7 @@ exports.getById = async (req, res) => {
         vendor = await PurchaseOrderVendor.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'PurchaseOrderVendor.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!vendor || vendor.povArch) {
         return res.status(404).json({ message: "Not found." });
@@ -155,7 +155,7 @@ exports.listByCompany = async (req, res) => {
         });
     } catch (error) {
         log.error({ err: error }, 'PurchaseOrderVendor.findAndCountAll failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -170,7 +170,7 @@ exports.update = async (req, res) => {
         vendor = await PurchaseOrderVendor.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'PurchaseOrderVendor.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!vendor || vendor.povArch) {
         return res.status(404).json({ message: "Not found." });
@@ -198,7 +198,7 @@ exports.update = async (req, res) => {
         return res.status(200).json({ message: "Updated.", purchaseOrderVendor: vendor });
     } catch (error) {
         log.error({ err: error }, 'PurchaseOrderVendor.update failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -213,7 +213,7 @@ exports.remove = async (req, res) => {
         vendor = await PurchaseOrderVendor.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'PurchaseOrderVendor.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!vendor || vendor.povArch) {
         return res.status(404).json({ message: "Not found." });
@@ -232,7 +232,7 @@ exports.remove = async (req, res) => {
         return res.status(200).json({ message: "Archived.", id: vendor.povId });
     } catch (error) {
         log.error({ err: error }, 'PurchaseOrderVendor archive failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 

@@ -47,7 +47,7 @@ exports.create = async (req, res) => {
         return res.status(201).json({ message: "VersionInfo created.", versionInfo: created });
     } catch (error) {
         log.error({ err: error }, 'VersionInfo.create failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -62,7 +62,7 @@ exports.getById = async (req, res) => {
         return res.status(200).json({ message: "Found.", versionInfo: v });
     } catch (error) {
         log.error({ err: error }, 'VersionInfo.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -94,7 +94,7 @@ exports.list = async (req, res) => {
         });
     } catch (error) {
         log.error({ err: error }, 'VersionInfo.findAndCountAll failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -107,7 +107,7 @@ exports.update = async (req, res) => {
         v = await VersionInfo.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'VersionInfo.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!v) return res.status(404).json({ message: "Not found." });
 
@@ -125,7 +125,7 @@ exports.update = async (req, res) => {
         return res.status(200).json({ message: "Updated.", versionInfo: v });
     } catch (error) {
         log.error({ err: error }, 'VersionInfo.update failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -138,7 +138,7 @@ exports.remove = async (req, res) => {
         v = await VersionInfo.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'VersionInfo.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!v) return res.status(404).json({ message: "Not found." });
 
@@ -147,7 +147,7 @@ exports.remove = async (req, res) => {
         return res.status(200).json({ message: "Deleted.", id: req.params.id });
     } catch (error) {
         log.error({ err: error }, 'VersionInfo.destroy failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
