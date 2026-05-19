@@ -70,6 +70,28 @@ describe('OpenAPI spec', () => {
         expect(schemas.TimeEntry.properties.teStartedAt).toBeDefined();
     });
 
+    test('Error component schema matches the runtime shape ({message, requestId?})', async () => {
+        // Pre-#334 the schema declared a free-form `error: string` field
+        // that the runtime never emitted (controller-error-shape.test.js
+        // pins the no-leak policy; the error-handler only ever sends
+        // `{message, requestId?}`). SDK code-gen consuming the spec was
+        // building clients that read a non-existent field. The replacement
+        // pins the true runtime shape: required `message`, optional
+        // `requestId`.
+        const res = await request(app).get('/openapi.json');
+        const err = res.body.components.schemas.Error;
+        expect(err.type).toBe('object');
+        expect(err.properties.message).toBeDefined();
+        expect(err.properties.message.type).toBe('string');
+        // requestId IS declared; `error` was dropped.
+        expect(err.properties.requestId).toBeDefined();
+        expect(err.properties.requestId.type).toBe('string');
+        expect(err.properties.error).toBeUndefined();
+        // message is the only required field — requestId only appears
+        // when the request reached the request-id middleware.
+        expect(err.required).toEqual(['message']);
+    });
+
     test('POST /v1/customer/bulk 201 declares the {message, count, customers} envelope', async () => {
         // makeBulkCreate (app/controllers/_bulk-helpers.js) emits
         // {message, count, <createdKey>}. The spec previously had
