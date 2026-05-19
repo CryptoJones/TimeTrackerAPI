@@ -37,6 +37,16 @@ describe('OpenAPI spec', () => {
         expect(res.body.openapi).toMatch(/^3\./);
         expect(res.body.info.title).toBe('TimeTrackerAPI');
         expect(res.body.info.version).toBeDefined();
+        // license is required for downstream Apache-2.0 compliance
+        // tooling (e.g. SBOM scanners). Pin its presence and SPDX
+        // identifier so a future re-write can't silently drop it.
+        expect(res.body.info.license).toBeDefined();
+        expect(res.body.info.license.name).toBe('Apache 2.0');
+        // contact.url surfaces the security policy in Swagger UI's
+        // info panel — operators reading the docs find the
+        // vuln-report channel without leaving the spec page.
+        expect(res.body.info.contact).toBeDefined();
+        expect(res.body.info.contact.url).toMatch(/security/i);
     });
 
     test('spec includes all v1 paths', async () => {
