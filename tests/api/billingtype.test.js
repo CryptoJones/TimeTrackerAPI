@@ -67,6 +67,92 @@ describe('BillingType route mounting', () => {
     });
 });
 
+describe('BillingType tenant-enumeration defense (secure 404)', () => {
+    // Same approach as the company secure-404 unit tests: drive the
+    // controller directly with stubbed Model + spied auth helpers, so
+    // we don't have to wire every upstream middleware. The HTTP-level
+    // mock above makes findByPk resolve to null by default, which
+    // short-circuits to 404 before the cross-tenant branch is reached.
+    test('controller getById: existing-but-not-yours returns 404 to non-master', async () => {
+        const auth = require('../../app/middleware/auth.js');
+        const controller = require('../../app/controllers/billingtypecontroller.js');
+        const isMasterSpy = vi.spyOn(auth, 'isMaster').mockResolvedValue(false);
+        const getCompanyIdSpy = vi.spyOn(auth, 'getCompanyId').mockResolvedValue(7);
+        try {
+            const db = require('../../app/config/db.config.js');
+            db.BillingType.findByPk = vi.fn().mockResolvedValue({
+                btId: 99, btCompId: 99, btArch: false,
+            });
+            const req = { get: (h) => (h === 'authKey' ? 'scoped-to-7' : undefined), params: { id: 99 } };
+            let captured = null;
+            const res = {
+                status(code) { this._code = code; return this; },
+                json(body) { captured = { code: this._code, body }; return this; },
+            };
+            await controller.getById(req, res);
+            expect(captured.code).toBe(404);
+            expect(captured.body.message).toMatch(/not found/i);
+        } finally {
+            isMasterSpy.mockRestore();
+            getCompanyIdSpy.mockRestore();
+        }
+    });
+
+    test('controller update: existing-but-not-yours returns 404 to non-master', async () => {
+        const auth = require('../../app/middleware/auth.js');
+        const controller = require('../../app/controllers/billingtypecontroller.js');
+        const isMasterSpy = vi.spyOn(auth, 'isMaster').mockResolvedValue(false);
+        const getCompanyIdSpy = vi.spyOn(auth, 'getCompanyId').mockResolvedValue(7);
+        try {
+            const db = require('../../app/config/db.config.js');
+            db.BillingType.findByPk = vi.fn().mockResolvedValue({
+                btId: 99, btCompId: 99, btArch: false, update: vi.fn(),
+            });
+            const req = {
+                get: (h) => (h === 'authKey' ? 'scoped-to-7' : undefined),
+                params: { id: 99 },
+                body: { btName: 'X' },
+            };
+            let captured = null;
+            const res = {
+                status(code) { this._code = code; return this; },
+                json(body) { captured = { code: this._code, body }; return this; },
+            };
+            await controller.update(req, res);
+            expect(captured.code).toBe(404);
+            expect(captured.body.message).toMatch(/not found/i);
+        } finally {
+            isMasterSpy.mockRestore();
+            getCompanyIdSpy.mockRestore();
+        }
+    });
+
+    test('controller remove: existing-but-not-yours returns 404 to non-master', async () => {
+        const auth = require('../../app/middleware/auth.js');
+        const controller = require('../../app/controllers/billingtypecontroller.js');
+        const isMasterSpy = vi.spyOn(auth, 'isMaster').mockResolvedValue(false);
+        const getCompanyIdSpy = vi.spyOn(auth, 'getCompanyId').mockResolvedValue(7);
+        try {
+            const db = require('../../app/config/db.config.js');
+            db.BillingType.findByPk = vi.fn().mockResolvedValue({
+                btId: 99, btCompId: 99, btArch: false, update: vi.fn(),
+            });
+            const req = { get: (h) => (h === 'authKey' ? 'scoped-to-7' : undefined), params: { id: 99 } };
+            let captured = null;
+            const res = {
+                status(code) { this._code = code; return this; },
+                json(body) { captured = { code: this._code, body }; return this; },
+            };
+            await controller.remove(req, res);
+            expect(captured.code).toBe(404);
+            expect(captured.body.message).toMatch(/not found/i);
+        } finally {
+            isMasterSpy.mockRestore();
+            getCompanyIdSpy.mockRestore();
+        }
+    });
+});
+
 describe('BillingType body validation', () => {
     test('POST rejects unknown field with 400', async () => {
         const res = await request(app)
