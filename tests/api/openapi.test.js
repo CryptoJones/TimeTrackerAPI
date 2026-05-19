@@ -70,6 +70,19 @@ describe('OpenAPI spec', () => {
         expect(schemas.TimeEntry.properties.teStartedAt).toBeDefined();
     });
 
+    test('TimeEntry.teDescription pins the 10000-char bound from the validator', async () => {
+        // The zod schema (app/schemas/timeentry.schema.js) caps
+        // teDescription at 10000 chars. The OpenAPI component schema
+        // previously left the field unbounded, so SDK code-gen would
+        // expose a `string` with no maxLength — clients couldn't tell
+        // there was a server-side limit until they got a 400 back. Pin
+        // the bound here so a regression on either side fails CI.
+        const res = await request(app).get('/openapi.json');
+        const te = res.body.components.schemas.TimeEntry;
+        expect(te.properties.teDescription.type).toBe('string');
+        expect(te.properties.teDescription.maxLength).toBe(10000);
+    });
+
     test('spec documents all 13 bulk-create endpoints', async () => {
         const res = await request(app).get('/openapi.json');
         const paths = Object.keys(res.body.paths);
