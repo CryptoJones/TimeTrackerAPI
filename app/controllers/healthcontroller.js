@@ -78,9 +78,17 @@ exports.healthz = async (req, res) => {
         // the lexicographically highest entry — migration filenames
         // are timestamp-prefixed (`20260518000000-…`) so lex order
         // matches apply order.
+        //
+        // Schema-qualify "dbo"."SequelizeMeta" because
+        // sequelize-cli.config.js sets `migrationStorageTableSchema:
+        // 'dbo'` so the table lives in `dbo`, not `public`. Without
+        // the qualifier the query 404s silently against `public` on
+        // every real deployment and the catch below maps it to
+        // `migration: null` — making the field useless for verifying
+        // rolling deploys.
         try {
             const rows = await db.sequelize.query(
-                'SELECT "name" FROM "SequelizeMeta" ORDER BY "name" DESC LIMIT 1',
+                'SELECT "name" FROM "dbo"."SequelizeMeta" ORDER BY "name" DESC LIMIT 1',
                 { type: db.sequelize.QueryTypes.SELECT },
             );
             if (rows && rows[0] && rows[0].name) {

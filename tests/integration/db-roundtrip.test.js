@@ -112,4 +112,24 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         // include didn't throw.
         expect(true).toBe(true);
     });
+
+    test('/healthz reports a non-null migration name (dbo-qualified read)', async () => {
+        // sequelize-cli writes the SequelizeMeta table into the `dbo`
+        // schema (`migrationStorageTableSchema: 'dbo'` in
+        // app/config/sequelize-cli.config.js). The healthz query that
+        // surfaces it MUST schema-qualify the SELECT, otherwise it
+        // looks in `public` and silently falls back to migration:null
+        // even when migrations are fully applied. This test catches
+        // a regression of that schema-qualifier going missing.
+        if (!connected) return;
+        const rows = await db.sequelize.query(
+            'SELECT "name" FROM "dbo"."SequelizeMeta" ORDER BY "name" DESC LIMIT 1',
+            { type: db.Sequelize.QueryTypes.SELECT },
+        );
+        // Migrations have been applied in CI bring-up; the row exists.
+        expect(rows.length).toBeGreaterThan(0);
+        expect(typeof rows[0].name).toBe('string');
+        // Migration names are timestamp-prefixed YYYYMMDDHHMMSS-…
+        expect(rows[0].name).toMatch(/^\d{14}-/);
+    });
 });
