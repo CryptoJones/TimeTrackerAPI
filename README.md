@@ -170,8 +170,8 @@ public host — the override exposes Postgres on :5432.
 ## Testing
 
 ```bash
-npm test          # unit + API suite (mocks the DB; no infra needed)
-npm test -- --watch    # vitest watch mode
+npm test            # unit + API suite (mocks the DB; no infra needed)
+npm run test:watch  # vitest watch mode
 ```
 
 For integration tests against a real Postgres — see
