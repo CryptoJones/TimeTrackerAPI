@@ -54,4 +54,36 @@ describe('InvoiceJob body validation', () => {
         const res = await request(app).post('/v1/invoicejob').set('authKey', 'any').send({ injbInvId: 1, injbJobId: 1, injbAmount: 1, bogus: 'no' });
         expect(res.status).toBe(400);
     });
+
+    test('POST accepts negative injbAmount (credit / discount lines)', async () => {
+        const res = await request(app).post('/v1/invoicejob').set('authKey', 'any')
+            .send({ injbInvId: 1, injbJobId: 1, injbAmount: -50 });
+        expect(res.status).not.toBe(400);
+    });
+
+    test('POST accepts zero injbAmount (reference / informational lines)', async () => {
+        // Unlike cpayAmount (which rejects 0 because a $0 payment is
+        // operator error), invoice lines at $0 are a real accounting
+        // case: a courtesy line, a placeholder, or a service-rendered
+        // reference. Pin this so a future tightening surfaces here.
+        const res = await request(app).post('/v1/invoicejob').set('authKey', 'any')
+            .send({ injbInvId: 1, injbJobId: 1, injbAmount: 0 });
+        expect(res.status).not.toBe(400);
+    });
+
+    test('PATCH rejects non-finite injbAmount (JSON `null` is the only way to send Infinity through JSON, but a string \\"Infinity\\" hits coerce-to-number)', async () => {
+        // JSON has no literal for Infinity, but `z.coerce.number()`
+        // happily turns the string "Infinity" into the float — and
+        // Sequelize's DOUBLE column will store it as `inf`. The
+        // .finite() refinement catches it at the schema boundary.
+        const res = await request(app).patch('/v1/invoicejob/1').set('authKey', 'any')
+            .send({ injbAmount: 'Infinity' });
+        expect(res.status).toBe(400);
+    });
+
+    test('PATCH rejects -Infinity injbAmount via the same coerce path', async () => {
+        const res = await request(app).patch('/v1/invoicejob/1').set('authKey', 'any')
+            .send({ injbAmount: '-Infinity' });
+        expect(res.status).toBe(400);
+    });
 });

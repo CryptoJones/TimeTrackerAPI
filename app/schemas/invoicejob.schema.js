@@ -8,16 +8,28 @@ const intIdParam = z.object({
     id: z.coerce.number().int().positive(),
 });
 
+// `injbAmount` is the per-line monetary value on an invoice. zod's
+// `.number()` rejects NaN by default but allows Infinity / -Infinity
+// through, and the column is a Sequelize DOUBLE — `inf` lands in the
+// database fine and contaminates any consumer doing arithmetic
+// (invoice totals, aging buckets, CSV exports). Pin to finite real
+// numbers at the boundary. Zero and negative values still pass (a
+// $0 reference line and a credit/discount line are both real
+// accounting uses).
+const injbAmountField = z.coerce.number().finite({
+    message: 'injbAmount must be a finite number.',
+});
+
 const createInvoiceJobBody = z.object({
     injbInvId: z.coerce.number().int().positive(),
     injbJobId: z.coerce.number().int().positive(),
-    injbAmount: z.coerce.number(),
+    injbAmount: injbAmountField,
 }).strict({
     message: 'Unexpected field in body. Whitelist: injbInvId, injbJobId, injbAmount.',
 });
 
 const updateInvoiceJobBody = z.object({
-    injbAmount: z.coerce.number().optional(),
+    injbAmount: injbAmountField.optional(),
 }).strict({
     message: 'Unexpected field in body. Whitelist: injbAmount.',
 });
