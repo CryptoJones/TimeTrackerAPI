@@ -23,6 +23,15 @@ const SENSITIVE_PARAM_NAMES = new Set([
     'api_key',
     'token',
     'access_token',
+    // OAuth2 token-exchange flow puts these on the query string in
+    // some misuses; defense-in-depth for operators fronting this
+    // API with an OAuth proxy whose redirect / error paths might
+    // bounce through a /v1/* URL. We don't issue OAuth tokens
+    // ourselves, but if a leaked log line contains one we shouldn't
+    // be the source.
+    'refresh_token',
+    'id_token',
+    'client_secret',
     'password',
     'secret',
 ]);
