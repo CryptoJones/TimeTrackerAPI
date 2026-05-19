@@ -113,6 +113,40 @@ describe('global error handler', () => {
         expect(text).not.toMatch(/column.*X/);
         expect(res.body.message).toMatch(/bad request/i);
     });
+
+    test('5xx response carries requestId when one is available', async () => {
+        // The OpenAPI Error schema (#336) declares `requestId` as an
+        // optional field. The handler reads it from `req.id` or
+        // `req.log.bindings().reqId` (pino-http's binding). Stand up
+        // a minimal app where the middleware order matches server.js
+        // — id-tagging middleware FIRST, then the explosion route —
+        // and assert the value lands in the 500 body verbatim so
+        // operators can correlate it to the structured log line.
+        const idApp = express();
+        idApp.use(express.json());
+        idApp.use((req, res, next) => {
+            req.id = 'test-req-id-correlator-1234';
+            next();
+        });
+        idApp.get('/boom', (req, res, next) => {
+            next(new Error('something failed deep inside'));
+        });
+        idApp.use(errorHandler);
+        const res = await request(idApp).get('/boom');
+        expect(res.status).toBe(500);
+        expect(res.body.message).toBe('Error!');
+        expect(res.body.requestId).toBe('test-req-id-correlator-1234');
+    });
+
+    test('5xx response omits requestId when none is available (no synthetic empty string)', async () => {
+        // The original /explode/500 route doesn't set req.id, so the
+        // handler should leave the field off entirely rather than
+        // emit `requestId: ""` or `requestId: null` — clients can
+        // distinguish "no correlator" from "empty correlator".
+        const res = await request(app).get('/explode/500');
+        expect(res.status).toBe(500);
+        expect(res.body.requestId).toBeUndefined();
+    });
 });
 
 describe('404 fallthrough', () => {
