@@ -78,4 +78,17 @@ describe('keyByAuthKeyOrIp', () => {
         const b = keyByAuthKeyOrIp(fakeReq({ ip: '2001:db8:1234:5700::1' }));
         expect(a).not.toBe(b);
     });
+
+    test('falls back to req.socket.remoteAddress when req.ip is missing', () => {
+        // #287 swapped the deprecated req.connection for req.socket.
+        // Exercise the fallback explicitly: no authKey, no req.ip, but
+        // req.socket.remoteAddress is set — the keygen should pick it
+        // up and route it through the IPv6/IPv4-aware helper.
+        const req = {
+            get: () => undefined,
+            socket: { remoteAddress: '10.20.30.40' },
+        };
+        const k = keyByAuthKeyOrIp(req);
+        expect(k).toBe('ip:10.20.30.40');
+    });
 });
