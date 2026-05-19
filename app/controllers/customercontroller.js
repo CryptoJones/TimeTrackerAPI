@@ -19,6 +19,24 @@ const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
 
 /**
+ * Escape the three SQL LIKE/ILIKE metacharacters in a substring so
+ * the calling code can wrap it in `%…%` without the user-supplied
+ * portion of the pattern doing wildcard work on its own.
+ *
+ *   %  matches any sequence of characters
+ *   _  matches any single character
+ *   \  the escape character (must come first in the replacement
+ *      regex so we don't double-escape our own escape)
+ *
+ * Used by exports.search; documented as test-only via _helpers so
+ * the unit test can pin the contract without taking a hard
+ * dependency on the function reference moving.
+ */
+function escapeLikeWildcards(s) {
+    return String(s).replace(/[\\%_]/g, '\\$&');
+}
+
+/**
  * GET /v1/customer/:id
  *
  * Auth contract:
@@ -475,7 +493,14 @@ exports.search = async (req, res) => {
     }
 
     // ILIKE on Postgres; the `%` wildcards come from us, not the user.
-    const pattern = `%${q}%`;
+    // Escape SQL LIKE metacharacters in `q` so a user sending `%` or
+    // `_` or `\` doesn't turn the substring search into a pattern
+    // search. Without this, `q=%` produces `%%%` which matches every
+    // customer in the scope — same security boundary (still
+    // company-scoped) but the substring contract is silently broken.
+    // Sequelize does NOT auto-escape these for Op.iLike; the
+    // package treats the pattern as verbatim user-controlled SQL.
+    const pattern = `%${escapeLikeWildcards(q)}%`;
     const where = {
         custCompId: effectiveCompanyId,
         [Op.or]: [
@@ -566,4 +591,4 @@ function CompaniesMatch(int1, int2) {
 }
 
 // Exported for testing
-exports._helpers = { IsMaster, GetCompanyId, GetCustomerCompanyId, CompaniesMatch };
+exports._helpers = { IsMaster, GetCompanyId, GetCustomerCompanyId, CompaniesMatch, escapeLikeWildcards };
