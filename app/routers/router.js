@@ -87,7 +87,19 @@ router.get('/v1/whoami', whoami.whoami);
 router.get('/openapi.json', (req, res) => res.json(openapiSpec));
 router.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, {
     customSiteTitle: 'TimeTrackerAPI · Swagger',
-    swaggerOptions: { persistAuthorization: true },
+    swaggerOptions: {
+        // Keep the authKey across page reloads so a "Try it out" flow
+        // doesn't lose the header on every refresh.
+        persistAuthorization: true,
+        // Path filter box — the API has ~50 path entries across 16
+        // entities, so a free-text filter ("invoice", "bulk", …) is
+        // a meaningful navigation aid for operators using /docs in
+        // a browser.
+        filter: true,
+        // Surface "Try it out" round-trip duration so latency-sensitive
+        // changes get a quick eyeball check without opening devtools.
+        displayRequestDuration: true,
+    },
 }));
 
 // v1 customer routes.
