@@ -35,7 +35,12 @@ function fmt(err) {
             })),
         };
     }
-    return { message: 'Validation failed.', error: String(err) };
+    // Fallback for any non-ZodError that `safeParse` somehow surfaces
+    // (defensive — zod normally always wraps). Match the controller-
+    // wide 5xx policy from #140: never echo raw error text to the
+    // client. The full error lands in the structured log via the
+    // global error-handler if it ever propagates that far.
+    return { message: 'Validation failed.' };
 }
 
 function validateOn(key) {
