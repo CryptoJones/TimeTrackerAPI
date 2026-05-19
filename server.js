@@ -76,10 +76,17 @@ app.use(pinoHttp({
 // Operators opt in via TRUST_PROXY (true|false|<hop count>). Default
 // false to avoid the security pitfall of trusting X-Forwarded-For
 // from a non-proxied client.
+//
+// The hop-count branch uses a strict regex match (^\d+$) rather than
+// `parseInt + !isNaN`, because parseInt is lenient — it would happily
+// turn `TRUST_PROXY=1abc` (an operator typo) into `1` and silently
+// trust one hop. With the regex an invalid value falls through to
+// the implicit Express default (no trust) instead of partially
+// honoring a malformed setting.
 const trustProxy = process.env.TRUST_PROXY;
 if (trustProxy === 'true') {
     app.set('trust proxy', true);
-} else if (trustProxy && !isNaN(parseInt(trustProxy, 10))) {
+} else if (typeof trustProxy === 'string' && /^\d+$/.test(trustProxy)) {
     app.set('trust proxy', parseInt(trustProxy, 10));
 }
 
