@@ -8,6 +8,7 @@ const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
 const { makeBulkCreate } = require('./_bulk-helpers.js');
+const { escapeCsvCell } = require('./_csv-escape.js');
 const Customer = db.Customer;
 
 // IsMaster / GetCompanyId previously lived inline in this file and
@@ -359,18 +360,21 @@ exports.exportCsv = async (req, res) => {
     const truncated = rows.length > limit;
     if (truncated) rows = rows.slice(0, limit);
 
-    // CSV serialization. Wraps every field in quotes (simpler than
-    // detecting which ones need it) and doubles any embedded quotes.
+    // CSV serialization via the shared helper. Includes RFC 4180
+    // quote-wrapping AND the OWASP formula-injection guard — any cell
+    // starting with =, +, -, @, tab, or CR is prefixed with a single
+    // quote so the spreadsheet engine treats it as text. Customer
+    // free-text fields (custCompanyName, custFName, etc.) are
+    // user-supplied per-tenant, so an entry like `=HYPERLINK(...)`
+    // would otherwise fire when a co-tenant operator opens the
+    // export. See _csv-escape.js + the timeentry counterpart (#266).
     const FIELDS = [
         'custId', 'custCompanyName', 'custFName', 'custLName',
         'custAddress1', 'custAddress2',
         'custCity', 'custState', 'custZip',
         'custPhone', 'custEmail', 'custCompId',
     ];
-    const escape = (val) => {
-        if (val === null || val === undefined) return '""';
-        return '"' + String(val).replace(/"/g, '""') + '"';
-    };
+    const escape = escapeCsvCell;
     const lines = [];
     lines.push(FIELDS.join(','));
     for (const r of rows) {
