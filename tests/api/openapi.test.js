@@ -166,18 +166,32 @@ describe('OpenAPI spec', () => {
         expect(replay.schema.enum).toContain('true');
     });
 
-    test('single-create POST /v1/customer declares Idempotency-Replay on the 201', async () => {
+    test('every single-create POST declares Idempotency-Replay on the 201', async () => {
         // Single-create POSTs flow through the same idempotency
         // middleware as the bulk endpoints. Without the response-header
         // declaration on the 201, SDKs generated from the spec can't
         // surface the replay flag for non-bulk creates.
+        //
+        // #245 sweep (#246–#288) ensured the declaration on every
+        // entity's single-create POST. Pin all 16 here so a future
+        // regression on any one of them fails CI — not just on
+        // /v1/customer.
         const res = await request(app).get('/openapi.json');
-        const customer = res.body.paths['/v1/customer'];
-        const r201 = customer.post.responses['201'];
-        expect(r201.headers, 'POST /v1/customer 201 should declare headers').toBeDefined();
-        const replay = r201.headers['Idempotency-Replay'];
-        expect(replay, 'Idempotency-Replay should appear on POST /v1/customer 201').toBeDefined();
-        expect(replay.schema.enum).toContain('true');
+        const targets = [
+            '/v1/customer', '/v1/timeentry', '/v1/worker', '/v1/billingtype',
+            '/v1/inventoryitem', '/v1/company', '/v1/job', '/v1/invoice',
+            '/v1/customerpayment', '/v1/invoicejob', '/v1/productentry',
+            '/v1/versioninfo', '/v1/purchaseordervendor',
+            '/v1/purchaseorderheader', '/v1/purchaseorderline',
+            '/v1/inventorytransaction',
+        ];
+        for (const path of targets) {
+            const r201 = res.body.paths[path].post.responses['201'];
+            expect(r201.headers, `${path} POST 201 should declare headers`).toBeDefined();
+            const replay = r201.headers['Idempotency-Replay'];
+            expect(replay, `Idempotency-Replay should appear on ${path} POST 201`).toBeDefined();
+            expect(replay.schema.enum, `${path} replay schema should enum 'true'`).toContain('true');
+        }
     });
 
     test('/metrics endpoint is documented', async () => {
