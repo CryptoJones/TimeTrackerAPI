@@ -101,4 +101,32 @@ describe('GET /metrics — METRICS_BEARER_TOKEN gate', () => {
             .set('Authorization', 'Bearer secret-test-token');
         expect(res.status).toBe(200);
     });
+
+    test('401 on an equal-length wrong token (exercises the timingSafeEqual branch)', async () => {
+        // METRICS_BEARER_TOKEN = 'secret-test-token' (17 chars).
+        // The "wrong token" test above uses a different-length value
+        // and hits the length-mismatch branch in checkMetricsAuth
+        // (sha256-of-both fallback returning `... && false`). This
+        // case pins the equal-length branch: same byte count, wrong
+        // contents. Without an explicit case the timingSafeEqual
+        // path is uncovered and a future "optimization" that returns
+        // true on a length-equal comparison would slip through.
+        const sameLengthWrong = 'XXXXXX-XXXX-XXXXX'; // 17 chars, all-X
+        expect(sameLengthWrong.length).toBe('secret-test-token'.length);
+        const res = await request(app)
+            .get('/metrics')
+            .set('Authorization', `Bearer ${sameLengthWrong}`);
+        expect(res.status).toBe(401);
+    });
+
+    test('401 on a malformed Authorization header (no Bearer prefix)', async () => {
+        // RFC 6750 Bearer-token format is `Authorization: Bearer <token>`.
+        // Anything without the `Bearer ` prefix should fail the regex
+        // match in checkMetricsAuth and return 401 — not silently
+        // pass through as if the header were missing.
+        const res = await request(app)
+            .get('/metrics')
+            .set('Authorization', 'secret-test-token');
+        expect(res.status).toBe(401);
+    });
 });
