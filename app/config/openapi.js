@@ -1186,7 +1186,20 @@ const spec = {
             },
         },
         '/v1/purchaseorderline': {
-            post: { summary: 'Create a PO line', security: [{ authKey: [] }], parameters: [idempotencyKeyHeader], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/PurchaseOrderLine' } } } }, responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } } },
+            post: {
+                summary: 'Create a PO line',
+                security: [{ authKey: [] }],
+                parameters: [idempotencyKeyHeader],
+                requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/PurchaseOrderLine' } } } },
+                responses: {
+                    201: {
+                        description: 'Created',
+                        headers: idempotencyReplayResponseHeader,
+                    },
+                    400: { description: 'Bad request' },
+                    403: { description: 'Auth failure' },
+                },
+            },
         },
         '/v1/purchaseorderline/{id}': {
             get: { summary: 'Get one PO line', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
