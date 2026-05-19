@@ -96,14 +96,20 @@ const companySchema = {
     type: 'object',
     properties: {
         compId: { type: 'integer', readOnly: true },
-        compName: { type: 'string' },
-        compAddress1: { type: 'string' },
-        compAddress2: { type: 'string' },
-        compCity: { type: 'string' },
-        compState: { type: 'string', maxLength: 2 },
-        compZip: { type: 'string' },
-        compPhone: { type: 'string' },
-        compEmail: { type: 'string', format: 'email' },
+        // Field-length constraints mirror the zod validators in
+        // company.schema.js and the DB column widths in
+        // setup/TimeTracker.sql. Surfacing them here lets SDK
+        // generators (openapi-typescript et al.) carry the bounds
+        // into client-side types. Customer got the same treatment
+        // in #270.
+        compName: { type: 'string', minLength: 1, maxLength: 255 },
+        compAddress1: { type: 'string', maxLength: 255 },
+        compAddress2: { type: 'string', maxLength: 255 },
+        compCity: { type: 'string', maxLength: 255 },
+        compState: { type: 'string', minLength: 2, maxLength: 2 },
+        compZip: { type: 'string', maxLength: 32 },
+        compPhone: { type: 'string', maxLength: 32 },
+        compEmail: { type: 'string', format: 'email', maxLength: 255 },
         compArch: { type: 'boolean', readOnly: true },
     },
 };
