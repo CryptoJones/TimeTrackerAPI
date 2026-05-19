@@ -19,13 +19,15 @@ import { resolve, join } from 'node:path';
 
 const REPO_ROOT = resolve(__dirname, '../..');
 
-// Files / directories we deliberately don't scan:
-//   - tests/integration/ test files: already covered via the
-//     same pattern but skipped here to keep the per-file count
-//     focused on production code's contract.
+// Both production code AND the test suite carry the header per the
+// project convention documented above. Scan both so a future test file
+// copy-pasted from a header-less template fails CI immediately
+// alongside the production-code path.
+//
+// server.js gets covered via the single-file fallback below.
 const SCAN_ROOTS = [
     'app',
-    // server.js gets covered via the single-file fallback below.
+    'tests',
 ];
 
 function walk(absDir, acc = []) {
