@@ -109,6 +109,16 @@ if (trustProxy === 'true') {
 // legitimate clients hitting the docs endpoint or future
 // browser-based dashboards. Operators who add an HTML surface
 // can re-enable via HELMET_CSP=1.
+//
+// crossOriginEmbedderPolicy is also disabled: Swagger UI at /docs
+// loads its JS/CSS bundle from the package's own host but pulls
+// theme assets cross-origin, and helmet's default
+// `require-corp` value blocks any sub-resource that doesn't
+// explicitly opt into CORP/CORS — which would break the docs
+// page on first load. Since this API has no other browser-facing
+// HTML, leaving COEP off is the lower-risk choice. Operators
+// hosting embedded dashboards alongside the API should configure
+// helmet directly rather than re-enabling COEP at this layer.
 app.use(helmet({
     contentSecurityPolicy: process.env.HELMET_CSP === '1' ? undefined : false,
     crossOriginEmbedderPolicy: false,
