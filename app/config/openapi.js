@@ -700,7 +700,33 @@ const spec = {
                     { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
                 ],
                 responses: {
-                    200: { description: 'OK' },
+                    200: {
+                        description: 'OK — paginated customer list',
+                        // Controller wraps the rows in a {message, count,
+                        // limit, offset, customers} envelope. Same
+                        // missing-content-schema pattern fixed for the
+                        // single GET in #312 and the bulk POST in #332 —
+                        // now also for the paginated list. Without the
+                        // declaration, SDK generators can't model the
+                        // Link-header-paired pagination envelope.
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        message: { type: 'string' },
+                                        count: { type: 'integer' },
+                                        limit: { type: 'integer' },
+                                        offset: { type: 'integer' },
+                                        customers: {
+                                            type: 'array',
+                                            items: { $ref: '#/components/schemas/Customer' },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
                     403: { description: 'Missing or invalid authKey' },
                 },
             },

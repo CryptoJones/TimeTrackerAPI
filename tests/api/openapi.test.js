@@ -92,6 +92,25 @@ describe('OpenAPI spec', () => {
         expect(err.required).toEqual(['message']);
     });
 
+    test('GET /v1/customer/bycompany/{id} 200 declares the {message, count, limit, offset, customers} envelope', async () => {
+        // Paginated list endpoint — controller emits the same envelope
+        // every list endpoint uses. Pre-fix the spec said only
+        // `description: 'OK'`, so SDK generators couldn't model the
+        // shape clients see in response to a Link-header-paginated
+        // walk. Same missing-content-schema fix pattern as #316
+        // (single POST) and #332 (bulk POST).
+        const res = await request(app).get('/openapi.json');
+        const r200 = res.body.paths['/v1/customer/bycompany/{id}'].get.responses['200'];
+        const schema = r200.content['application/json'].schema;
+        expect(schema.type).toBe('object');
+        expect(schema.properties.message.type).toBe('string');
+        expect(schema.properties.count.type).toBe('integer');
+        expect(schema.properties.limit.type).toBe('integer');
+        expect(schema.properties.offset.type).toBe('integer');
+        expect(schema.properties.customers.type).toBe('array');
+        expect(schema.properties.customers.items.$ref).toBe('#/components/schemas/Customer');
+    });
+
     test('POST /v1/customer/bulk 201 declares the {message, count, customers} envelope', async () => {
         // makeBulkCreate (app/controllers/_bulk-helpers.js) emits
         // {message, count, <createdKey>}. The spec previously had
