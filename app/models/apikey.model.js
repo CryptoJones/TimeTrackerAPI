@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Aaron K. Clark
-'use strict';
+"use strict";
 module.exports = (sequelize, Sequelize) => {
     const ApiKey = sequelize.define('ApiKey', {
         akId: {
@@ -12,22 +12,18 @@ module.exports = (sequelize, Sequelize) => {
         akKEY: {
             field: 'akKEY',
             type: Sequelize.STRING
-            
         },
         akCompanyId: {
             field: 'akCompanyId',
             type: Sequelize.INTEGER
-            
         },
         akArchive: {
             field: 'akArchive',
             type: Sequelize.BOOLEAN
-            
         },
         akArchiveDate: {
             field: 'akArchiveDate',
             type: Sequelize.DATE
-            
         }
     },
         {
