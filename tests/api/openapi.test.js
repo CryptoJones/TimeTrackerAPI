@@ -134,6 +134,24 @@ describe('OpenAPI spec', () => {
         expect(customer.post).toBeDefined();
     });
 
+    test('bulk endpoints declare Idempotency-Replay on the 201 response', async () => {
+        // Counterpart to the request-header check above: the response
+        // header is what SDK generators (openapi-typescript, etc.)
+        // surface as a client-facing type. Without this declaration,
+        // clients can't tell from the spec that a 201 may carry the
+        // replay flag — it's only mentioned in the request header's
+        // description prose.
+        const res = await request(app).get('/openapi.json');
+        const worker = res.body.paths['/v1/worker/bulk'];
+        const r201 = worker.post.responses['201'];
+        expect(r201, 'worker/bulk 201 response should be declared').toBeDefined();
+        expect(r201.headers, 'worker/bulk 201 should declare response headers').toBeDefined();
+        const replay = r201.headers['Idempotency-Replay'];
+        expect(replay, 'Idempotency-Replay header should appear in 201 headers').toBeDefined();
+        expect(replay.schema).toBeDefined();
+        expect(replay.schema.enum).toContain('true');
+    });
+
     test('/metrics endpoint is documented', async () => {
         const res = await request(app).get('/openapi.json');
         const m = res.body.paths['/metrics'];
