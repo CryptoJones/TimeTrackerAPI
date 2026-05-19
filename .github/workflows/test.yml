@@ -8,6 +8,17 @@ on:
   pull_request:
     branches: [master, main]
 
+# Least-privilege GITHUB_TOKEN. Without an explicit permissions
+# block the token gets the repository default — usually read+write
+# on contents/issues/PRs — which means a compromised dependency or
+# action in this workflow could push to master, open issues, or
+# manipulate PRs. The test workflow only needs to clone the repo
+# and report status, so `contents: read` is the entire required
+# scope. Per the GitHub Actions hardening guide:
+# https://docs.github.com/actions/security-guides/automatic-token-authentication
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
