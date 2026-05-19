@@ -200,7 +200,11 @@ const versionInfoSchema = {
     type: 'object',
     properties: {
         viId: { type: 'integer', readOnly: true },
-        viVersion: { type: 'string' },
+        // viVersion mirrors versioninfo.schema.js: 1..255 chars. SemVer
+        // is much shorter than 255 in practice, but the cap matches
+        // every other free-text "name/identifier" column in the API
+        // for consistency.
+        viVersion: { type: 'string', minLength: 1, maxLength: 255 },
         viDate: { type: 'string', format: 'date-time' },
     },
 };

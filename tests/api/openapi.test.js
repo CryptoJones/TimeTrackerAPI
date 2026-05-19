@@ -70,6 +70,17 @@ describe('OpenAPI spec', () => {
         expect(schemas.TimeEntry.properties.teStartedAt).toBeDefined();
     });
 
+    test('VersionInfo.viVersion pins the 1..255 bound from the validator', async () => {
+        // Mirrors versioninfo.schema.js. SDK generators expose viVersion
+        // as `string`; without minLength/maxLength they can't catch a
+        // client sending a 10k-char "version" string before the server
+        // does.
+        const res = await request(app).get('/openapi.json');
+        const vi = res.body.components.schemas.VersionInfo;
+        expect(vi.properties.viVersion.minLength).toBe(1);
+        expect(vi.properties.viVersion.maxLength).toBe(255);
+    });
+
     test('PurchaseOrderHeader pins the validator field-length bounds', async () => {
         // Mirrors purchaseorderheader.schema.js. Without these, SDK
         // generators expose pohReference/pohTerms as unbounded strings
