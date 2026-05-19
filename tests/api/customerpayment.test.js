@@ -76,6 +76,25 @@ describe('CustomerPayment body validation', () => {
             .send({ cpayAmount: 0 });
         expect(res.status).toBe(400);
     });
+
+    test('POST rejects non-finite cpayAmount (Infinity via z.coerce.number)', async () => {
+        // The schema applies `z.coerce.number().finite()` — JSON has no
+        // literal for Infinity, but `coerce` happily turns the STRING
+        // "Infinity" into the float, and a DOUBLE column would store it
+        // and poison every downstream sum / aging-bucket calculation.
+        // Pin the .finite() guard so a future schema rewrite that drops
+        // it surfaces here. Mirrors the invoicejob.test.js coverage for
+        // the same scenario on injbAmount.
+        const res = await request(app).post('/v1/customerpayment').set('authKey', 'any')
+            .send({ cpayCustId: 1, cpayDate: '2026-01-01', cpayAmount: 'Infinity' });
+        expect(res.status).toBe(400);
+    });
+
+    test('PATCH rejects non-finite cpayAmount', async () => {
+        const res = await request(app).patch('/v1/customerpayment/1').set('authKey', 'any')
+            .send({ cpayAmount: '-Infinity' });
+        expect(res.status).toBe(400);
+    });
 });
 
 describe('CustomerPayment tenant-enumeration defense (secure 404)', () => {
