@@ -722,7 +722,11 @@ const spec = {
                     },
                 },
                 responses: {
-                    201: { description: 'Created', content: { 'application/json': { schema: { $ref: '#/components/schemas/Worker' } } } },
+                    201: {
+                        description: 'Created (or a replay of a previously-cached create)',
+                        headers: idempotencyReplayResponseHeader,
+                        content: { 'application/json': { schema: { $ref: '#/components/schemas/Worker' } } },
+                    },
                     400: { description: 'Bad request' },
                     403: { description: 'Missing or invalid authKey' },
                 },
