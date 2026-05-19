@@ -572,6 +572,27 @@ const spec = {
                         // see it on all 13 bulk endpoints, not 12-of-13.
                         // Matches the factory output from #168.
                         headers: idempotencyReplayResponseHeader,
+                        // Controller (`_bulk-helpers.makeBulkCreate`) emits
+                        // `{message, count, customers}` on success. The spec
+                        // previously left the body unspecified — same drift
+                        // pattern fixed for single-create POST endpoints in
+                        // #316 (customer) and #326 (timeentry). Pin the
+                        // envelope here so SDK code-gen models the response.
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        message: { type: 'string' },
+                                        count: { type: 'integer' },
+                                        customers: {
+                                            type: 'array',
+                                            items: { $ref: '#/components/schemas/Customer' },
+                                        },
+                                    },
+                                },
+                            },
+                        },
                     },
                     400: { description: 'Validation failure (array empty / master without custCompId on some entry)' },
                     403: { description: 'Missing authKey or cross-tenant create attempt' },
