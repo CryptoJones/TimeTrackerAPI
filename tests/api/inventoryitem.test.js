@@ -75,6 +75,40 @@ describe('InventoryItem body validation', () => {
             .send({ invitDescription: 'X' });
         expect(res.status).toBe(400);
     });
+
+    test('POST rejects non-finite invitQty (string "Infinity" coerces to the float)', async () => {
+        const res = await request(app)
+            .post('/v1/inventoryitem')
+            .set('authKey', 'any')
+            .send({ invitDescription: 'Widget', invitQty: 'Infinity' });
+        expect(res.status).toBe(400);
+    });
+
+    test('POST accepts zero invitQty (item at 0 on-hand)', async () => {
+        // Pin that the .finite() guard doesn't accidentally block 0 —
+        // an item momentarily out of stock should still be modelable.
+        const res = await request(app)
+            .post('/v1/inventoryitem')
+            .set('authKey', 'any')
+            .send({ invitDescription: 'Widget', invitQty: 0 });
+        expect(res.status).not.toBe(400);
+    });
+
+    test('POST accepts negative invitQty (backorder / reconciliation entries)', async () => {
+        const res = await request(app)
+            .post('/v1/inventoryitem')
+            .set('authKey', 'any')
+            .send({ invitDescription: 'Backorder', invitQty: -3 });
+        expect(res.status).not.toBe(400);
+    });
+
+    test('PATCH rejects -Infinity invitQty', async () => {
+        const res = await request(app)
+            .patch('/v1/inventoryitem/1')
+            .set('authKey', 'any')
+            .send({ invitQty: '-Infinity' });
+        expect(res.status).toBe(400);
+    });
 });
 
 describe('InventoryItem tenant-enumeration defense (secure 404)', () => {
