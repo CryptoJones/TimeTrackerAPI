@@ -60,7 +60,7 @@ exports.create = async (req, res) => {
         return res.status(201).json({ message: "Job created.", job: created });
     } catch (error) {
         log.error({ err: error }, 'Job.create failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -75,7 +75,7 @@ exports.getById = async (req, res) => {
         job = await Job.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'Job.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!job || job.jobArch) {
         return res.status(404).json({ message: "Not found." });
@@ -136,7 +136,7 @@ exports.listByCustomer = async (req, res) => {
         });
     } catch (error) {
         log.error({ err: error }, 'Job.findAndCountAll failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -151,7 +151,7 @@ exports.update = async (req, res) => {
         job = await Job.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'Job.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!job || job.jobArch) {
         return res.status(404).json({ message: "Not found." });
@@ -180,7 +180,7 @@ exports.update = async (req, res) => {
         return res.status(200).json({ message: "Updated.", job });
     } catch (error) {
         log.error({ err: error }, 'Job.update failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -195,7 +195,7 @@ exports.remove = async (req, res) => {
         job = await Job.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'Job.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!job || job.jobArch) {
         return res.status(404).json({ message: "Not found." });
@@ -215,7 +215,7 @@ exports.remove = async (req, res) => {
         return res.status(200).json({ message: "Archived.", id: job.jobId });
     } catch (error) {
         log.error({ err: error }, 'Job archive failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 

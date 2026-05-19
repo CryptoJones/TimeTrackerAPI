@@ -52,7 +52,7 @@ exports.create = async (req, res) => {
         return res.status(201).json({ message: "Customer payment created.", customerPayment: created });
     } catch (error) {
         log.error({ err: error }, 'CustomerPayment.create failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -67,7 +67,7 @@ exports.getById = async (req, res) => {
         payment = await CustomerPayment.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'CustomerPayment.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!payment || payment.cpayArch) {
         return res.status(404).json({ message: "Not found." });
@@ -127,7 +127,7 @@ exports.listByCustomer = async (req, res) => {
         });
     } catch (error) {
         log.error({ err: error }, 'CustomerPayment.findAndCountAll failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -142,7 +142,7 @@ exports.update = async (req, res) => {
         payment = await CustomerPayment.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'CustomerPayment.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!payment || payment.cpayArch) {
         return res.status(404).json({ message: "Not found." });
@@ -171,7 +171,7 @@ exports.update = async (req, res) => {
         return res.status(200).json({ message: "Updated.", customerPayment: payment });
     } catch (error) {
         log.error({ err: error }, 'CustomerPayment.update failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -186,7 +186,7 @@ exports.remove = async (req, res) => {
         payment = await CustomerPayment.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'CustomerPayment.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!payment || payment.cpayArch) {
         return res.status(404).json({ message: "Not found." });
@@ -206,7 +206,7 @@ exports.remove = async (req, res) => {
         return res.status(200).json({ message: "Archived.", id: payment.cpayId });
     } catch (error) {
         log.error({ err: error }, 'CustomerPayment archive failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 

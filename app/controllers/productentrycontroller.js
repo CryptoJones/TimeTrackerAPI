@@ -49,7 +49,7 @@ exports.create = async (req, res) => {
         return res.status(201).json({ message: "Product entry created.", productEntry: created });
     } catch (error) {
         log.error({ err: error }, 'ProductEntry.create failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -64,7 +64,7 @@ exports.getById = async (req, res) => {
         productEntry = await ProductEntry.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'ProductEntry.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!productEntry || productEntry.penArch) {
         return res.status(404).json({ message: "Not found." });
@@ -124,7 +124,7 @@ exports.listByJob = async (req, res) => {
         });
     } catch (error) {
         log.error({ err: error }, 'ProductEntry.findAndCountAll failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -139,7 +139,7 @@ exports.update = async (req, res) => {
         productEntry = await ProductEntry.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'ProductEntry.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!productEntry || productEntry.penArch) {
         return res.status(404).json({ message: "Not found." });
@@ -168,7 +168,7 @@ exports.update = async (req, res) => {
         return res.status(200).json({ message: "Updated.", productEntry });
     } catch (error) {
         log.error({ err: error }, 'ProductEntry.update failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -183,7 +183,7 @@ exports.remove = async (req, res) => {
         productEntry = await ProductEntry.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'ProductEntry.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!productEntry || productEntry.penArch) {
         return res.status(404).json({ message: "Not found." });
@@ -203,7 +203,7 @@ exports.remove = async (req, res) => {
         return res.status(200).json({ message: "Archived.", id: productEntry.pentId });
     } catch (error) {
         log.error({ err: error }, 'ProductEntry archive failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 

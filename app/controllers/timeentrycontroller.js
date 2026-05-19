@@ -83,7 +83,7 @@ exports.create = async (req, res) => {
         return res.status(201).json({ message: "Time entry created.", timeEntry: created });
     } catch (error) {
         log.error({ err: error }, 'TimeEntry.create failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -103,7 +103,7 @@ exports.getById = async (req, res) => {
         entry = await TimeEntry.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'TimeEntry.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!entry || entry.teArch) {
         return res.status(404).json({ message: "Not found." });
@@ -191,7 +191,7 @@ exports.listByCompany = async (req, res) => {
         });
     } catch (error) {
         log.error({ err: error }, 'TimeEntry.findAndCountAll failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -212,7 +212,7 @@ exports.update = async (req, res) => {
         entry = await TimeEntry.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'TimeEntry.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!entry || entry.teArch) {
         return res.status(404).json({ message: "Not found." });
@@ -246,7 +246,7 @@ exports.update = async (req, res) => {
         return res.status(200).json({ message: "Updated.", timeEntry: entry });
     } catch (error) {
         log.error({ err: error }, 'TimeEntry.update failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -266,7 +266,7 @@ exports.remove = async (req, res) => {
         entry = await TimeEntry.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'TimeEntry.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!entry || entry.teArch) {
         return res.status(404).json({ message: "Not found." });
@@ -285,7 +285,7 @@ exports.remove = async (req, res) => {
         return res.status(200).json({ message: "Archived.", id: entry.teId });
     } catch (error) {
         log.error({ err: error }, 'TimeEntry archive failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -316,7 +316,7 @@ exports.exportCsv = async (req, res) => {
         isMasterKey = await IsMaster(authKey);
     } catch (error) {
         log.error({ err: error }, 'IsMaster failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 
     let effectiveCompanyId;
@@ -334,7 +334,7 @@ exports.exportCsv = async (req, res) => {
             authKeyCompanyId = await GetCompanyId(authKey);
         } catch (error) {
             log.error({ err: error }, 'GetCompanyId failed');
-            return res.status(500).json({ message: "Error!", error: String(error) });
+            return res.status(500).json({ message: "Error!" });
         }
         if (authKeyCompanyId === -1) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
@@ -381,7 +381,7 @@ exports.exportCsv = async (req, res) => {
         });
     } catch (error) {
         log.error({ err: error }, 'TimeEntry.findAll for CSV export failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 
     const truncated = rows.length > limit;

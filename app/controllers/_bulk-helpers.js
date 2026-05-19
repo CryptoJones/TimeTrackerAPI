@@ -53,7 +53,7 @@ function makeBulkCreate({
             isAuthKeyMasterKey = await auth.isMaster(authKey);
         } catch (error) {
             log.error({ err: error }, `${modelKey}: isMaster failed`);
-            return res.status(500).json({ message: "Error!", error: String(error) });
+            return res.status(500).json({ message: "Error!" });
         }
 
         const input = (req.body && Array.isArray(req.body[bodyKey]))
@@ -70,7 +70,7 @@ function makeBulkCreate({
                 authKeyCompanyId = await auth.getCompanyId(authKey);
             } catch (error) {
                 log.error({ err: error }, `${modelKey}: getCompanyId failed`);
-                return res.status(500).json({ message: "Error!", error: String(error) });
+                return res.status(500).json({ message: "Error!" });
             }
             if (authKeyCompanyId === -1) {
                 return res.status(403).json({ message: "Invalid Authorization Key." });
@@ -122,7 +122,7 @@ function makeBulkCreate({
         } catch (error) {
             try { await t.rollback(); } catch (_) { /* swallow */ }
             log.error({ err: error }, `${modelKey}.bulkCreate failed`);
-            return res.status(500).json({ message: "Error!", error: String(error) });
+            return res.status(500).json({ message: "Error!" });
         }
     };
 }
@@ -185,7 +185,7 @@ function makeBulkCreateIndirect({
             isAuthKeyMasterKey = await auth.isMaster(authKey);
         } catch (error) {
             log.error({ err: error }, `${modelKey}: isMaster failed`);
-            return res.status(500).json({ message: "Error!", error: String(error) });
+            return res.status(500).json({ message: "Error!" });
         }
 
         const input = (req.body && Array.isArray(req.body[bodyKey]))
@@ -201,7 +201,7 @@ function makeBulkCreateIndirect({
                 authKeyCompanyId = await auth.getCompanyId(authKey);
             } catch (error) {
                 log.error({ err: error }, `${modelKey}: getCompanyId failed`);
-                return res.status(500).json({ message: "Error!", error: String(error) });
+                return res.status(500).json({ message: "Error!" });
             }
             if (authKeyCompanyId === -1) {
                 return res.status(403).json({ message: "Invalid Authorization Key." });
@@ -228,7 +228,7 @@ function makeBulkCreateIndirect({
                 parentCompId = await resolveParentCompanyId(parentId);
             } catch (error) {
                 log.error({ err: error }, `${modelKey}: parent scope resolve failed`);
-                return res.status(500).json({ message: "Error!", error: String(error) });
+                return res.status(500).json({ message: "Error!" });
             }
             if (parentCompId === -1) {
                 return res.status(400).json({
@@ -263,7 +263,7 @@ function makeBulkCreateIndirect({
         } catch (error) {
             try { await t.rollback(); } catch (_) { /* swallow */ }
             log.error({ err: error }, `${modelKey}.bulkCreate failed`);
-            return res.status(500).json({ message: "Error!", error: String(error) });
+            return res.status(500).json({ message: "Error!" });
         }
     };
 }

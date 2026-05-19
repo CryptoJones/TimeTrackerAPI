@@ -26,7 +26,7 @@ exports.create = async (req, res) => {
         isAuthKeyMasterKey = await IsMaster(authKey);
     } catch (error) {
         log.error({ err: error }, 'IsMaster failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 
     const body = req.body || {};
@@ -41,7 +41,7 @@ exports.create = async (req, res) => {
             authKeyCompanyId = await GetCompanyId(authKey);
         } catch (error) {
             log.error({ err: error }, 'GetCompanyId failed');
-            return res.status(500).json({ message: "Error!", error: String(error) });
+            return res.status(500).json({ message: "Error!" });
         }
         if (authKeyCompanyId === -1) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
@@ -67,7 +67,7 @@ exports.create = async (req, res) => {
         return res.status(201).json({ message: "Billing type created.", billingType: created });
     } catch (error) {
         log.error({ err: error }, 'BillingType.create failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -82,7 +82,7 @@ exports.getById = async (req, res) => {
         billingType = await BillingType.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'BillingType.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!billingType || billingType.btArch) {
         return res.status(404).json({ message: "Not found." });
@@ -144,7 +144,7 @@ exports.listByCompany = async (req, res) => {
         });
     } catch (error) {
         log.error({ err: error }, 'BillingType.findAndCountAll failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -159,7 +159,7 @@ exports.update = async (req, res) => {
         billingType = await BillingType.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'BillingType.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!billingType || billingType.btArch) {
         return res.status(404).json({ message: "Not found." });
@@ -187,7 +187,7 @@ exports.update = async (req, res) => {
         return res.status(200).json({ message: "Updated.", billingType });
     } catch (error) {
         log.error({ err: error }, 'BillingType.update failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -202,7 +202,7 @@ exports.remove = async (req, res) => {
         billingType = await BillingType.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'BillingType.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!billingType || billingType.btArch) {
         return res.status(404).json({ message: "Not found." });
@@ -221,7 +221,7 @@ exports.remove = async (req, res) => {
         return res.status(200).json({ message: "Archived.", id: billingType.btId });
     } catch (error) {
         log.error({ err: error }, 'BillingType archive failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 

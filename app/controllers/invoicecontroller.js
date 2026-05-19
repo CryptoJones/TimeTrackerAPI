@@ -53,7 +53,7 @@ exports.create = async (req, res) => {
         return res.status(201).json({ message: "Invoice created.", invoice: created });
     } catch (error) {
         log.error({ err: error }, 'Invoice.create failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -68,7 +68,7 @@ exports.getById = async (req, res) => {
         invoice = await Invoice.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'Invoice.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!invoice || invoice.invArch) {
         return res.status(404).json({ message: "Not found." });
@@ -128,7 +128,7 @@ exports.listByCustomer = async (req, res) => {
         });
     } catch (error) {
         log.error({ err: error }, 'Invoice.findAndCountAll failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -143,7 +143,7 @@ exports.update = async (req, res) => {
         invoice = await Invoice.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'Invoice.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!invoice || invoice.invArch) {
         return res.status(404).json({ message: "Not found." });
@@ -172,7 +172,7 @@ exports.update = async (req, res) => {
         return res.status(200).json({ message: "Updated.", invoice });
     } catch (error) {
         log.error({ err: error }, 'Invoice.update failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -187,7 +187,7 @@ exports.remove = async (req, res) => {
         invoice = await Invoice.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'Invoice.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!invoice || invoice.invArch) {
         return res.status(404).json({ message: "Not found." });
@@ -207,7 +207,7 @@ exports.remove = async (req, res) => {
         return res.status(200).json({ message: "Archived.", id: invoice.invId });
     } catch (error) {
         log.error({ err: error }, 'Invoice archive failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 

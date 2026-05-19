@@ -47,7 +47,7 @@ exports.getCustomerById = async (req, res) => {
         isAuthKeyMasterKey = await IsMaster(authKey);
     } catch (error) {
         log.error({ err: error }, 'IsMaster failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 
     if (isAuthKeyMasterKey) {
@@ -60,7 +60,7 @@ exports.getCustomerById = async (req, res) => {
         authKeyCompanyId = await GetCompanyId(authKey);
     } catch (error) {
         log.error({ err: error }, 'Company lookup failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 
     if (!CompaniesMatch(custCompanyId, authKeyCompanyId)) {
@@ -110,7 +110,7 @@ exports.createCustomer = async (req, res) => {
         isAuthKeyMasterKey = await IsMaster(authKey);
     } catch (error) {
         log.error({ err: error }, 'IsMaster failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 
     // Whitelist of model fields we accept. Anything else in the body
@@ -138,7 +138,7 @@ exports.createCustomer = async (req, res) => {
             authKeyCompanyId = await GetCompanyId(authKey);
         } catch (error) {
             log.error({ err: error }, 'GetCompanyId failed');
-            return res.status(500).json({ message: "Error!", error: String(error) });
+            return res.status(500).json({ message: "Error!" });
         }
         if (authKeyCompanyId === -1) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
@@ -171,7 +171,7 @@ exports.createCustomer = async (req, res) => {
         });
     } catch (error) {
         log.error({ err: error }, 'Customer.create failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -197,7 +197,7 @@ exports.getAllByCompanyId = async (req, res) => {
         isAuthKeyMasterKey = await IsMaster(authKey);
     } catch (error) {
         log.error({ err: error }, 'IsMaster failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 
     if (!isAuthKeyMasterKey) {
@@ -206,7 +206,7 @@ exports.getAllByCompanyId = async (req, res) => {
             authKeyCompanyId = await GetCompanyId(authKey);
         } catch (error) {
             log.error({ err: error }, 'GetCompanyId failed');
-            return res.status(500).json({ message: "Error!", error: String(error) });
+            return res.status(500).json({ message: "Error!" });
         }
         // req.params.id arrives as a string; authKeyCompanyId comes back
         // as an INT from Sequelize. Normalize both before comparing.
@@ -252,7 +252,7 @@ exports.getAllByCompanyId = async (req, res) => {
         });
     } catch (error) {
         log.error({ err: error }, 'Customer.findAndCountAll failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -283,7 +283,7 @@ exports.exportCsv = async (req, res) => {
         isAuthKeyMasterKey = await IsMaster(authKey);
     } catch (error) {
         log.error({ err: error }, 'IsMaster failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 
     let effectiveCompanyId;
@@ -301,7 +301,7 @@ exports.exportCsv = async (req, res) => {
             authKeyCompanyId = await GetCompanyId(authKey);
         } catch (error) {
             log.error({ err: error }, 'GetCompanyId failed');
-            return res.status(500).json({ message: "Error!", error: String(error) });
+            return res.status(500).json({ message: "Error!" });
         }
         if (authKeyCompanyId === -1) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
@@ -335,7 +335,7 @@ exports.exportCsv = async (req, res) => {
         });
     } catch (error) {
         log.error({ err: error }, 'Customer.findAll for CSV export failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 
     const truncated = rows.length > limit;
@@ -426,7 +426,7 @@ exports.search = async (req, res) => {
         isAuthKeyMasterKey = await IsMaster(authKey);
     } catch (error) {
         log.error({ err: error }, 'IsMaster failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 
     // Resolve effective companyId from auth + query
@@ -445,7 +445,7 @@ exports.search = async (req, res) => {
             authKeyCompanyId = await GetCompanyId(authKey);
         } catch (error) {
             log.error({ err: error }, 'GetCompanyId failed');
-            return res.status(500).json({ message: "Error!", error: String(error) });
+            return res.status(500).json({ message: "Error!" });
         }
         if (authKeyCompanyId === -1) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
@@ -471,7 +471,7 @@ exports.search = async (req, res) => {
 
     const Op = db.Sequelize && db.Sequelize.Op;
     if (!Op) {
-        return res.status(500).json({ message: "Error!", error: "Sequelize Op not available" });
+        return res.status(500).json({ message: "Error!" });
     }
 
     // ILIKE on Postgres; the `%` wildcards come from us, not the user.
@@ -505,7 +505,7 @@ exports.search = async (req, res) => {
         });
     } catch (error) {
         log.error({ err: error }, 'Customer.search findAndCountAll failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -520,7 +520,7 @@ async function findAndRespond(customerId, res) {
         });
     } catch (error) {
         log.error({ err: error }, 'Customer.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 }
 

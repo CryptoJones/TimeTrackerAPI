@@ -54,7 +54,7 @@ exports.create = async (req, res) => {
         return res.status(201).json({ message: "Purchase order line created.", purchaseOrderLine: created });
     } catch (error) {
         log.error({ err: error }, 'PurchaseOrderLine.create failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -69,7 +69,7 @@ exports.getById = async (req, res) => {
         line = await PurchaseOrderLine.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'PurchaseOrderLine.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!line || line.polArch) {
         return res.status(404).json({ message: "Not found." });
@@ -127,7 +127,7 @@ exports.listByHeader = async (req, res) => {
         });
     } catch (error) {
         log.error({ err: error }, 'PurchaseOrderLine.findAndCountAll failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -142,7 +142,7 @@ exports.update = async (req, res) => {
         line = await PurchaseOrderLine.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'PurchaseOrderLine.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!line || line.polArch) {
         return res.status(404).json({ message: "Not found." });
@@ -171,7 +171,7 @@ exports.update = async (req, res) => {
         return res.status(200).json({ message: "Updated.", purchaseOrderLine: line });
     } catch (error) {
         log.error({ err: error }, 'PurchaseOrderLine.update failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
@@ -186,7 +186,7 @@ exports.remove = async (req, res) => {
         line = await PurchaseOrderLine.findByPk(req.params.id);
     } catch (error) {
         log.error({ err: error }, 'PurchaseOrderLine.findByPk failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
     if (!line || line.polArch) {
         return res.status(404).json({ message: "Not found." });
@@ -206,7 +206,7 @@ exports.remove = async (req, res) => {
         return res.status(200).json({ message: "Archived.", id: line.polId });
     } catch (error) {
         log.error({ err: error }, 'PurchaseOrderLine archive failed');
-        return res.status(500).json({ message: "Error!", error: String(error) });
+        return res.status(500).json({ message: "Error!" });
     }
 };
 
