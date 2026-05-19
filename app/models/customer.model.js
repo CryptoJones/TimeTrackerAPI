@@ -1,69 +1,73 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Aaron K. Clark
 "use strict";
+
+/**
+ * Customer — a person/organization a TimeEntry attaches to.
+ *
+ * Column types + nullability mirror setup/TimeTracker.sql (the
+ * authoritative DDL). Earlier this model declared every string field
+ * as `Sequelize.STRING` (varchar 255) with no `allowNull` —
+ * misrepresenting the underlying `text NOT NULL` columns. Aligning
+ * here means sequelize-level validation matches the DB constraint
+ * a row would actually fail on, and any downstream consumer reading
+ * the model definition (e.g. SDK code-gen, migration diffs) sees the
+ * real shape.
+ *
+ * Soft-deletes via custArch — defaultScope filters `false` so reads
+ * never see archived rows without `.unscoped()` (which this codebase
+ * never uses; cf. tests/unit/default-scope.test.js).
+ */
 module.exports = (sequelize, Sequelize) => {
     const Customer = sequelize.define('Customer', {
         custId: {
             field: 'custId',
             type: Sequelize.INTEGER,
             autoIncrement: true,
-            primaryKey: true
+            primaryKey: true,
         },
+        // text NOT NULL in the DB — see setup/TimeTracker.sql.
         custCompanyName: {
             field: 'custCompanyName',
-            type: Sequelize.STRING
+            type: Sequelize.TEXT,
+            allowNull: false,
         },
         custFName: {
             field: 'custFName',
-            type: Sequelize.STRING
+            type: Sequelize.TEXT,
+            allowNull: false,
         },
         custLName: {
             field: 'custLName',
-            type: Sequelize.STRING
+            type: Sequelize.TEXT,
+            allowNull: false,
         },
-        custAddress1: {
-            field: 'custAddress1',
-            type: Sequelize.STRING
-        },
-        custAddress2: {
-            field: 'custAddress2',
-            type: Sequelize.STRING
-        },
-        custCity: {
-            field: 'custCity',
-            type: Sequelize.STRING
-        },
-        custState: {
-            field: 'custState',
-            type: Sequelize.STRING
-        },
-        custZip: {
-            field: 'custZip',
-            type: Sequelize.STRING
-        },
+        // text NULL — nullable address fields.
+        custAddress1: { field: 'custAddress1', type: Sequelize.TEXT },
+        custAddress2: { field: 'custAddress2', type: Sequelize.TEXT },
+        custCity:     { field: 'custCity',     type: Sequelize.TEXT },
+        // varchar(2) — US state codes / Canadian province codes.
+        custState:    { field: 'custState',    type: Sequelize.STRING(2) },
+        custZip:      { field: 'custZip',      type: Sequelize.TEXT },
         custArch: {
             field: 'custArch',
             type: Sequelize.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
         },
-        custPhone: {
-            field: 'custPhone',
-            type: Sequelize.STRING
-        },
-        custEmail: {
-            field: 'custEmail',
-            type: Sequelize.STRING
-        },
+        // varchar(32) — phone numbers stored as a string, not parsed.
+        custPhone:    { field: 'custPhone',    type: Sequelize.STRING(32) },
+        custEmail:    { field: 'custEmail',    type: Sequelize.TEXT },
         custCompId: {
             field: 'custCompId',
-            type: Sequelize.INTEGER
-        }
-    },
-        {
-            tableName: 'Customer',
-            timestamps: true,
-            defaultScope: { where: { custArch: false } }
-        }
-    );
+            type: Sequelize.INTEGER,
+            allowNull: false,
+        },
+    }, {
+        tableName: 'Customer',
+        timestamps: true,
+        defaultScope: { where: { custArch: false } },
+    });
 
     return Customer;
-}
+};
