@@ -39,6 +39,7 @@ beforeAll(() => {
             'RateLimit-Limit',
             'RateLimit-Remaining',
             'RateLimit-Reset',
+            'Retry-After',
         ],
     }));
     app.get('/ping', (req, res) => {
@@ -64,6 +65,10 @@ describe('CORS Access-Control-Expose-Headers', () => {
             'RateLimit-Limit',
             'RateLimit-Remaining',
             'RateLimit-Reset',
+            // Retry-After lands on the 429 response from express-rate-
+            // limit. Not on the CORS safelist, so browser JS clients
+            // can't read it without explicit exposure here.
+            'Retry-After',
         ]));
     });
 

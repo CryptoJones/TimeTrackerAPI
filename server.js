@@ -140,6 +140,15 @@ app.use(cors({
         'RateLimit-Limit',
         'RateLimit-Remaining',
         'RateLimit-Reset',
+        // Retry-After is set on the 429 response by express-rate-limit
+        // (standardHeaders: true). It carries the seconds the client
+        // should wait before retrying — without exposing it across
+        // CORS, browser JS gets `undefined` and clients have to fall
+        // back to a fixed-delay retry instead of honoring the value
+        // the server intended. Retry-After is NOT on the CORS
+        // safelisted-response-headers list, so explicit exposure is
+        // required.
+        'Retry-After',
     ],
 }));
 

@@ -61,6 +61,14 @@ describe('rate limiting', () => {
         const r3 = await request(app).get('/v1/customer/1').set('authKey', 'k');
         expect(r3.status).toBe(429);
         expect(r3.body.message).toMatch(/too many requests/i);
+        // 429 must carry `Retry-After` so browser JS clients can
+        // honor the suggested back-off instead of falling back to a
+        // fixed-delay retry. server.js's CORS expose-headers list
+        // includes it (#322) — this asserts the server-side path
+        // actually emits it.
+        expect(r3.headers['retry-after']).toBeDefined();
+        // Value is a positive integer (seconds, RFC 7231 §7.1.3).
+        expect(/^\d+$/.test(r3.headers['retry-after'])).toBe(true);
     });
 
     test('does not apply to /healthz', async () => {
