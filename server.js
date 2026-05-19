@@ -186,7 +186,14 @@ app.use(errorHandler);
 
 // Listen port — env-configurable. Defaults to 3000 so the API can be
 // started by a non-root user. Bind to 0.0.0.0 for container friendliness.
-const port = parseInt(process.env.PORT, 10) || 3000;
+//
+// Note: `parseInt(...) || 3000` would incorrectly coerce a legitimate
+// PORT=0 (kernel-pick-a-free-port, used by tests/api/server-boots.test.js
+// to avoid colliding with another dev process on :3000) to the 3000
+// fallback. Branch explicitly so 0 is honored and only NaN / negatives
+// fall through to the default.
+const portRaw = parseInt(process.env.PORT, 10);
+const port = Number.isFinite(portRaw) && portRaw >= 0 ? portRaw : 3000;
 const host = process.env.HOST || '0.0.0.0';
 
 const server = app.listen(port, host, () => {
