@@ -11,7 +11,12 @@ module.exports = (sequelize, Sequelize) => {
         },
         amKEY: {
             field: 'amKEY',
-            type: Sequelize.STRING
+            // Same DB column-type change as ApiKey.akKEY — see
+            // migration 20260518000000-hash-api-keys.js. The column
+            // is TEXT in PG; the model previously declared STRING
+            // (varchar(255)) which still works at runtime but drifts
+            // from the DB schema. Aligned to TEXT for parity.
+            type: Sequelize.TEXT
         },
         amArchive: {
             field: 'amArchive',
