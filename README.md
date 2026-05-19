@@ -181,7 +181,7 @@ Short version:
 cp .env.example .env   # set DB_PASSWORD
 sudo docker compose up -d postgres setup migrate
 DB_HOST=localhost DB_PORT=5432 DB_NAME=timetracker \
-    DB_USERNAME=timetracker DB_PASSWORD=$(grep ^DB_PASSWORD= .env | cut -d= -f2-) \
+    DB_USER=timetracker DB_PASSWORD=$(grep ^DB_PASSWORD= .env | cut -d= -f2-) \
     npx vitest run tests/integration
 sudo docker compose down -v   # cleanup
 ```
