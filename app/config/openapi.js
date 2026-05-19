@@ -870,7 +870,34 @@ const spec = {
                     { name: 'to', in: 'query', schema: { type: 'string', format: 'date-time' } },
                     { name: 'limit', in: 'query', schema: { type: 'integer', default: 100, maximum: 500 } },
                 ],
-                responses: { 200: { description: 'OK' }, 400: { description: 'Invalid company id' }, 403: { description: 'Auth failure' } },
+                responses: {
+                    200: {
+                        description: 'OK — paginated time-entry list',
+                        // Controller emits the standard pagination envelope —
+                        // same shape every list endpoint uses. Mirrors the
+                        // customer/bycompany declaration from #340 so SDK
+                        // code-gen models the Link-header-paired response.
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        message: { type: 'string' },
+                                        count: { type: 'integer' },
+                                        limit: { type: 'integer' },
+                                        offset: { type: 'integer' },
+                                        timeEntries: {
+                                            type: 'array',
+                                            items: { $ref: '#/components/schemas/TimeEntry' },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    400: { description: 'Invalid company id' },
+                    403: { description: 'Auth failure' },
+                },
             },
         },
         '/v1/worker': {
