@@ -70,6 +70,26 @@ describe('OpenAPI spec', () => {
         expect(schemas.TimeEntry.properties.teStartedAt).toBeDefined();
     });
 
+    test('PurchaseOrderHeader pins the validator field-length bounds', async () => {
+        // Mirrors purchaseorderheader.schema.js. Without these, SDK
+        // generators expose pohReference/pohTerms as unbounded strings
+        // and miss the server-side caps.
+        const res = await request(app).get('/openapi.json');
+        const poh = res.body.components.schemas.PurchaseOrderHeader;
+        expect(poh.properties.pohReference.minLength).toBe(1);
+        expect(poh.properties.pohReference.maxLength).toBe(255);
+        expect(poh.properties.pohTerms.minLength).toBe(1);
+        expect(poh.properties.pohTerms.maxLength).toBe(1000);
+    });
+
+    test('PurchaseOrderLine.polItemDesc pins the validator field-length bound', async () => {
+        // Mirrors purchaseorderline.schema.js — 1..1000 chars.
+        const res = await request(app).get('/openapi.json');
+        const pol = res.body.components.schemas.PurchaseOrderLine;
+        expect(pol.properties.polItemDesc.minLength).toBe(1);
+        expect(pol.properties.polItemDesc.maxLength).toBe(1000);
+    });
+
     test('TimeEntry.teDescription pins the 10000-char bound from the validator', async () => {
         // The zod schema (app/schemas/timeentry.schema.js) caps
         // teDescription at 10000 chars. The OpenAPI component schema
