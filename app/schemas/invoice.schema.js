@@ -35,7 +35,16 @@ const createInvoiceBody = z.object({
     invCustId: z.coerce.number().int().positive(),
     invDate: isoDate,
     invDueDate: isoDate,
-    invPaid: z.boolean().optional(),
+    // invPaid is `boolean NOT NULL` in the DB (no DB-level default).
+    // The single-create controller already short-circuits a missing
+    // value to `false`, but the bulk-create path (`makeBulkCreateIndirect`)
+    // doesn't know to do that, so a bulk POST without invPaid landed
+    // as "null value in column invPaid violates not-null constraint"
+    // at the postgres layer — surfacing as a 500 instead of a clean
+    // accepted row. Switching from `.optional()` to `.default(false)`
+    // fills the value at the validator boundary, which both paths
+    // consume via `validate.body()` (see app/middleware/validate.js).
+    invPaid: z.boolean().default(false),
 }).strict({
     message: 'Unexpected field in body. Whitelist: invCustId, invDate, invDueDate, invPaid.',
 }).refine(refineDueDateAfterIssue, DUE_BEFORE_ISSUE);
