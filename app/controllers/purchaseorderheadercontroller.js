@@ -79,8 +79,14 @@ exports.getById = async (req, res) => {
     if (!isMaster) {
         const authCompanyId = await GetCompanyId(authKey);
         const vendorCompanyId = await GetCompanyIdByPovId(header.pohPovId);
+        // Cross-tenant access is reported as 404, not 403 — otherwise
+        // a scoped caller can enumerate which PurchaseOrderHeader ids
+        // are populated across the whole tenant table by status code.
+        // Same secure-404 pattern as #174 (company), #188 (billingtype),
+        // #192 (worker), #196 (inventoryitem), #200 (purchaseordervendor),
+        // #204 (inventorytransaction).
         if (authCompanyId === -1 || vendorCompanyId === -1 || authCompanyId !== vendorCompanyId) {
-            return res.status(403).json({ message: "Invalid Authorization Key." });
+            return res.status(404).json({ message: "Not found." });
         }
     }
     return res.status(200).json({ message: "Found.", purchaseOrderHeader: header });
@@ -152,8 +158,9 @@ exports.update = async (req, res) => {
     if (!isMaster) {
         const authCompanyId = await GetCompanyId(authKey);
         const vendorCompanyId = await GetCompanyIdByPovId(header.pohPovId);
+        // Secure-404 on PATCH for the same reason as GET.
         if (authCompanyId === -1 || vendorCompanyId === -1 || authCompanyId !== vendorCompanyId) {
-            return res.status(403).json({ message: "Invalid Authorization Key." });
+            return res.status(404).json({ message: "Not found." });
         }
     }
 
@@ -196,8 +203,9 @@ exports.remove = async (req, res) => {
     if (!isMaster) {
         const authCompanyId = await GetCompanyId(authKey);
         const vendorCompanyId = await GetCompanyIdByPovId(header.pohPovId);
+        // Secure-404 on DELETE for the same reason as GET / PATCH.
         if (authCompanyId === -1 || vendorCompanyId === -1 || authCompanyId !== vendorCompanyId) {
-            return res.status(403).json({ message: "Invalid Authorization Key." });
+            return res.status(404).json({ message: "Not found." });
         }
     }
 
