@@ -130,4 +130,15 @@ describe('404 fallthrough', () => {
         const res = await request(app).post('/explode/500');
         expect(res.status).toBe(404);
     });
+
+    test('redacts sensitive query params in the echoed path', async () => {
+        // SDK bugs that put authKey in the query string instead of the
+        // header would otherwise have their secret echoed back in the
+        // 404 response body. Pin the redaction so any proxy / client
+        // error-logger capturing the body cannot persist the secret.
+        const res = await request(app).get('/no/such/path?authKey=super-secret&q=ok');
+        expect(res.status).toBe(404);
+        expect(res.body.path).toBe('/no/such/path?authKey=<REDACTED>&q=ok');
+        expect(res.body.path).not.toContain('super-secret');
+    });
 });
