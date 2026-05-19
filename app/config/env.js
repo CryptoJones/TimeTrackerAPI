@@ -15,10 +15,6 @@ const env = {
     password: process.env.DB_PASSWORD || '',
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT, 10) || 5432,
-    dialect: 'postgres',
-    define: {
-        timestamps: false,
-    },
 };
 
 if (!env.password) {
