@@ -638,7 +638,14 @@ const spec = {
                     },
                 },
                 responses: {
-                    201: { description: 'Created' },
+                    201: {
+                        description: 'Created (or a replay of a previously-cached create)',
+                        // Same Idempotency-Key middleware path as /v1/customer
+                        // (#246) and the 13 bulk endpoints (#168 / #240).
+                        // Declare the replay header so SDK generators surface
+                        // the field on single-create writes.
+                        headers: idempotencyReplayResponseHeader,
+                    },
                     400: { description: 'Bad request — missing teCustId or teStartedAt' },
                     403: { description: 'Missing or invalid authKey' },
                 },
