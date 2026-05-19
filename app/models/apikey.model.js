@@ -11,7 +11,14 @@ module.exports = (sequelize, Sequelize) => {
         },
         akKEY: {
             field: 'akKEY',
-            type: Sequelize.STRING
+            // Migration 20260518000000-hash-api-keys.js changed the DB
+            // column from `uuid` to `text` so it can hold a SHA-256
+            // hex digest (64 chars) without a length cap. The model
+            // had been left at `Sequelize.STRING` (varchar(255)),
+            // which doesn't break runtime — hashes fit comfortably
+            // — but `sequelize.sync()` and any schema-introspection
+            // tooling would disagree with the DB. Use TEXT to match.
+            type: Sequelize.TEXT
         },
         akCompanyId: {
             field: 'akCompanyId',
