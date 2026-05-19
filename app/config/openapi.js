@@ -264,6 +264,27 @@ const idempotencyKeyHeader = {
 };
 
 /**
+ * Reusable response-header spec for `Idempotency-Replay: true`.
+ *
+ * Set by the idempotency middleware (see app/middleware/idempotency.js)
+ * whenever a cached response is replayed for a matching key + body.
+ * Documented inline in the request-header description above, but the
+ * response-header declaration is what SDK generators (openapi-typescript,
+ * etc.) actually surface to client typings. Reference this from every
+ * 200/201 response that flows through the idempotency layer so clients
+ * can branch on "first write" vs. "replay" without re-parsing the body.
+ */
+const idempotencyReplayResponseHeader = {
+    'Idempotency-Replay': {
+        description:
+            'Present with value `true` when the response is a replay from the ' +
+            'idempotency cache. Absent on first-time writes. Useful for client- ' +
+            'side write counters and observability dashboards.',
+        schema: { type: 'string', enum: ['true'] },
+    },
+};
+
+/**
  * OpenAPI path entry for a bulk-create endpoint. Every bulk route
  * shares the same shape — outer JSON key wraps an array of the
  * underlying entity create body, capped at 500 entries, with the
@@ -302,7 +323,10 @@ function bulkPath(bodyKey, schemaName) {
                 },
             },
             responses: {
-                201: { description: 'All entries created' },
+                201: {
+                    description: 'All entries created (or a replay of a previously-cached create)',
+                    headers: idempotencyReplayResponseHeader,
+                },
                 400: { description: 'Validation failure (array empty/capped, missing parent FK, master without scope)' },
                 403: { description: 'Missing authKey or cross-tenant create attempt' },
                 409: { description: 'Idempotency-Key reused with a different body' },
