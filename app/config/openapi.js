@@ -869,7 +869,14 @@ const spec = {
                 security: [{ authKey: [] }],
                 parameters: [idempotencyKeyHeader],
                 requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/Company' } } } },
-                responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Non-master key' } },
+                responses: {
+                    201: {
+                        description: 'Created',
+                        headers: idempotencyReplayResponseHeader,
+                    },
+                    400: { description: 'Bad request' },
+                    403: { description: 'Non-master key' },
+                },
             },
             get: {
                 summary: 'List all companies (master keys only, paginated)',
