@@ -1219,7 +1219,20 @@ const spec = {
             },
         },
         '/v1/inventorytransaction': {
-            post: { summary: 'Create an inventory transaction', security: [{ authKey: [] }], parameters: [idempotencyKeyHeader], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/InventoryTransaction' } } } }, responses: { 201: { description: 'Created' }, 400: { description: 'Bad request' }, 403: { description: 'Auth failure' } } },
+            post: {
+                summary: 'Create an inventory transaction',
+                security: [{ authKey: [] }],
+                parameters: [idempotencyKeyHeader],
+                requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/InventoryTransaction' } } } },
+                responses: {
+                    201: {
+                        description: 'Created',
+                        headers: idempotencyReplayResponseHeader,
+                    },
+                    400: { description: 'Bad request' },
+                    403: { description: 'Auth failure' },
+                },
+            },
         },
         '/v1/inventorytransaction/{id}': {
             get: { summary: 'Get one inventory transaction', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
