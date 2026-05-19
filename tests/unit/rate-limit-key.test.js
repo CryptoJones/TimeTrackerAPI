@@ -59,4 +59,23 @@ describe('keyByAuthKeyOrIp', () => {
         const b = keyByAuthKeyOrIp(fakeReq({ ip: '1.1.1.1' }));
         expect(a).toBe(b);
     });
+
+    test('IPv6 addresses in the same /56 collapse to the same key', () => {
+        // An attacker rotating through addresses inside their ISP
+        // allocation would defeat per-IP rate limiting if the key
+        // were the raw IP. express-rate-limit's ipKeyGenerator
+        // canonicalizes IPv6 to its /56 network (helper default),
+        // so two different addresses inside one /56 must bucket to
+        // the same key.
+        const a = keyByAuthKeyOrIp(fakeReq({ ip: '2001:db8:1234:5600::1' }));
+        const b = keyByAuthKeyOrIp(fakeReq({ ip: '2001:db8:1234:56ff::dead' }));
+        expect(a).toBe(b);
+        expect(a.startsWith('ip:')).toBe(true);
+    });
+
+    test('IPv6 addresses in different /56 prefixes get different keys', () => {
+        const a = keyByAuthKeyOrIp(fakeReq({ ip: '2001:db8:1234:5600::1' }));
+        const b = keyByAuthKeyOrIp(fakeReq({ ip: '2001:db8:1234:5700::1' }));
+        expect(a).not.toBe(b);
+    });
 });
