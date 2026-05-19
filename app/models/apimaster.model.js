@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Aaron K. Clark
-'use strict';
+"use strict";
 module.exports = (sequelize, Sequelize) => {
     const ApiMaster = sequelize.define('ApiMaster', {
         amId: {
@@ -12,17 +12,14 @@ module.exports = (sequelize, Sequelize) => {
         amKEY: {
             field: 'amKEY',
             type: Sequelize.STRING
-            
         },
         amArchive: {
             field: 'amArchive',
             type: Sequelize.BOOLEAN
-            
         },
         amArchiveDate: {
             field: 'amArchiveDate',
             type: Sequelize.DATE
-            
         }
     },
         {
@@ -31,8 +28,6 @@ module.exports = (sequelize, Sequelize) => {
             defaultScope: { where: { amArchive: false } }
         }
     );
-
-
 
     return ApiMaster;
 }

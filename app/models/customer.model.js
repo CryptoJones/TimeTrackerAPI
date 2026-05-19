@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Aaron K. Clark
-'use strict';
+"use strict";
 module.exports = (sequelize, Sequelize) => {
     const Customer = sequelize.define('Customer', {
         custId: {
@@ -12,37 +12,30 @@ module.exports = (sequelize, Sequelize) => {
         custCompanyName: {
             field: 'custCompanyName',
             type: Sequelize.STRING
-            
         },
         custFName: {
             field: 'custFName',
             type: Sequelize.STRING
-            
         },
         custLName: {
             field: 'custLName',
             type: Sequelize.STRING
-            
         },
         custAddress1: {
             field: 'custAddress1',
             type: Sequelize.STRING
-            
         },
         custAddress2: {
             field: 'custAddress2',
             type: Sequelize.STRING
-            
         },
         custCity: {
             field: 'custCity',
             type: Sequelize.STRING
-            
         },
         custState: {
             field: 'custState',
             type: Sequelize.STRING
-            
         },
         custZip: {
             field: 'custZip',
@@ -55,7 +48,6 @@ module.exports = (sequelize, Sequelize) => {
         custPhone: {
             field: 'custPhone',
             type: Sequelize.STRING
-            
         },
         custEmail: {
             field: 'custEmail',
@@ -72,8 +64,6 @@ module.exports = (sequelize, Sequelize) => {
             defaultScope: { where: { custArch: false } }
         }
     );
-
-
 
     return Customer;
 }
