@@ -76,3 +76,87 @@ describe('InventoryItem body validation', () => {
         expect(res.status).toBe(400);
     });
 });
+
+describe('InventoryItem tenant-enumeration defense (secure 404)', () => {
+    // Same pattern as worker/billingtype/company secure-404 tests:
+    // drive the controller directly with stubbed Model + spied auth
+    // helpers so we don't have to wire every upstream middleware.
+    test('controller getById: existing-but-not-yours returns 404 to non-master', async () => {
+        const auth = require('../../app/middleware/auth.js');
+        const controller = require('../../app/controllers/inventoryitemcontroller.js');
+        const isMasterSpy = vi.spyOn(auth, 'isMaster').mockResolvedValue(false);
+        const getCompanyIdSpy = vi.spyOn(auth, 'getCompanyId').mockResolvedValue(7);
+        try {
+            const db = require('../../app/config/db.config.js');
+            db.InventoryItem.findByPk = vi.fn().mockResolvedValue({
+                invitId: 99, invitCompId: 99, invitArch: false,
+            });
+            const req = { get: (h) => (h === 'authKey' ? 'scoped-to-7' : undefined), params: { id: 99 } };
+            let captured = null;
+            const res = {
+                status(code) { this._code = code; return this; },
+                json(body) { captured = { code: this._code, body }; return this; },
+            };
+            await controller.getById(req, res);
+            expect(captured.code).toBe(404);
+            expect(captured.body.message).toMatch(/not found/i);
+        } finally {
+            isMasterSpy.mockRestore();
+            getCompanyIdSpy.mockRestore();
+        }
+    });
+
+    test('controller update: existing-but-not-yours returns 404 to non-master', async () => {
+        const auth = require('../../app/middleware/auth.js');
+        const controller = require('../../app/controllers/inventoryitemcontroller.js');
+        const isMasterSpy = vi.spyOn(auth, 'isMaster').mockResolvedValue(false);
+        const getCompanyIdSpy = vi.spyOn(auth, 'getCompanyId').mockResolvedValue(7);
+        try {
+            const db = require('../../app/config/db.config.js');
+            db.InventoryItem.findByPk = vi.fn().mockResolvedValue({
+                invitId: 99, invitCompId: 99, invitArch: false, update: vi.fn(),
+            });
+            const req = {
+                get: (h) => (h === 'authKey' ? 'scoped-to-7' : undefined),
+                params: { id: 99 },
+                body: { invitDescription: 'X' },
+            };
+            let captured = null;
+            const res = {
+                status(code) { this._code = code; return this; },
+                json(body) { captured = { code: this._code, body }; return this; },
+            };
+            await controller.update(req, res);
+            expect(captured.code).toBe(404);
+            expect(captured.body.message).toMatch(/not found/i);
+        } finally {
+            isMasterSpy.mockRestore();
+            getCompanyIdSpy.mockRestore();
+        }
+    });
+
+    test('controller remove: existing-but-not-yours returns 404 to non-master', async () => {
+        const auth = require('../../app/middleware/auth.js');
+        const controller = require('../../app/controllers/inventoryitemcontroller.js');
+        const isMasterSpy = vi.spyOn(auth, 'isMaster').mockResolvedValue(false);
+        const getCompanyIdSpy = vi.spyOn(auth, 'getCompanyId').mockResolvedValue(7);
+        try {
+            const db = require('../../app/config/db.config.js');
+            db.InventoryItem.findByPk = vi.fn().mockResolvedValue({
+                invitId: 99, invitCompId: 99, invitArch: false, update: vi.fn(),
+            });
+            const req = { get: (h) => (h === 'authKey' ? 'scoped-to-7' : undefined), params: { id: 99 } };
+            let captured = null;
+            const res = {
+                status(code) { this._code = code; return this; },
+                json(body) { captured = { code: this._code, body }; return this; },
+            };
+            await controller.remove(req, res);
+            expect(captured.code).toBe(404);
+            expect(captured.body.message).toMatch(/not found/i);
+        } finally {
+            isMasterSpy.mockRestore();
+            getCompanyIdSpy.mockRestore();
+        }
+    });
+});

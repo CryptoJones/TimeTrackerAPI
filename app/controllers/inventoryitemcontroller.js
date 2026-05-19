@@ -91,8 +91,13 @@ exports.getById = async (req, res) => {
     const isMaster = await IsMaster(authKey);
     if (!isMaster) {
         const companyId = await GetCompanyId(authKey);
+        // Cross-tenant access is reported as 404, not 403 — otherwise
+        // a scoped caller can enumerate which InventoryItem ids are
+        // populated across the whole tenant table by status code.
+        // Same secure-404 pattern as #174 (company), #188 (billingtype),
+        // #192 (worker).
         if (companyId === -1 || inventoryItem.invitCompId !== companyId) {
-            return res.status(403).json({ message: "Invalid Authorization Key." });
+            return res.status(404).json({ message: "Not found." });
         }
     }
     return res.status(200).json({ message: "Found.", inventoryItem });
@@ -168,8 +173,9 @@ exports.update = async (req, res) => {
     const isMaster = await IsMaster(authKey);
     if (!isMaster) {
         const companyId = await GetCompanyId(authKey);
+        // Secure-404 on PATCH for the same reason as GET.
         if (companyId === -1 || inventoryItem.invitCompId !== companyId) {
-            return res.status(403).json({ message: "Invalid Authorization Key." });
+            return res.status(404).json({ message: "Not found." });
         }
     }
 
@@ -211,8 +217,9 @@ exports.remove = async (req, res) => {
     const isMaster = await IsMaster(authKey);
     if (!isMaster) {
         const companyId = await GetCompanyId(authKey);
+        // Secure-404 on DELETE for the same reason as GET / PATCH.
         if (companyId === -1 || inventoryItem.invitCompId !== companyId) {
-            return res.status(403).json({ message: "Invalid Authorization Key." });
+            return res.status(404).json({ message: "Not found." });
         }
     }
 
