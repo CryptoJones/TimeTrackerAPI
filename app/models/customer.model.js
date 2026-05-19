@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Aaron K. Clark
 'use strict';
 module.exports = (sequelize, Sequelize) => {
     const Customer = sequelize.define('Customer', {
