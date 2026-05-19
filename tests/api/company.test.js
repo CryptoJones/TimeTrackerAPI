@@ -76,6 +76,84 @@ describe('Company route mounting', () => {
     });
 });
 
+describe('Company tenant-enumeration defense (secure 404)', () => {
+    // Unit-level: exercise the controller's getById/update directly with
+    // a stub `res` and an explicit `Company` model whose findByPk
+    // returns the "exists but not yours" shape. Sidesteps the HTTP
+    // pipeline so we don't have to wire every upstream middleware
+    // through testing seams — the assertion is just about the response
+    // code the controller chose for the cross-tenant branch.
+    //
+    // Why test at this level
+    //   The HTTP-level mock used by the other tests in this file makes
+    //   `Company.findByPk` resolve to `null` by default, which the
+    //   controller short-circuits to a 404 BEFORE the cross-tenant
+    //   branch is reached. Driving findByPk to return a populated row
+    //   from the HTTP layer requires reaching deep into vitest module
+    //   state in a way that fights vi.mock's hoisting; the controller-
+    //   level test below pins the same behavioral guarantee much more
+    //   cleanly.
+
+    test('controller getById: existing-but-not-yours returns 404 to non-master', async () => {
+        // Use the exposed _internals seam (companycontroller.js:198).
+        // The controller's getById path uses IsMaster + GetCompanyId
+        // captured as module-locals; we can't rebind those across the
+        // ESM boundary, so we drive them indirectly by spying on
+        // auth.js's own exports — the helpers the captured locals point
+        // to.
+        const auth = require('../../app/middleware/auth.js');
+        const controller = require('../../app/controllers/companycontroller.js');
+        const isMasterSpy = vi.spyOn(auth, 'isMaster').mockResolvedValue(false);
+        const getCompanyIdSpy = vi.spyOn(auth, 'getCompanyId').mockResolvedValue(7);
+        try {
+            const db = require('../../app/config/db.config.js');
+            db.Company.findByPk = vi.fn().mockResolvedValue({ compId: 99, compArch: false });
+
+            const req = { get: (h) => (h === 'authKey' ? 'scoped-to-7' : undefined), params: { id: 99 } };
+            let captured = null;
+            const res = {
+                status(code) { this._code = code; return this; },
+                json(body) { captured = { code: this._code, body }; return this; },
+            };
+            await controller.getById(req, res);
+            expect(captured.code).toBe(404);
+            expect(captured.body.message).toMatch(/not found/i);
+        } finally {
+            isMasterSpy.mockRestore();
+            getCompanyIdSpy.mockRestore();
+        }
+    });
+
+    test('controller update: existing-but-not-yours returns 404 to non-master', async () => {
+        const auth = require('../../app/middleware/auth.js');
+        const controller = require('../../app/controllers/companycontroller.js');
+        const isMasterSpy = vi.spyOn(auth, 'isMaster').mockResolvedValue(false);
+        const getCompanyIdSpy = vi.spyOn(auth, 'getCompanyId').mockResolvedValue(7);
+        try {
+            const db = await import('../../app/config/db.config.js');
+            db.Company.findByPk = vi.fn().mockResolvedValue({
+                compId: 99, compArch: false, update: vi.fn(),
+            });
+            const req = {
+                get: (h) => (h === 'authKey' ? 'scoped-to-7' : undefined),
+                params: { id: 99 },
+                body: { compName: 'X' },
+            };
+            let captured = null;
+            const res = {
+                status(code) { this._code = code; return this; },
+                json(body) { captured = { code: this._code, body }; return this; },
+            };
+            await controller.update(req, res);
+            expect(captured.code).toBe(404);
+            expect(captured.body.message).toMatch(/not found/i);
+        } finally {
+            isMasterSpy.mockRestore();
+            getCompanyIdSpy.mockRestore();
+        }
+    });
+});
+
 describe('Company body validation', () => {
     test('POST rejects unknown field with 400', async () => {
         const res = await request(app)

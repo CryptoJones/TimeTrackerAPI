@@ -75,8 +75,15 @@ exports.getById = async (req, res) => {
     const isMaster = await IsMaster(authKey);
     if (!isMaster) {
         const companyId = await GetCompanyId(authKey);
+        // Cross-tenant access (caller's company doesn't match the
+        // looked-up company) is reported as 404, not 403. Returning
+        // 403 here would let a non-master caller enumerate which
+        // companies exist by probing IDs: 403 = "this company exists
+        // but isn't yours", 404 = "doesn't exist at all". Collapse
+        // both into 404 so the API doesn't leak the size of the
+        // tenant table to scoped keys.
         if (companyId === -1 || company.compId !== companyId) {
-            return res.status(403).json({ message: "Invalid Authorization Key." });
+            return res.status(404).json({ message: "Not found." });
         }
     }
     return res.status(200).json({ message: "Found.", company });
@@ -142,8 +149,11 @@ exports.update = async (req, res) => {
     const isMaster = await IsMaster(authKey);
     if (!isMaster) {
         const companyId = await GetCompanyId(authKey);
+        // Same secure-404 pattern as getById: don't let a non-master
+        // caller distinguish "this company exists but isn't yours"
+        // from "this id doesn't exist" by status code.
         if (companyId === -1 || company.compId !== companyId) {
-            return res.status(403).json({ message: "Invalid Authorization Key." });
+            return res.status(404).json({ message: "Not found." });
         }
     }
 
