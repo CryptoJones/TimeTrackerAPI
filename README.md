@@ -201,15 +201,28 @@ production). See `.env.example` for the canonical reference.
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `PORT` | `3000` | HTTP listen port. Use a non-privileged port (>1024). |
+| `NODE_ENV` | (unset) | Set to `production` to enable strict startup checks (e.g. refuse to start when `DB_PASSWORD` is empty). |
+| `PORT` | `3000` | HTTP listen port. Use a non-privileged port (>1024). `0` asks the kernel to pick a free port. |
 | `HOST` | `0.0.0.0` | Bind address. `127.0.0.1` for localhost-only. |
 | `CORS_ORIGIN` | (unset → disabled) | Comma-separated list of allowed origins, e.g. `https://app.example.com,https://admin.example.com`. Leave unset to disable cross-origin requests entirely. |
+| `TRUST_PROXY` | (unset → off) | When the API runs behind nginx/caddy/cloudflare, set to `true` (trust any proxy) or a hop count (`1`) so rate-limit and log IPs resolve to the real client. Never set when the API is directly internet-facing. |
 | `DB_HOST` | `localhost` | PostgreSQL host. |
 | `DB_PORT` | `5432` | PostgreSQL port. |
 | `DB_NAME` | `timetracker` | Database name. |
 | `DB_USER` | `timetracker` | Database user (must have access to the `dbo` schema). |
-| `DB_PASSWORD` | (empty) | Database password. **Required.** Setting it empty will cause connection failures and a startup warning. |
+| `DB_PASSWORD` | (empty) | Database password. **Required.** With `NODE_ENV=production` the server refuses to start on empty; in dev it warns and keeps going. |
+| `DB_LOG_QUERIES` | (unset → off) | Set to `1` to route Sequelize query logs through pino at debug level. Off by default so SQL + bound parameters (which include hashed `authKey` values) don't escape pino's redact paths. |
+| `LOG_LEVEL` | `info` | pino log level: `trace`/`debug`/`info`/`warn`/`error`/`fatal`/`silent`. |
+| `LOG_PRETTY` | (unset → JSON) | Set to `1` for human-readable colorized output via pino-pretty (dev only — leave unset in production so log shippers get the structured JSON they expect). |
+| `JSON_BODY_LIMIT` | `100kb` | Max request body size for `express.json()`. Accepts the same forms as the `bytes` module (e.g. `512kb`, `1mb`). Bumping is rarely needed — the largest schema-allowed body is well under the default. |
+| `HELMET_CSP` | (unset → off) | Set to `1` to re-enable helmet's Content-Security-Policy. Off by default because this is a JSON API and a misconfigured CSP would break Swagger UI at `/docs`. |
+| `RATE_LIMIT_MAX` | `100` | Per-key request budget for `/v1/*` in the rolling window. Set to `0` to disable rate limiting entirely (e.g. for load tests). |
+| `RATE_LIMIT_WINDOW_MS` | `900000` | Rolling rate-limit window in milliseconds (default 15 min). |
+| `METRICS_BEARER_TOKEN` | (unset → open) | When set, the Prometheus scrape at `/metrics` requires `Authorization: Bearer <token>`. Leave unset for a private-network deployment where the reverse proxy gates exposure. Constant-time compared. |
 | `PUBLIC_BASE_URL` | (unset) | Canonical `scheme://host` the API is publicly reachable at. Used as the base for absolute URLs in the RFC 5988 `Link` header (pagination next/prev/first/last). Pin in production so a client sending a malicious `Host` header can't get it echoed back. Unset = derive from `req.protocol` + `req.get('host')`. |
+| `SHUTDOWN_TIMEOUT_MS` | `25000` | How long the graceful-shutdown drain may run before the server force-exits with code 1 — set this under whatever your orchestrator's `SIGTERM`→`SIGKILL` window is (k8s default is 30s). |
+| `TLS_DOMAIN` | (unset) | Required for `docker-compose.tls.yml`. Domain Caddy provisions a Let's Encrypt cert for; `localhost` gives a self-signed cert via Caddy's internal CA. |
+| `TLS_EMAIL` | (unset) | Optional email forwarded to Let's Encrypt for cert-expiry notices. |
 
 `.env` is gitignored. Never commit a populated `.env`.
 
