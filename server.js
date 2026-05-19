@@ -49,11 +49,22 @@ app.use(pinoHttp({
     // a fresh one. The id lands on req.id, is echoed back on the
     // X-Request-Id response header, and is included in every log
     // line via pino-http's reqId binding.
+    //
+    // Validate the incoming value's character set, not just its
+    // length: Node's `res.setHeader` throws ERR_INVALID_CHAR on
+    // anything outside the printable-ASCII range (e.g. CR, LF, NUL),
+    // and a thrown setHeader inside pino-http's request hook
+    // crashes the request handler and surfaces as a 500. Limiting
+    // to printable ASCII [0x21..0x7e] (no spaces, no control chars)
+    // matches the W3C trace-id alphabet and the de-facto format used
+    // by every proxy / mesh / APM agent we'd be propagating from.
     genReqId: (req, res) => {
         const incoming = req.headers['x-request-id'];
-        const reqId = (typeof incoming === 'string' && incoming.length > 0 && incoming.length <= 128)
-            ? incoming
-            : crypto.randomUUID();
+        const valid = typeof incoming === 'string'
+            && incoming.length > 0
+            && incoming.length <= 128
+            && /^[\x21-\x7e]+$/.test(incoming);
+        const reqId = valid ? incoming : crypto.randomUUID();
         res.setHeader('X-Request-Id', reqId);
         return reqId;
     },
