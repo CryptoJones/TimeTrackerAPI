@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **`PORT=0` is honored instead of being silently coerced to 3000**
+  (#124). `server.js` resolved its listen port via
+  `parseInt(process.env.PORT, 10) || 3000`, which short-circuited on
+  the legitimate "kernel pick a free port" case because `0 || 3000`
+  evaluates to `3000`. `tests/api/server-boots.test.js` relied on
+  this exact behavior (port 0) to avoid colliding with whatever's
+  already on `:3000` on a dev box, so the smoke-test was failing on
+  `master` for any contributor with a busy 3000. Replaced the
+  falsy-fallback with an explicit `Number.isFinite(parsed) && parsed
+  >= 0` check so only `NaN` / negative `PORT` values fall back to
+  the default.
+
+### Changed
+- **Production hard-fails on empty `DB_PASSWORD`** (#119). Previously
+  a missing `DB_PASSWORD` in `NODE_ENV=production` would warn and
+  start anyway; `/healthz` reported degraded, but a load balancer
+  keyed purely off HTTP 200 from `/healthz` could still flip traffic
+  to a pod that couldn't reach its database. Now the process logs
+  to stderr and `process.exit(1)` immediately so systemd / k8s
+  catch the misconfiguration before traffic ever lands. Development
+  and test paths still warn-and-continue so the suite runs without
+  a real DB.
+- **`DB_PASSWORD` is documented as REQUIRED in production** (#120).
+  README + `.env.example` callouts updated to match the new
+  hard-fail behavior above; operators get the warning at config-edit
+  time, not just at first deploy.
+- **`pg` bumped 8.20.0 → 8.21.0** (#122). Patch-level dep refresh
+  in the `minor-and-patch` Dependabot group.
+
+### Added
+- **Real-PG integration coverage for the cascade auth helpers**
+  (#121, follow-up to #117). Six new test cases against
+  `postgres:16-alpine` for the four `getCompanyIdBy*` helpers in
+  `app/middleware/auth.js` (Customer, Job, PurchaseOrderVendor,
+  PurchaseOrderHeader cascades). Includes a regression-pin that
+  archiving an intermediate Customer drops a downstream Job's auth
+  scope to `-1` — the correct security outcome since the parent's
+  scope no longer applies. Auto-skips locally without a DB; runs on
+  every CI build.
+- **`npm run dev`** (#116). Uses Node's built-in `--watch` flag
+  (stable since Node 22; project pins `>=20`) to restart on changes
+  to `app/` and `server.js`. No new dev dependency. CONTRIBUTING.md
+  quick-start updated.
+
 ### Security
 - **Fixed an IPv6 rate-limit bypass**. The custom `keyByAuthKeyOrIp`
   rate-limit key generator was reading `req.ip` directly and
