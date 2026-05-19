@@ -92,6 +92,22 @@ describe('OpenAPI spec', () => {
         expect(err.required).toEqual(['message']);
     });
 
+    test('GET /v1/timeentry/bycompany/{id} 200 declares the {message, count, limit, offset, timeEntries} envelope', async () => {
+        // Parallel to the customer/bycompany declaration in #340.
+        // Pre-fix the spec said only `description: 'OK'`; SDK code-gen
+        // had no way to model the pagination envelope.
+        const res = await request(app).get('/openapi.json');
+        const r200 = res.body.paths['/v1/timeentry/bycompany/{id}'].get.responses['200'];
+        const schema = r200.content['application/json'].schema;
+        expect(schema.type).toBe('object');
+        expect(schema.properties.message.type).toBe('string');
+        expect(schema.properties.count.type).toBe('integer');
+        expect(schema.properties.limit.type).toBe('integer');
+        expect(schema.properties.offset.type).toBe('integer');
+        expect(schema.properties.timeEntries.type).toBe('array');
+        expect(schema.properties.timeEntries.items.$ref).toBe('#/components/schemas/TimeEntry');
+    });
+
     test('GET /v1/customer/bycompany/{id} 200 declares the {message, count, limit, offset, customers} envelope', async () => {
         // Paginated list endpoint — controller emits the same envelope
         // every list endpoint uses. Pre-fix the spec said only
