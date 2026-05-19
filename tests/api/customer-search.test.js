@@ -88,6 +88,39 @@ describe('GET /v1/customer/search query validation', () => {
     });
 });
 
+describe('escapeLikeWildcards helper', () => {
+    // Pinning the escape because Sequelize's Op.iLike does NOT
+    // auto-escape SQL LIKE metacharacters. A future helper rewrite
+    // that accidentally drops the escape on `%` would silently turn
+    // the substring search into a pattern search — same auth scope
+    // still applies, but the intent of "match substring q" breaks.
+    let escapeLikeWildcards;
+    beforeAll(async () => {
+        const ctrl = await import('../../app/controllers/customercontroller.js');
+        escapeLikeWildcards = ctrl._helpers.escapeLikeWildcards;
+    });
+    test('escapes the three LIKE metacharacters: %, _, backslash', () => {
+        expect(escapeLikeWildcards('%')).toBe('\\%');
+        expect(escapeLikeWildcards('_')).toBe('\\_');
+        expect(escapeLikeWildcards('\\')).toBe('\\\\');
+    });
+    test('leaves ordinary text alone', () => {
+        expect(escapeLikeWildcards('Acme Corp')).toBe('Acme Corp');
+        expect(escapeLikeWildcards('john.doe@example.com')).toBe('john.doe@example.com');
+    });
+    test('escapes multiple metacharacters in one string', () => {
+        expect(escapeLikeWildcards('100%_done')).toBe('100\\%\\_done');
+        expect(escapeLikeWildcards('path\\to\\file')).toBe('path\\\\to\\\\file');
+    });
+    test('coerces non-string to string before escaping (defensive)', () => {
+        // Schema validation already enforces string, but the helper
+        // defensively coerces so a runtime mis-call doesn't throw.
+        expect(escapeLikeWildcards(null)).toBe('null');
+        expect(escapeLikeWildcards(undefined)).toBe('undefined');
+        expect(escapeLikeWildcards(42)).toBe('42');
+    });
+});
+
 describe('GET /v1/customer/search route mounting', () => {
     test('route is mounted; not treated as /v1/customer/:id', async () => {
         // If the route ordering were wrong, "search" would be parsed as
