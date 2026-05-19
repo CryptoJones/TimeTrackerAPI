@@ -129,6 +129,27 @@ describe('OpenAPI spec', () => {
         }
     });
 
+    test('GET /v1/customer/search 200 declares the {message, q, companyId, count, limit, offset, customers} envelope', async () => {
+        // The spec already declares the full envelope for the search
+        // endpoint, but no test pinned the shape — a future "cleanup"
+        // that drops a field from the spec would silently regress the
+        // SDK code-gen output without CI catching it. Pin all seven
+        // properties + the Customer items ref so the contract stays
+        // stable.
+        const res = await request(app).get('/openapi.json');
+        const r200 = res.body.paths['/v1/customer/search'].get.responses['200'];
+        const schema = r200.content['application/json'].schema;
+        expect(schema.type).toBe('object');
+        expect(schema.properties.message.type).toBe('string');
+        expect(schema.properties.q.type).toBe('string');
+        expect(schema.properties.companyId.type).toBe('integer');
+        expect(schema.properties.count.type).toBe('integer');
+        expect(schema.properties.limit.type).toBe('integer');
+        expect(schema.properties.offset.type).toBe('integer');
+        expect(schema.properties.customers.type).toBe('array');
+        expect(schema.properties.customers.items.$ref).toBe('#/components/schemas/Customer');
+    });
+
     test('/v1/timeentry/{id} GET / PATCH / DELETE 200 declare their envelopes', async () => {
         // Same missing-content-schema pattern as #312 (customer GET),
         // #326 (timeentry POST), #340 (customer bycompany), #348
