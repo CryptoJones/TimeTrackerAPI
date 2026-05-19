@@ -91,7 +91,7 @@ node -e "require('fs').writeFileSync('/tmp/oas.json', JSON.stringify(require('./
 
 ## Requirements
 
-- **Node.js 18+** (tested on 20 and 22)
+- **Node.js 20+** (matches `engines.node` in `package.json`; CI tests against 20 and 22)
 - **PostgreSQL 14+**
 - A modern Linux distribution (any currently supported LTS — Ubuntu 22.04 / 24.04, Debian 12, RHEL 9, etc.)
 
