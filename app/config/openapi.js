@@ -843,20 +843,72 @@ const spec = {
                 summary: 'Get one time entry',
                 security: [{ authKey: [] }],
                 parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
-                responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } },
+                responses: {
+                    200: {
+                        description: 'Found — {message, timeEntry} envelope',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        message: { type: 'string' },
+                                        timeEntry: { $ref: '#/components/schemas/TimeEntry' },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    404: { description: 'Not found' },
+                    403: { description: 'Auth failure' },
+                },
             },
             patch: {
                 summary: 'Partial update of a time entry',
                 security: [{ authKey: [] }],
                 parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
                 requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/TimeEntry' } } } },
-                responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } },
+                responses: {
+                    200: {
+                        description: 'Updated — {message, timeEntry} envelope',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        message: { type: 'string' },
+                                        timeEntry: { $ref: '#/components/schemas/TimeEntry' },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    400: { description: 'No updatable fields supplied' },
+                    404: { description: 'Not found' },
+                    403: { description: 'Auth failure' },
+                },
             },
             delete: {
                 summary: 'Soft-delete a time entry',
                 security: [{ authKey: [] }],
                 parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
-                responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } },
+                responses: {
+                    200: {
+                        description: 'Archived — {message, id} envelope (id echoes the deleted row\'s teId)',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        message: { type: 'string' },
+                                        id: { type: 'integer' },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    404: { description: 'Not found' },
+                    403: { description: 'Auth failure' },
+                },
             },
         },
         '/v1/timeentry/export.csv': {

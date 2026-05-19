@@ -129,6 +129,35 @@ describe('OpenAPI spec', () => {
         }
     });
 
+    test('/v1/timeentry/{id} GET / PATCH / DELETE 200 declare their envelopes', async () => {
+        // Same missing-content-schema pattern as #312 (customer GET),
+        // #326 (timeentry POST), #340 (customer bycompany), #348
+        // (timeentry bycompany). The single-row endpoints
+        // historically had only `description: ...` on the 200s. Pin
+        // the controller-emitted envelopes:
+        //   GET   → {message, timeEntry}
+        //   PATCH → {message, timeEntry}
+        //   DELETE → {message, id} (no entity body — the row is archived)
+        const res = await request(app).get('/openapi.json');
+        const ops = res.body.paths['/v1/timeentry/{id}'];
+
+        const getSchema = ops.get.responses['200'].content['application/json'].schema;
+        expect(getSchema.properties.message.type).toBe('string');
+        expect(getSchema.properties.timeEntry.$ref).toBe('#/components/schemas/TimeEntry');
+
+        const patchSchema = ops.patch.responses['200'].content['application/json'].schema;
+        expect(patchSchema.properties.message.type).toBe('string');
+        expect(patchSchema.properties.timeEntry.$ref).toBe('#/components/schemas/TimeEntry');
+
+        const deleteSchema = ops.delete.responses['200'].content['application/json'].schema;
+        expect(deleteSchema.properties.message.type).toBe('string');
+        expect(deleteSchema.properties.id.type).toBe('integer');
+        // DELETE responds with the row's id, NOT the full entity —
+        // pin the absence so a future "echo the deleted row back"
+        // refactor surfaces here.
+        expect(deleteSchema.properties.timeEntry).toBeUndefined();
+    });
+
     test('GET /v1/timeentry/bycompany/{id} 200 declares the {message, count, limit, offset, timeEntries} envelope', async () => {
         // Parallel to the customer/bycompany declaration in #340.
         // Pre-fix the spec said only `description: 'OK'`; SDK code-gen
