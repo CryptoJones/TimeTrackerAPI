@@ -91,8 +91,13 @@ exports.getById = async (req, res) => {
     const isMaster = await IsMaster(authKey);
     if (!isMaster) {
         const companyId = await GetCompanyId(authKey);
+        // Cross-tenant access is reported as 404, not 403 — otherwise
+        // a scoped caller can enumerate which BillingType ids are
+        // populated across the whole tenant table by status code:
+        // 403 = "exists but not yours", 404 = "doesn't exist". Same
+        // secure-404 pattern landed for /v1/company in #174.
         if (companyId === -1 || billingType.btCompId !== companyId) {
-            return res.status(403).json({ message: "Invalid Authorization Key." });
+            return res.status(404).json({ message: "Not found." });
         }
     }
     return res.status(200).json({ message: "Found.", billingType });
@@ -168,8 +173,11 @@ exports.update = async (req, res) => {
     const isMaster = await IsMaster(authKey);
     if (!isMaster) {
         const companyId = await GetCompanyId(authKey);
+        // Secure-404 on PATCH for the same reason as GET — don't let
+        // a scoped caller distinguish "exists but not yours" from
+        // "doesn't exist".
         if (companyId === -1 || billingType.btCompId !== companyId) {
-            return res.status(403).json({ message: "Invalid Authorization Key." });
+            return res.status(404).json({ message: "Not found." });
         }
     }
 
@@ -211,8 +219,9 @@ exports.remove = async (req, res) => {
     const isMaster = await IsMaster(authKey);
     if (!isMaster) {
         const companyId = await GetCompanyId(authKey);
+        // Secure-404 on DELETE for the same reason as GET / PATCH.
         if (companyId === -1 || billingType.btCompId !== companyId) {
-            return res.status(403).json({ message: "Invalid Authorization Key." });
+            return res.status(404).json({ message: "Not found." });
         }
     }
 
