@@ -14,6 +14,7 @@ const TimeEntry = db.TimeEntry;
 // preserve the existing call sites in the controller body.
 const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
+const GetCompanyIdByCustomerId = auth.getCompanyIdByCustomerId;
 
 const ALLOWED_FIELDS_CREATE = [
     'teCustId', 'teDescription', 'teStartedAt', 'teEndedAt',
@@ -113,6 +114,27 @@ exports.create = async (req, res) => {
     }
     if (!payload.teStartedAt) {
         return res.status(400).json({ message: "teStartedAt is required (ISO 8601)." });
+    }
+    // Cross-tenant FK guard: non-master callers must own the customer
+    // they're attributing the entry to. Every other create handler with
+    // a cross-company FK does this (job, invoice, customerpayment,
+    // productentry, …); timeentry was the outlier — without this check,
+    // a non-master scoped to company 7 could send teCustId=13 where
+    // customer 13 lives in company 99, and the resulting row would
+    // carry teCompId=7 (forced below) + teCustId=13 (kept from body) —
+    // a permanent cross-tenant reference that listByCompany hides
+    // (filters teCompId only) but joins through the FK surface.
+    //
+    // Master keys skip this check by design (admin can write across
+    // tenants); the existing `isMaster` branch above already short-
+    // circuits.
+    if (!isMaster) {
+        const custCompanyId = await GetCompanyIdByCustomerId(payload.teCustId);
+        if (custCompanyId === -1 || custCompanyId !== companyId) {
+            return res.status(403).json({
+                message: "Cannot create a time entry for a customer in a company you do not belong to.",
+            });
+        }
     }
     payload.teCompId = companyId;
     payload.teArch = false;
@@ -485,4 +507,7 @@ exports.exportCsv = async (req, res) => {
 };
 
 // Exposed for unit testing.
-exports._internals = { computeMinutes, isInvertedRange, parseDateOrNull, IsMaster, GetCompanyId };
+exports._internals = {
+    computeMinutes, isInvertedRange, parseDateOrNull,
+    IsMaster, GetCompanyId, GetCompanyIdByCustomerId,
+};
