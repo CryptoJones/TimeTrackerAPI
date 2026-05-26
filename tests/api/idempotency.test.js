@@ -170,3 +170,57 @@ describe('Idempotency middleware: mounted on POST routes', () => {
         expect(res.status).not.toBe(400);
     });
 });
+
+
+describe('Idempotency middleware: bounded canonicalJson (DoS defense)', () => {
+    test('deeply nested body returns 400 — NOT 500', async () => {
+        // Construct a 5000-deep payload AS A RAW STRING. JSON.stringify
+        // itself recurses and overflows on deeply nested objects, so
+        // .send(nestedObject) can't even build the payload — supertest
+        // would throw client-side. Build the JSON text iteratively
+        // instead; express.json() parses iteratively (V8 ≥9) so the
+        // body still reaches req.body intact.
+        const depth = 5000;
+        let payload = '0';
+        for (let i = 0; i < depth; i++) payload = '{"a":' + payload + '}';
+
+        const res = await request(app)
+            .post('/v1/customer')
+            .set('authKey', 'any')
+            .set('Idempotency-Key', 'depth-test-001')
+            .set('Content-Type', 'application/json')
+            .send(payload);
+
+        // Pre-fix: 500 (RangeError from canonicalJson surfacing via
+        // the global error handler). Post-fix: 400. The specific 400
+        // body has code:'body_too_deep'; we don't insist on that exact
+        // shape (Express' own parser or a future express.json depth
+        // guard could also emit a different 400 body), only that
+        // we no longer 500.
+        expect(res.status).not.toBe(500);
+        expect(res.status).toBe(400);
+        if (res.body && res.body.code === 'body_too_deep') {
+            expect(res.body.message).toMatch(/nesting depth/i);
+        }
+    });
+
+    test('shallow body with Idempotency-Key still proceeds normally', async () => {
+        // Positive control: a normal body (any depth below the cap)
+        // does not 400. Whatever status the controller returns
+        // (likely 403 because of the empty ApiKey mock) is fine —
+        // we just want to prove the depth check didn't trip.
+        const res = await request(app)
+            .post('/v1/customer')
+            .set('authKey', 'any')
+            .set('Idempotency-Key', 'shallow-test-001')
+            .send({
+                custCompanyName: 'Acme',
+                custFName: 'Test',
+                custLName: 'User',
+            });
+        expect(res.status).not.toBe(400);
+        // Don't assert on body.code — the controller emits whatever
+        // it emits; we only care the depth check stayed silent.
+        expect(res.body && res.body.code).not.toBe('body_too_deep');
+    });
+});
