@@ -392,3 +392,124 @@ describe('TimeEntry tenant-enumeration defense (secure 404)', () => {
         }
     });
 });
+
+
+
+
+describe('POST /v1/timeentry tenant-scoped teCustId (cross-tenant FK)', () => {
+    // Bug regression: previously POST /v1/timeentry accepted any
+    // integer-shaped teCustId for a non-master caller, without
+    // checking that the referenced Customer belongs to the caller's
+    // company.
+    //
+    // Effect: a non-master scoped to company 7 could send
+    // `{ teCustId: 13 }` where customer 13 lives in company 99. The
+    // resulting TimeEntry row carried teCompId=7 (forced by the
+    // controller) and teCustId=13 (kept from the body) — a permanent
+    // cross-tenant reference. Listing TimeEntries by company hid the
+    // anomaly (filtered on teCompId) but any join through the FK or
+    // any operator-side report walking customer relations would
+    // surface customer 13 from company 99 inside company 7's view.
+    //
+    // Every other controller with a cross-company FK already did this
+    // check (job, invoice, customerpayment, productentry, …);
+    // timeentry was the outlier.
+    //
+    // These tests drive the controller through the db.config mock set
+    // at file-top, rather than vi.spyOn on the auth helpers, because
+    // the controller captures `IsMaster = auth.isMaster` at module
+    // load time — spy reassignment of `auth.isMaster` happens AFTER
+    // the closure already captured the original reference, so spying
+    // on auth.* doesn't reach the controller's call site. The db
+    // mock IS reached because auth.getDb() resolves each call.
+
+    function setupDb({ authKeyCompId, customerCompId, customerId, isMasterRow = null }) {
+        const db = require('../../app/config/db.config.js');
+        db.ApiMaster = { findOne: vi.fn().mockResolvedValue(isMasterRow) };
+        db.ApiKey = {
+            findOne: vi.fn().mockResolvedValue(
+                authKeyCompId == null ? null : { akCompanyId: authKeyCompId },
+            ),
+        };
+        db.Customer = db.Customer || {};
+        db.Customer.findByPk = vi.fn().mockImplementation((id) => {
+            if (Number(id) !== customerId) return Promise.resolve(null);
+            if (customerCompId === null) return Promise.resolve(null);
+            return Promise.resolve({ custCompId: customerCompId });
+        });
+        const createSpy = vi.fn().mockResolvedValue({ teId: 1 });
+        db.TimeEntry.create = createSpy;
+        return createSpy;
+    }
+
+    test('returns 403 when teCustId belongs to a different company', async () => {
+        const createSpy = setupDb({
+            authKeyCompId: 7,
+            customerCompId: 99,   // customer 13 lives in company 99
+            customerId: 13,
+        });
+        const res = await request(app)
+            .post('/v1/timeentry')
+            .set('authKey', 'scoped-to-7')
+            .send({
+                teCustId: 13,
+                teStartedAt: '2026-05-16T09:00:00Z',
+            });
+        expect(res.status).toBe(403);
+        expect(res.body.message).toMatch(/cannot create.*time entry|customer.*company you do not belong/i);
+        expect(createSpy).not.toHaveBeenCalled();
+    });
+
+    test('returns 403 when teCustId customer does not exist (archived or missing)', async () => {
+        const createSpy = setupDb({
+            authKeyCompId: 7,
+            customerCompId: null,
+            customerId: 9999,
+        });
+        const res = await request(app)
+            .post('/v1/timeentry')
+            .set('authKey', 'scoped-to-7')
+            .send({
+                teCustId: 9999,
+                teStartedAt: '2026-05-16T09:00:00Z',
+            });
+        expect(res.status).toBe(403);
+        expect(createSpy).not.toHaveBeenCalled();
+    });
+
+    test('returns 201 when teCustId belongs to the same company (positive control)', async () => {
+        const createSpy = setupDb({
+            authKeyCompId: 7,
+            customerCompId: 7,
+            customerId: 13,
+        });
+        const res = await request(app)
+            .post('/v1/timeentry')
+            .set('authKey', 'scoped-to-7')
+            .send({
+                teCustId: 13,
+                teStartedAt: '2026-05-16T09:00:00Z',
+            });
+        expect(res.status).toBe(201);
+        expect(createSpy).toHaveBeenCalledOnce();
+    });
+
+    test('master keys skip the customer-company check (admin can create cross-tenant)', async () => {
+        const createSpy = setupDb({
+            authKeyCompId: null,                  // master keys don't use ApiKey
+            isMasterRow: { amId: 1 },              // ApiMaster row exists
+            customerCompId: 99,                    // customer in some other company
+            customerId: 13,
+        });
+        const res = await request(app)
+            .post('/v1/timeentry')
+            .set('authKey', 'master-key')
+            .send({
+                teCompId: 7,
+                teCustId: 13,
+                teStartedAt: '2026-05-16T09:00:00Z',
+            });
+        expect(res.status).toBe(201);
+        expect(createSpy).toHaveBeenCalledOnce();
+    });
+});
