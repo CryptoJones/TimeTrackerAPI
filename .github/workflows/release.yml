@@ -98,10 +98,16 @@ jobs:
             cosign sign --yes "${tag%:*}@${DIGEST}"
           done
 
+      # Scan the source tree, not the pushed image: syft can't pull the
+      # freshly-pushed (private) GHCR image, and GHCR rejects the
+      # uppercase owner in `${{ github.repository }}` anyway. A source SBOM
+      # is what we want to ship. Non-fatal — a SBOM hiccup must never block
+      # the actual release.
       - name: Generate SBOM (SPDX)
         uses: anchore/sbom-action@v0
+        continue-on-error: true
         with:
-          image: ${{ env.REGISTRY }}/${{ github.repository }}@${{ steps.build.outputs.digest }}
+          path: "."
           format: spdx-json
           output-file: sbom.spdx.json
 
@@ -122,7 +128,7 @@ jobs:
         with:
           body_path: RELEASE_NOTES.md
           files: sbom.spdx.json
-          fail_on_unmatched_files: true
+          fail_on_unmatched_files: false
 
       # ---- Codeberg mirror (opt-in) ----
       # Inert until you set repo variable ENABLE_CODEBERG_MIRROR=true and add

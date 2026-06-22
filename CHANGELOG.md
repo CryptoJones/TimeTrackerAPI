@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **`release.yml` SBOM step** now scans the source tree (`path: .`)
+  instead of the pushed image, and is non-fatal. On the v1.0.0 run syft
+  failed trying to pull the freshly-pushed private GHCR image (and the
+  image ref carried the uppercase owner, which GHCR rejects), which
+  skipped the GitHub Release step. The release is now resilient to a SBOM
+  hiccup; v1.0.0's image shipped + was signed, and its Release was
+  created manually.
+
 ## [1.0.0] - 2026-06-22
 
 First tagged release. The entries below cover the full port from the
