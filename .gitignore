@@ -18,6 +18,12 @@ build/
 coverage/
 .nyc_output/
 
+# Database exports / dumps — may contain real data; never commit
+*.bacpac
+*.dacpac
+*.bak
+*.dump
+
 # Editor / OS noise
 .DS_Store
 .idea/

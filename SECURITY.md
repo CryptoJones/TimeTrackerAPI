@@ -66,6 +66,20 @@ Please include in your report:
   upstream and don't have a fix available — please report those
   upstream and link us to the tracking issue.
 
+## Known dependency advisories (accepted)
+
+We track these against our production dependency tree and have judged
+them low-risk for this project:
+
+- **`uuid` < 11.1.1 — GHSA-w5hq-g745-h8pq (moderate).** Reached only
+  transitively through Sequelize's internal identifier handling; the
+  API never passes user-controlled input to the affected `uuid` code
+  path. The only `npm audit fix` available is a breaking Sequelize
+  major change, so we wait for Sequelize to bump `uuid` upstream. Our
+  CI `npm audit` gate runs at `--audit-level=high --omit=dev`, so this
+  moderate advisory does not gate releases; we'll clear it when the
+  upstream fix lands.
+
 ## Public disclosure timeline
 
 Once a fix has landed on `master` and an advisory has been published,
