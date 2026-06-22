@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-06-22
+
+First tagged release. The entries below cover the full port from the
+original SQL Server database to this Node.js + PostgreSQL API.
+
 ### Fixed
 - **`PORT=0` is honored instead of being silently coerced to 3000**
   (#124). `server.js` resolved its listen port via
@@ -72,6 +77,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   helper, which normalizes IPv6 to a /64 prefix. Authenticated
   keying (sha256 of the authKey header) is unchanged. **Operators
   on previous releases should upgrade.**
+- **`form-data` bumped 4.0.5 → 4.0.6** (GHSA-fjxv-7rqg-78g4, dev-only
+  via `supertest`), clearing the only HIGH `npm audit` finding. The
+  residual moderate `uuid` < 11.1.1 advisory (transitive via Sequelize,
+  not reachable with user-controlled input, no non-breaking fix) is
+  documented as accepted in `SECURITY.md`; the CI `npm audit` gate runs
+  at `--audit-level=high --omit=dev`, so it does not block releases.
+- **Database exports are gitignored** (`*.bacpac`, `*.dacpac`, `*.bak`,
+  `*.dump`) so a schema/data dump containing real records can't be
+  committed by accident.
 
 ### Removed
 - **Unused production dependencies**: `express-asyncify` and
@@ -358,5 +372,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   middleware boundary.
 
 ---
+
+[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/CryptoJones/TimeTrackerAPI/releases/tag/v1.0.0
 
 Proudly Made in Nebraska. Go Big Red! 🌽 https://xkcd.com/2347/
