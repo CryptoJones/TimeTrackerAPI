@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-06-22
+
+### Added
+- **`GET /v1/report/invoice-list` (+ `.csv`)** — a reporting endpoint that
+  restores the source database's `v_InvoiceList` view, which had no API
+  surface. One row per invoice line (Invoices × Customers × InvoiceJobs):
+  `invoiceDate`, `invoiceNumber`, `invoiceAmount`, `customerId`.
+  Company-scoped (master keys pass `companyId`; non-master keys are
+  auto-scoped at the Customer leaf), paginated via the Link header, with
+  an optional `customerId` filter. The `.csv` variant mirrors the other
+  export endpoints (5000-row cap, `# truncated` comment, OWASP
+  formula-injection guard). New `reportcontroller.js` +
+  `report.schema.js`; OpenAPI + README updated; +14 tests.
+
 ## [1.0.1] - 2026-06-22
 
 ### Added
@@ -398,7 +412,8 @@ original SQL Server database to this Node.js + PostgreSQL API.
 
 ---
 
-[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/CryptoJones/TimeTrackerAPI/releases/tag/v1.0.0
 

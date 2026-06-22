@@ -962,6 +962,73 @@ const spec = {
                 },
             },
         },
+        '/v1/report/invoice-list': {
+            get: {
+                summary: 'Invoice list report (restores the v_InvoiceList view)',
+                description:
+                    'Read-only projection joining Invoices × Customers × ' +
+                    'InvoiceJobs: one row per invoice line carrying the invoice ' +
+                    'date/number, the line amount, and the customer id. ' +
+                    'Company-scoped (master keys must pass companyId); paginated ' +
+                    'via the Link header. Optional customerId narrows the report.',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys.' },
+                    { name: 'customerId', in: 'query', schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer', default: 100, maximum: 500 } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+                ],
+                responses: {
+                    200: {
+                        description: 'Invoice-list rows',
+                        content: { 'application/json': { schema: {
+                            type: 'object',
+                            properties: {
+                                message: { type: 'string' },
+                                count: { type: 'integer' },
+                                limit: { type: 'integer' },
+                                offset: { type: 'integer' },
+                                invoiceList: {
+                                    type: 'array',
+                                    items: {
+                                        type: 'object',
+                                        properties: {
+                                            invoiceDate: { type: 'string', format: 'date', nullable: true },
+                                            invoiceNumber: { type: 'integer' },
+                                            invoiceAmount: { type: 'number' },
+                                            customerId: { type: 'integer' },
+                                        },
+                                    },
+                                },
+                            },
+                        } } },
+                    },
+                    400: { description: 'Master without companyId' },
+                    403: { description: 'Missing authKey or cross-tenant attempt' },
+                },
+            },
+        },
+        '/v1/report/invoice-list.csv': {
+            get: {
+                summary: 'Invoice list report as CSV',
+                description:
+                    'Same projection as /v1/report/invoice-list, returned as a ' +
+                    'text/csv attachment. 5000-row hard cap with a trailing ' +
+                    '`# truncated…` comment row; OWASP formula-injection guarded.',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys.' },
+                    { name: 'customerId', in: 'query', schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer', default: 5000, maximum: 5000 } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+                ],
+                responses: {
+                    200: { description: 'CSV body', content: { 'text/csv': { schema: { type: 'string' } } } },
+                    400: { description: 'Master without companyId' },
+                    403: { description: 'Missing authKey or cross-tenant attempt' },
+                },
+            },
+        },
         '/v1/timeentry/bycompany/{id}': {
             get: {
                 summary: 'List time entries for a company',

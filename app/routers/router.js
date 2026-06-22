@@ -25,6 +25,7 @@ const purchaseOrderVendor = require('../controllers/purchaseordervendorcontrolle
 const purchaseOrderHeader = require('../controllers/purchaseorderheadercontroller.js');
 const purchaseOrderLine = require('../controllers/purchaseorderlinecontroller.js');
 const inventoryTransaction = require('../controllers/inventorytransactioncontroller.js');
+const report = require('../controllers/reportcontroller.js');
 const whoami = require('../controllers/whoamicontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
@@ -44,6 +45,7 @@ const purchaseOrderVendorSchemas = require('../schemas/purchaseordervendor.schem
 const purchaseOrderHeaderSchemas = require('../schemas/purchaseorderheader.schema.js');
 const purchaseOrderLineSchemas = require('../schemas/purchaseorderline.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
+const reportSchemas = require('../schemas/report.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
 // of the API process and reachability of the database.
@@ -171,6 +173,20 @@ router.delete(
     '/v1/timeentry/:id',
     v.params(timeEntrySchemas.intIdParam),
     timeEntry.remove,
+);
+
+// v1 reporting routes — read-only projections across domain tables.
+// The `.csv` variant is declared before the bare path so express
+// doesn't fold the suffix into the preceding match.
+router.get(
+    '/v1/report/invoice-list.csv',
+    v.query(reportSchemas.invoiceListCsvQuery),
+    report.invoiceListCsv,
+);
+router.get(
+    '/v1/report/invoice-list',
+    v.query(reportSchemas.invoiceListQuery),
+    report.invoiceList,
 );
 
 // v1 worker routes.
