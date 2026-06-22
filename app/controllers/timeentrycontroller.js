@@ -15,14 +15,47 @@ const TimeEntry = db.TimeEntry;
 const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
 const GetCompanyIdByCustomerId = auth.getCompanyIdByCustomerId;
+const GetCompanyIdByJobId = auth.getCompanyIdByJobId;
+const GetCompanyIdByWorkerId = auth.getCompanyIdByWorkerId;
+const GetCompanyIdByBillingTypeId = auth.getCompanyIdByBillingTypeId;
 
 const ALLOWED_FIELDS_CREATE = [
     'teCustId', 'teDescription', 'teStartedAt', 'teEndedAt',
-    'teBillable',
+    'teBillable', 'teJobId', 'teWorkerId', 'teBillTypeId',
 ];
 const ALLOWED_FIELDS_UPDATE = [
     'teDescription', 'teStartedAt', 'teEndedAt', 'teBillable',
+    'teJobId', 'teWorkerId', 'teBillTypeId',
 ];
+
+// Optional restored FKs and the helper that resolves each to its
+// owning company. A non-master caller may only attach a job / worker /
+// billing-type that belongs to their own company; master keys skip the
+// check (admin writes across tenants). Mirrors the teCustId guard.
+const SCOPED_FKS = [
+    ['teJobId', GetCompanyIdByJobId, 'job'],
+    ['teWorkerId', GetCompanyIdByWorkerId, 'worker'],
+    ['teBillTypeId', GetCompanyIdByBillingTypeId, 'billing type'],
+];
+
+/**
+ * Validate the optional restored FKs on a write payload against the
+ * caller's company. Returns an error message string for the first
+ * out-of-scope reference, or null when all present FKs are in scope
+ * (or absent). `null` values are treated as "absent" (a PATCH may
+ * detach an FK by setting it null).
+ */
+async function scopedFkError(payload, companyId) {
+    for (const [field, resolver, label] of SCOPED_FKS) {
+        const val = payload[field];
+        if (val === undefined || val === null) continue;
+        const owner = await resolver(val);
+        if (owner === -1 || owner !== companyId) {
+            return `Cannot reference a ${label} in a company you do not belong to.`;
+        }
+    }
+    return null;
+}
 
 function computeMinutes(startedAt, endedAt) {
     if (!startedAt || !endedAt) return null;
@@ -134,6 +167,11 @@ exports.create = async (req, res) => {
             return res.status(403).json({
                 message: "Cannot create a time entry for a customer in a company you do not belong to.",
             });
+        }
+        // Same cross-tenant guard for the optional job/worker/billtype FKs.
+        const fkError = await scopedFkError(payload, companyId);
+        if (fkError) {
+            return res.status(403).json({ message: fkError });
         }
     }
     payload.teCompId = companyId;
@@ -291,10 +329,11 @@ exports.update = async (req, res) => {
     }
 
     const isMaster = await IsMaster(authKey);
+    let callerCompanyId = -1;
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        callerCompanyId = await GetCompanyId(authKey);
         // Secure-404 on PATCH for the same reason as GET.
-        if (companyId === -1 || entry.teCompId !== companyId) {
+        if (callerCompanyId === -1 || entry.teCompId !== callerCompanyId) {
             return res.status(404).json({ message: "Not found." });
         }
     }
@@ -306,6 +345,14 @@ exports.update = async (req, res) => {
     }
     if (Object.keys(updates).length === 0) {
         return res.status(400).json({ message: "No updatable fields supplied." });
+    }
+    // Cross-tenant guard on any job/worker/billtype FK being set (a null
+    // detaches and is allowed). Master keys may reassign across tenants.
+    if (!isMaster) {
+        const fkError = await scopedFkError(updates, callerCompanyId);
+        if (fkError) {
+            return res.status(403).json({ message: fkError });
+        }
     }
     // Recompute minutes if either bound changed.
     if (updates.teStartedAt !== undefined || updates.teEndedAt !== undefined) {
@@ -484,6 +531,9 @@ exports.exportCsv = async (req, res) => {
         'teId', 'teCustId', 'teCompId',
         'teStartedAt', 'teEndedAt', 'teMinutes',
         'teBillable', 'teDescription',
+        // Restored relationships, appended so existing column order is
+        // stable for current consumers.
+        'teJobId', 'teWorkerId', 'teBillTypeId',
     ];
     // CSV-formula-injection mitigation lives in the shared helper —
     // see app/controllers/_csv-escape.js. Both export endpoints
@@ -510,4 +560,6 @@ exports.exportCsv = async (req, res) => {
 exports._internals = {
     computeMinutes, isInvertedRange, parseDateOrNull,
     IsMaster, GetCompanyId, GetCompanyIdByCustomerId,
+    GetCompanyIdByJobId, GetCompanyIdByWorkerId, GetCompanyIdByBillingTypeId,
+    scopedFkError,
 };

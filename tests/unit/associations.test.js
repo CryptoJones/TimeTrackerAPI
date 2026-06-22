@@ -99,3 +99,21 @@ describe('association graph: Worker.defaultBillingType', () => {
         assertAssoc('Worker', 'BelongsTo', 'workerDefaultBillType', 'BillingType');
     });
 });
+
+describe('association graph: TimeEntry restored relationships', () => {
+    test.each([
+        ['Job',         'teJobId'],
+        ['Worker',      'teWorkerId'],
+        ['BillingType', 'teBillTypeId'],
+    ])('TimeEntry belongsTo %s via %s', (target, fk) => {
+        assertAssoc('TimeEntry', 'BelongsTo', fk, target);
+    });
+
+    test.each([
+        ['Job',         'teJobId'],
+        ['Worker',      'teWorkerId'],
+        ['BillingType', 'teBillTypeId'],
+    ])('%s hasMany TimeEntry via %s', (owner, fk) => {
+        assertAssoc(owner, 'HasMany', fk, 'TimeEntry');
+    });
+});

@@ -117,6 +117,17 @@ db.CustomerPayment.belongsTo(db.Customer, { foreignKey: 'cpayCustId', as: 'custo
 db.BillingType.hasMany(db.Worker,    { foreignKey: 'workerDefaultBillType', as: 'workersWithDefault' });
 db.Worker.belongsTo(db.BillingType,  { foreignKey: 'workerDefaultBillType', as: 'defaultBillingType' });
 
+// TimeEntry → Job / Worker / BillingType. Restored from the original
+// TimerEntries table: time is logged against a job, by a worker, at a
+// billing rate — the bridge that reconnects time to the
+// Job → InvoiceJob → Invoice chain. All three FKs are nullable.
+db.Job.hasMany(db.TimeEntry,         { foreignKey: 'teJobId',      as: 'timeEntries' });
+db.TimeEntry.belongsTo(db.Job,       { foreignKey: 'teJobId',      as: 'job' });
+db.Worker.hasMany(db.TimeEntry,      { foreignKey: 'teWorkerId',   as: 'timeEntries' });
+db.TimeEntry.belongsTo(db.Worker,    { foreignKey: 'teWorkerId',   as: 'worker' });
+db.BillingType.hasMany(db.TimeEntry, { foreignKey: 'teBillTypeId', as: 'timeEntries' });
+db.TimeEntry.belongsTo(db.BillingType, { foreignKey: 'teBillTypeId', as: 'billingType' });
+
 // Job has lines (InvoiceJob) and product entries.
 db.Job.hasMany(db.InvoiceJob,      { foreignKey: 'injbJobId', as: 'invoiceLines' });
 db.Job.hasMany(db.ProductEntry,    { foreignKey: 'pentJobId', as: 'productEntries' });

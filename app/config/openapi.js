@@ -304,6 +304,18 @@ const timeEntrySchema = {
         teEndedAt: { type: 'string', format: 'date-time', nullable: true },
         teMinutes: { type: 'integer', nullable: true, readOnly: true },
         teBillable: { type: 'boolean', default: true },
+        teJobId: {
+            type: 'integer', nullable: true,
+            description: 'Optional Job this time was worked against. Reconnects time to the Job → InvoiceJob → Invoice chain. Scoped to the caller\'s company.',
+        },
+        teWorkerId: {
+            type: 'integer', nullable: true,
+            description: 'Optional Worker who performed the work. Scoped to the caller\'s company.',
+        },
+        teBillTypeId: {
+            type: 'integer', nullable: true,
+            description: 'Optional BillingType (rate) for this time. Scoped to the caller\'s company.',
+        },
         teArch: { type: 'boolean', readOnly: true },
     },
 };

@@ -130,6 +130,44 @@ describe('POST /v1/timeentry body validation', () => {
             });
         expect(res.status).not.toBe(400);
     });
+
+    test('accepts the restored teJobId/teWorkerId/teBillTypeId fields', async () => {
+        // The new optional FKs must be whitelisted by the strict schema:
+        // a body carrying them should pass validation (and only then be
+        // stopped by auth), not 400 as an unexpected field.
+        const res = await request(app)
+            .post('/v1/timeentry')
+            .send({
+                teCustId: 1,
+                teStartedAt: '2026-05-16T09:00:00Z',
+                teJobId: 5,
+                teWorkerId: 6,
+                teBillTypeId: 7,
+            });
+        expect(res.status).not.toBe(400);
+    });
+
+    test('rejects a non-positive teJobId', async () => {
+        const res = await request(app)
+            .post('/v1/timeentry')
+            .send({
+                teCustId: 1,
+                teStartedAt: '2026-05-16T09:00:00Z',
+                teJobId: -1,
+            });
+        expect(res.status).toBe(400);
+    });
+
+    test('rejects a non-integer teWorkerId', async () => {
+        const res = await request(app)
+            .post('/v1/timeentry')
+            .send({
+                teCustId: 1,
+                teStartedAt: '2026-05-16T09:00:00Z',
+                teWorkerId: 'abc',
+            });
+        expect(res.status).toBe(400);
+    });
 });
 
 describe('PATCH /v1/timeentry/:id body validation', () => {

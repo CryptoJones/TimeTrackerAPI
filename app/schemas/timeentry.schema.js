@@ -35,8 +35,13 @@ const createTimeEntryBody = z.object({
     teStartedAt: isoDatetime,
     teEndedAt: isoDatetime.optional(),
     teBillable: z.boolean().optional(),
+    // Optional restored relationships — the controller scopes each to
+    // the caller's company when present (non-master keys).
+    teJobId: z.coerce.number().int().positive().optional(),
+    teWorkerId: z.coerce.number().int().positive().optional(),
+    teBillTypeId: z.coerce.number().int().positive().optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: teCustId, teCompId, teDescription, teStartedAt, teEndedAt, teBillable.',
+    message: 'Unexpected field in body. Whitelist: teCustId, teCompId, teDescription, teStartedAt, teEndedAt, teBillable, teJobId, teWorkerId, teBillTypeId.',
 }).refine(
     (data) => !data.teEndedAt || new Date(data.teEndedAt) >= new Date(data.teStartedAt),
     {
@@ -63,8 +68,12 @@ const updateTimeEntryBody = z.object({
     teStartedAt: isoDatetime.optional(),
     teEndedAt: isoDatetime.nullable().optional(),
     teBillable: z.boolean().optional(),
+    // Nullable so a PATCH can detach a job/worker/rate (set to null).
+    teJobId: z.coerce.number().int().positive().nullable().optional(),
+    teWorkerId: z.coerce.number().int().positive().nullable().optional(),
+    teBillTypeId: z.coerce.number().int().positive().nullable().optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: teDescription, teStartedAt, teEndedAt, teBillable.',
+    message: 'Unexpected field in body. Whitelist: teDescription, teStartedAt, teEndedAt, teBillable, teJobId, teWorkerId, teBillTypeId.',
 }).refine(
     (data) => !(data.teStartedAt && data.teEndedAt) ||
         new Date(data.teEndedAt) >= new Date(data.teStartedAt),

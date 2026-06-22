@@ -58,6 +58,21 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.BOOLEAN,
             defaultValue: true,
         },
+        // Restored relationships from the original TimerEntries table.
+        // Nullable: legacy rows and minimal create payloads have no
+        // job/worker/rate. Associations are wired in db.config.js.
+        teJobId: {
+            field: 'teJobId',
+            type: Sequelize.INTEGER,
+        },
+        teWorkerId: {
+            field: 'teWorkerId',
+            type: Sequelize.INTEGER,
+        },
+        teBillTypeId: {
+            field: 'teBillTypeId',
+            type: Sequelize.INTEGER,
+        },
         teArch: {
             field: 'teArch',
             type: Sequelize.BOOLEAN,

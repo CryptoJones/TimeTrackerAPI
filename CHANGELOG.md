@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-06-22
+
+### Added
+- **Restored the `TimeEntry` → Job / Worker / BillingType relationships**
+  that the original SQL Server `TimerEntries` table carried and the Node
+  redesign had dropped. Three **nullable, additive** FKs — `teJobId`,
+  `teWorkerId`, `teBillTypeId` — reconnect time to the
+  Job → InvoiceJob → Invoice chain and make the previously-orphaned
+  Worker and BillingType entities meaningful. Wired through the migration,
+  model + Sequelize associations, the create/update Zod schemas, the
+  controller (each FK is company-scoped on write for non-master keys,
+  mirroring the `teCustId` guard), the OpenAPI spec, and the CSV export
+  (three columns appended). Existing rows and payloads are unaffected.
+  Discovered by diffing the repo's `TimeTracker.bacpac` against the
+  models. No automatic billing-amount computation — relationships only.
+
 ### Fixed
 - **`release.yml` SBOM step** now scans the source tree (`path: .`)
   instead of the pushed image, and is non-fatal. On the v1.0.0 run syft
@@ -382,7 +398,8 @@ original SQL Server database to this Node.js + PostgreSQL API.
 
 ---
 
-[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/CryptoJones/TimeTrackerAPI/releases/tag/v1.0.0
 
 Proudly Made in Nebraska. Go Big Red! 🌽 https://xkcd.com/2347/

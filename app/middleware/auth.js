@@ -242,6 +242,48 @@ async function getCompanyIdByJobId(jobId) {
 }
 
 /**
+ * Resolve a worker id to its owning company id. Worker scopes directly
+ * via workerCompId. Used by TimeEntry's optional teWorkerId FK guard so
+ * a scoped caller can't attribute time to another company's worker.
+ */
+async function getCompanyIdByWorkerId(workerId) {
+    const idStr = workerId == null ? '' : String(workerId);
+    if (idStr.length === 0 || idStr === '0') return -1;
+    try {
+        const row = await getDb().Worker.findByPk(workerId, {
+            attributes: ['workerCompId'],
+        });
+        if (!row) return -1;
+        const cid = row.workerCompId;
+        return typeof cid === 'number' && cid > 0 ? cid : -1;
+    } catch (error) {
+        log.error({ err: error }, 'auth.getCompanyIdByWorkerId query failed');
+        return -1;
+    }
+}
+
+/**
+ * Resolve a billing-type id to its owning company id. BillingType
+ * scopes directly via btCompId. Used by TimeEntry's optional
+ * teBillTypeId FK guard.
+ */
+async function getCompanyIdByBillingTypeId(btId) {
+    const idStr = btId == null ? '' : String(btId);
+    if (idStr.length === 0 || idStr === '0') return -1;
+    try {
+        const row = await getDb().BillingType.findByPk(btId, {
+            attributes: ['btCompId'],
+        });
+        if (!row) return -1;
+        const cid = row.btCompId;
+        return typeof cid === 'number' && cid > 0 ? cid : -1;
+    } catch (error) {
+        log.error({ err: error }, 'auth.getCompanyIdByBillingTypeId query failed');
+        return -1;
+    }
+}
+
+/**
  * Express middleware: ensures the authKey header is present and
  * stashes it on req.authKey. Does NOT validate the key against the
  * database — leaves that to controllers that may have different
@@ -339,6 +381,8 @@ module.exports = {
     getCompanyIdByJobId,
     getCompanyIdByPovId,
     getCompanyIdByPohId,
+    getCompanyIdByWorkerId,
+    getCompanyIdByBillingTypeId,
     requireAuthKey,
     attachAuth,
     requireAuth,
