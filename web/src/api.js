@@ -77,3 +77,8 @@ export const createCustomer = (data) => api('/v1/customer', { method: 'POST', bo
 // --- jobs ---
 export const listJobs = (custId) => api(`/v1/job/bycustomer/${custId}`);
 export const createJob = (data) => api('/v1/job', { method: 'POST', body: data });
+
+// --- time entries ---
+export const listTimeEntries = (companyId, query = '') =>
+    api(`/v1/timeentry/bycompany/${companyId}${query}`);
+export const createTimeEntry = (data) => api('/v1/timeentry', { method: 'POST', body: data });

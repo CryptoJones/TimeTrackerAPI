@@ -7,6 +7,7 @@ import Signup from './pages/Signup.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Clients from './pages/Clients.jsx';
 import CustomerDetail from './pages/CustomerDetail.jsx';
+import TimeTracking from './pages/TimeTracking.jsx';
 
 function Protected({ children }) {
     const { user, loading } = useAuth();
@@ -23,6 +24,7 @@ function Header() {
             <Link to="/" className="brand">⏱ TimeTracker</Link>
             <nav className="nav">
                 <NavLink to="/" end>Dashboard</NavLink>
+                <NavLink to="/time">Time</NavLink>
                 <NavLink to="/clients">Clients</NavLink>
             </nav>
             <div className="spacer" />
@@ -43,6 +45,7 @@ export default function App() {
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />
                     <Route path="/" element={<Protected><Dashboard /></Protected>} />
+                    <Route path="/time" element={<Protected><TimeTracking /></Protected>} />
                     <Route path="/clients" element={<Protected><Clients /></Protected>} />
                     <Route path="/clients/:id" element={<Protected><CustomerDetail /></Protected>} />
                     <Route path="*" element={<Navigate to="/" replace />} />

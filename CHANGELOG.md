@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.12] - 2026-06-22
+
+### Added
+- **web: Time tracking.** Log time against a client (and optionally a job)
+  with a manual date + start/end form, and see a recent-entries table with
+  durations. Wired to `POST /v1/timeentry` and
+  `/v1/timeentry/bycompany`. Client→job selects cascade; billable toggle.
+  Builds clean.
+
 ## [1.0.11] - 2026-06-22
 
 ### Added
@@ -546,7 +555,8 @@ original SQL Server database to this Node.js + PostgreSQL API.
 
 ---
 
-[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.11...HEAD
+[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.12...HEAD
+[1.0.12]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.11...v1.0.12
 [1.0.11]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.10...v1.0.11
 [1.0.10]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.9...v1.0.10
 [1.0.9]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.8...v1.0.9

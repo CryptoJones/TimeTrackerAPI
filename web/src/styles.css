@@ -83,3 +83,11 @@ button.ghost:hover { background: #20242d; }
 .table th { color: var(--muted); font-weight: 600; font-size: 13px; }
 .table tr:hover td { background: #14171d; }
 .table a { color: var(--accent-2); text-decoration: none; }
+
+select {
+    padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);
+    background: #0d0f13; color: var(--text); font-size: 15px;
+}
+select:focus { outline: 2px solid var(--accent-2); border-color: transparent; }
+label.inline { flex-direction: row; align-items: center; gap: 6px; color: var(--text); font-size: 14px; }
+label.inline input { flex: 0 0 auto; }
