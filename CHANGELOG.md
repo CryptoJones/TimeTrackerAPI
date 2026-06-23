@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-06-22
+
+### Added
+- **`POST /v1/invoice/:id/payment`** — record a full or partial payment
+  against an invoice (`{ amount, date?, description? }`). Writes a
+  `CustomerPayment` linked to the invoice (`cpayInvId`) inside a
+  transaction, then recomputes and persists the invoice's status
+  (`partial`/`paid`) and `invPaid` mirror from the full payment set.
+  Overpayment is allowed (drives the balance negative — a credit).
+  Idempotent via the global Idempotency-Key layer. Company-scoped with
+  the same secure-404 as the other invoice routes. Covered by money-module
+  unit tests, schema/403 controller tests, and a real-Postgres integration
+  test for the full draft→partial→paid balance flow.
+
 ## [1.0.3] - 2026-06-22
 
 ### Added
@@ -427,7 +441,8 @@ original SQL Server database to this Node.js + PostgreSQL API.
 
 ---
 
-[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.0...v1.0.1

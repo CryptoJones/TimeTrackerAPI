@@ -161,6 +161,8 @@ const invoiceSchema = {
         invDate: { type: 'string', format: 'date' },
         invDueDate: { type: 'string', format: 'date' },
         invPaid: { type: 'boolean' },
+        invStatus: { type: 'string', enum: ['draft', 'sent', 'partial', 'paid', 'void'], description: 'Payment-state source of truth.' },
+        invBalanceForwardFrom: { type: 'integer', nullable: true, description: 'Predecessor invoice when this one carries a brought-forward balance.' },
         invArch: { type: 'boolean', readOnly: true },
     },
 };
@@ -1318,8 +1320,43 @@ const spec = {
                 },
             },
         },
+        '/v1/invoice/{id}/payment': {
+            post: {
+                summary: 'Record a full or partial payment against an invoice',
+                description:
+                    'Writes a payment linked to this invoice and recomputes its ' +
+                    'status + balance. Overpayment is allowed (drives the balance ' +
+                    'negative — a credit). Idempotent via Idempotency-Key.',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    idempotencyKeyHeader,
+                ],
+                requestBody: {
+                    required: true,
+                    content: { 'application/json': { schema: {
+                        type: 'object',
+                        required: ['amount'],
+                        properties: {
+                            amount: { type: 'number', exclusiveMinimum: 0, description: 'Payment amount (positive).' },
+                            date: { type: 'string', format: 'date', description: 'Defaults to today if omitted.' },
+                            description: { type: 'string', maxLength: 10000 },
+                        },
+                    } } },
+                },
+                responses: {
+                    201: {
+                        description: 'Payment recorded; returns the payment + recomputed total/paid/balance/status',
+                        headers: idempotencyReplayResponseHeader,
+                    },
+                    400: { description: 'Missing/invalid amount' },
+                    404: { description: 'Not found (or cross-tenant)' },
+                    403: { description: 'Missing authKey' },
+                },
+            },
+        },
         '/v1/invoice/{id}': {
-            get: { summary: 'Get one invoice', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
+            get: { summary: 'Get one invoice (with total/paid/balance/status)', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
             patch: { summary: 'Partial update of an invoice', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/Invoice' } } } }, responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
             delete: { summary: 'Soft-delete an invoice', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
         },

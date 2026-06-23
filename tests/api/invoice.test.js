@@ -210,3 +210,53 @@ describe('Invoice tenant-enumeration defense (secure 404)', () => {
         }
     });
 });
+
+describe('POST /v1/invoice/:id/payment — recordPayment', () => {
+    const schemas = require('../../app/schemas/invoice.schema.js');
+
+    function fakeRes() {
+        return {
+            status(code) { this._code = code; return this; },
+            json(body) { this._body = body; return this; },
+        };
+    }
+
+    test('schema rejects missing / non-positive amount and unknown fields', () => {
+        expect(schemas.recordPaymentBody.safeParse({}).success).toBe(false);
+        expect(schemas.recordPaymentBody.safeParse({ amount: -5 }).success).toBe(false);
+        expect(schemas.recordPaymentBody.safeParse({ amount: 0 }).success).toBe(false);
+        expect(schemas.recordPaymentBody.safeParse({ amount: 50, bogus: 1 }).success).toBe(false);
+        expect(schemas.recordPaymentBody.safeParse({ amount: 50 }).success).toBe(true);
+        expect(schemas.recordPaymentBody.safeParse({ amount: 50, date: '2026-01-02', description: 'x' }).success).toBe(true);
+    });
+
+    test('403 when authKey header is missing', async () => {
+        const controller = require('../../app/controllers/invoicecontroller.js');
+        const req = { get: () => undefined, params: { id: 1 }, body: { amount: 50 } };
+        const r = fakeRes();
+        await controller.recordPayment(req, r);
+        expect(r._code).toBe(403);
+    });
+
+    test('404 when the invoice does not exist', async () => {
+        const auth = require('../../app/middleware/auth.js');
+        const controller = require('../../app/controllers/invoicecontroller.js');
+        const db = require('../../app/config/db.config.js');
+        const isMasterSpy = vi.spyOn(auth, 'isMaster').mockResolvedValue(true);
+        try {
+            db.Invoice.findByPk = vi.fn().mockResolvedValue(null);
+            const req = { get: (h) => (h === 'authKey' ? 'm' : undefined), params: { id: 999 }, body: { amount: 50 } };
+            const r = fakeRes();
+            await controller.recordPayment(req, r);
+            expect(r._code).toBe(404);
+        } finally { isMasterSpy.mockRestore(); }
+    });
+
+    // NOTE: the 201 success path (create payment + recompute status) is a
+    // DB-touching transaction. It can't be unit-tested here — the
+    // controller captures auth.isMaster / db.Invoice at load, so vi.spyOn
+    // and property-override don't reach it (the same limitation the
+    // secure-404 tests above work around). The money math is covered by
+    // tests/unit/money.test.js; the full record-payment flow against real
+    // Postgres lives in tests/integration/invoice-payments.test.js.
+});

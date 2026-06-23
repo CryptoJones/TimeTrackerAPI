@@ -368,6 +368,12 @@ router.post(
     v.body(invoiceSchemas.createInvoiceBody),
     invoice.create,
 );
+router.post(
+    '/v1/invoice/:id/payment',
+    v.params(invoiceSchemas.intIdParam),
+    v.body(invoiceSchemas.recordPaymentBody),
+    invoice.recordPayment,
+);
 router.get(
     '/v1/invoice/bycustomer/:id',
     v.params(invoiceSchemas.intIdParam),

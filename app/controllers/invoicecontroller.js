@@ -230,6 +230,87 @@ exports.remove = async (req, res) => {
     }
 };
 
+/**
+ * POST /v1/invoice/:id/payment
+ *
+ * Record a full or partial payment against an invoice. Writes a
+ * CustomerPayment linked to the invoice (cpayInvId) and its customer,
+ * then recomputes the invoice's status + invPaid mirror from the full
+ * payment set. Wrapped in a transaction so a payment never lands
+ * without its status update. Idempotent via the global Idempotency-Key
+ * layer — critical for a money-moving POST.
+ */
+exports.recordPayment = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+
+    let invoice;
+    try {
+        invoice = await Invoice.findByPk(req.params.id, {
+            include: [
+                { model: db.InvoiceJob, as: 'lines', required: false },
+                { model: db.CustomerPayment, as: 'payments', required: false },
+            ],
+        });
+    } catch (error) {
+        log.error({ err: error }, 'Invoice.findByPk (recordPayment) failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (!invoice || invoice.invArch) {
+        return res.status(404).json({ message: "Not found." });
+    }
+
+    const isMaster = await IsMaster(authKey);
+    if (!isMaster) {
+        const authCompanyId = await GetCompanyId(authKey);
+        const invCompanyId = await GetCompanyIdByCustomerId(invoice.invCustId);
+        // Secure-404 on cross-tenant, same as getById/update.
+        if (authCompanyId === -1 || invCompanyId === -1 || authCompanyId !== invCompanyId) {
+            return res.status(404).json({ message: "Not found." });
+        }
+    }
+
+    const body = req.body || {};
+    const amount = Number(body.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+        return res.status(400).json({ message: "amount is required and must be a positive number." });
+    }
+    const date = body.date || new Date().toISOString().slice(0, 10);
+
+    const t = await db.sequelize.transaction();
+    try {
+        const payment = await db.CustomerPayment.create({
+            cpayInvId: invoice.invId,
+            cpayCustId: invoice.invCustId,
+            cpayAmount: money.roundCents(amount),
+            cpayDate: date,
+            cpayDescription: body.description,
+            cpayArch: false,
+        }, { transaction: t });
+
+        // Recompute from the full payment set (existing + the new one).
+        const payments = [...(invoice.payments || []), payment];
+        const total = money.invoiceTotal(invoice.lines);
+        const paid = money.invoicePaid(payments);
+        const balance = money.invoiceBalance(total, paid);
+        const status = money.deriveStatus({ total, paid, currentStatus: invoice.invStatus });
+        await invoice.update(
+            { invStatus: status, invPaid: balance <= 0 && total > 0 },
+            { transaction: t },
+        );
+        await t.commit();
+        return res.status(201).json({
+            message: "Payment recorded.", payment, total, paid, balance, status,
+        });
+    } catch (error) {
+        if (t && typeof t.rollback === 'function') await t.rollback();
+        log.error({ err: error }, 'Invoice.recordPayment failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+};
+
 exports.bulkCreate = makeBulkCreateIndirect({
     Model: Invoice,
     modelKey: 'Invoice',

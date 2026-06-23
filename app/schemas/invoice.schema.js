@@ -57,6 +57,18 @@ const updateInvoiceBody = z.object({
     message: 'Unexpected field in body. Whitelist: invDate, invDueDate, invPaid.',
 }).refine(refineDueDateAfterIssue, DUE_BEFORE_ISSUE);
 
+// POST /v1/invoice/:id/payment — record a full or partial payment.
+// amount is a positive money value (overpayment is allowed and drives
+// the balance negative — a credit). date defaults to today in the
+// controller when omitted.
+const recordPaymentBody = z.object({
+    amount: z.coerce.number().positive(),
+    date: isoDate.optional(),
+    description: z.string().max(10000).optional(),
+}).strict({
+    message: 'Unexpected field in body. Whitelist: amount, date, description.',
+});
+
 const listByCustomerQuery = z.object({
     limit: z.coerce.number().int().positive().max(500).optional(),
     offset: z.coerce.number().int().nonnegative().optional(),
@@ -74,6 +86,7 @@ module.exports = {
     intIdParam,
     createInvoiceBody,
     updateInvoiceBody,
+    recordPaymentBody,
     listByCustomerQuery,
     bulkInvoiceBody,
 };
