@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.6] - 2026-06-22
+
+### Added
+- **`POST /v1/invoice/:id/carry-forward`** — re-issue an invoice's
+  outstanding balance onto a new draft invoice for the same customer:
+  one "balance brought forward" line for the balance, linked back via
+  `invBalanceForwardFrom`. By default the original is marked `void` so
+  its balance isn't double-counted (`voidOriginal:false` keeps it open).
+  Optional `{ invDate, netDays, voidOriginal }`. Transaction-wrapped,
+  company-scoped (secure-404), idempotent. Covered by schema/403 tests
+  and a real-Postgres integration test.
+
+### Changed
+- **`InvoiceJob.injbJobId` is now nullable** (migration) so a job-less
+  "balance brought forward" line can exist. Normal job lines are
+  unaffected — the create/bulk schema still requires `injbJobId`.
+
 ## [1.0.5] - 2026-06-22
 
 ### Added
@@ -458,7 +475,8 @@ original SQL Server database to this Node.js + PostgreSQL API.
 
 ---
 
-[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.5...HEAD
+[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.6...HEAD
+[1.0.6]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.2...v1.0.3

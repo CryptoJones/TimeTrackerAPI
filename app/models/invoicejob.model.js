@@ -26,8 +26,10 @@ module.exports = (sequelize, Sequelize) => {
         },
         injbJobId: {
             field: 'injbJobId',
+            // Nullable: a "balance brought forward" line (carry-forward)
+            // is not tied to a job. Normal job lines still set it (the
+            // create/bulk schema requires it).
             type: Sequelize.INTEGER,
-            allowNull: false,
         },
         injbAmount: {
             field: 'injbAmount',

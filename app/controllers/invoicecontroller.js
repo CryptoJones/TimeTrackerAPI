@@ -442,6 +442,85 @@ exports.createFromJob = async (req, res) => {
     }
 };
 
+/**
+ * POST /v1/invoice/:id/carry-forward
+ *
+ * Re-issue an invoice's outstanding balance onto a new draft invoice for
+ * the same customer: one "balance brought forward" line (a job-less
+ * InvoiceJob) for the balance, linked back via invBalanceForwardFrom.
+ * By default the original is marked `void` so its balance isn't
+ * double-counted (set voidOriginal:false to keep it open).
+ */
+exports.createCarryForward = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+
+    let prior;
+    try {
+        prior = await Invoice.findByPk(req.params.id, {
+            include: [
+                { model: db.InvoiceJob, as: 'lines', required: false },
+                { model: db.CustomerPayment, as: 'payments', required: false },
+            ],
+        });
+    } catch (error) {
+        log.error({ err: error }, 'Invoice.findByPk (carryForward) failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (!prior || prior.invArch) {
+        return res.status(404).json({ message: "Not found." });
+    }
+
+    const isMaster = await IsMaster(authKey);
+    if (!isMaster) {
+        const authCompanyId = await GetCompanyId(authKey);
+        const invCompanyId = await GetCompanyIdByCustomerId(prior.invCustId);
+        if (authCompanyId === -1 || invCompanyId === -1 || authCompanyId !== invCompanyId) {
+            return res.status(404).json({ message: "Not found." });
+        }
+    }
+
+    const { balance } = money.summarize(prior, prior.lines, prior.payments);
+    if (balance <= 0) {
+        return res.status(400).json({ message: "Nothing to carry forward — the invoice has no outstanding balance." });
+    }
+
+    const body = req.body || {};
+    const invDate = body.invDate || new Date().toISOString().slice(0, 10);
+    const netDays = Number.isInteger(Number(body.netDays)) ? Number(body.netDays) : 30;
+    const due = new Date(invDate + 'T00:00:00Z');
+    due.setUTCDate(due.getUTCDate() + netDays);
+    const invDueDate = due.toISOString().slice(0, 10);
+    const voidOriginal = body.voidOriginal !== false; // default true
+
+    const t = await db.sequelize.transaction();
+    try {
+        const invoice = await db.Invoice.create({
+            invCustId: prior.invCustId, invDate, invDueDate,
+            invPaid: false, invStatus: 'draft', invArch: false,
+            invBalanceForwardFrom: prior.invId,
+        }, { transaction: t });
+        const line = await db.InvoiceJob.create({
+            injbInvId: invoice.invId, injbJobId: null,
+            injbAmount: balance, injbArch: false,
+        }, { transaction: t });
+        if (voidOriginal) {
+            await prior.update({ invStatus: 'void' }, { transaction: t });
+        }
+        await t.commit();
+        return res.status(201).json({
+            message: "Balance carried forward to a new invoice.",
+            invoice, line, carriedBalance: balance, voidedOriginal: voidOriginal,
+        });
+    } catch (error) {
+        if (t && typeof t.rollback === 'function') await t.rollback();
+        log.error({ err: error }, 'Invoice.createCarryForward failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+};
+
 exports.bulkCreate = makeBulkCreateIndirect({
     Model: Invoice,
     modelKey: 'Invoice',

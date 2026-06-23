@@ -79,6 +79,17 @@ const fromJobBody = z.object({
     message: 'Unexpected field in body. Whitelist: invDate, netDays.',
 });
 
+// POST /v1/invoice/:id/carry-forward — re-issue the outstanding balance
+// of an invoice onto a new one. Optional body; voidOriginal defaults to
+// true (the old invoice is superseded so its balance isn't double-counted).
+const carryForwardBody = z.object({
+    invDate: isoDate.optional(),
+    netDays: z.coerce.number().int().min(0).max(365).optional(),
+    voidOriginal: z.boolean().optional(),
+}).strict({
+    message: 'Unexpected field in body. Whitelist: invDate, netDays, voidOriginal.',
+});
+
 const listByCustomerQuery = z.object({
     limit: z.coerce.number().int().positive().max(500).optional(),
     offset: z.coerce.number().int().nonnegative().optional(),
@@ -98,6 +109,7 @@ module.exports = {
     updateInvoiceBody,
     recordPaymentBody,
     fromJobBody,
+    carryForwardBody,
     listByCustomerQuery,
     bulkInvoiceBody,
 };

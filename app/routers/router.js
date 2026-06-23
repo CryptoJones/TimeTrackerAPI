@@ -380,6 +380,12 @@ router.post(
     v.body(invoiceSchemas.fromJobBody),
     invoice.createFromJob,
 );
+router.post(
+    '/v1/invoice/:id/carry-forward',
+    v.params(invoiceSchemas.intIdParam),
+    v.body(invoiceSchemas.carryForwardBody),
+    invoice.createCarryForward,
+);
 router.get(
     '/v1/invoice/bycustomer/:id',
     v.params(invoiceSchemas.intIdParam),

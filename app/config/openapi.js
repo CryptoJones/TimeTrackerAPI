@@ -1355,6 +1355,38 @@ const spec = {
                 },
             },
         },
+        '/v1/invoice/{id}/carry-forward': {
+            post: {
+                summary: 'Carry an invoice\'s outstanding balance forward to a new invoice',
+                description:
+                    'Creates a new draft invoice for the same customer with a single ' +
+                    '"balance brought forward" line equal to this invoice\'s outstanding ' +
+                    'balance, linked via invBalanceForwardFrom. By default the original ' +
+                    'is marked void (voidOriginal:false keeps it open).',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    idempotencyKeyHeader,
+                ],
+                requestBody: {
+                    required: false,
+                    content: { 'application/json': { schema: {
+                        type: 'object',
+                        properties: {
+                            invDate: { type: 'string', format: 'date', description: 'Defaults to today.' },
+                            netDays: { type: 'integer', minimum: 0, maximum: 365, description: 'Defaults to 30.' },
+                            voidOriginal: { type: 'boolean', description: 'Mark the original void. Defaults to true.' },
+                        },
+                    } } },
+                },
+                responses: {
+                    201: { description: 'New invoice created with the carried balance', headers: idempotencyReplayResponseHeader },
+                    400: { description: 'No outstanding balance to carry forward' },
+                    404: { description: 'Not found (or cross-tenant)' },
+                    403: { description: 'Missing authKey' },
+                },
+            },
+        },
         '/v1/invoice/from-job/{id}': {
             post: {
                 summary: 'Auto-bill a job: create a draft invoice from its billable time',

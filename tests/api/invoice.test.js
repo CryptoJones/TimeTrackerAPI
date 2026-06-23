@@ -289,3 +289,30 @@ describe('POST /v1/invoice/from-job/:id — createFromJob', () => {
     // against real Postgres in tests/integration/invoice-from-job.test.js,
     // and the rate/amount math is unit-tested in tests/unit/money.test.js.
 });
+
+describe('POST /v1/invoice/:id/carry-forward — createCarryForward', () => {
+    const schemas = require('../../app/schemas/invoice.schema.js');
+
+    test('carryForwardBody: optional fields validate; bad ones rejected', () => {
+        expect(schemas.carryForwardBody.safeParse({}).success).toBe(true);
+        expect(schemas.carryForwardBody.safeParse({ invDate: '2026-01-01', netDays: 15, voidOriginal: false }).success).toBe(true);
+        expect(schemas.carryForwardBody.safeParse({ voidOriginal: 'yes' }).success).toBe(false);
+        expect(schemas.carryForwardBody.safeParse({ netDays: 9999 }).success).toBe(false);
+        expect(schemas.carryForwardBody.safeParse({ bogus: 1 }).success).toBe(false);
+    });
+
+    test('403 when authKey header is missing', async () => {
+        const controller = require('../../app/controllers/invoicecontroller.js');
+        const req = { get: () => undefined, params: { id: 1 }, body: {} };
+        const r = {
+            status(code) { this._code = code; return this; },
+            json(body) { this._body = body; return this; },
+        };
+        await controller.createCarryForward(req, r);
+        expect(r._code).toBe(403);
+    });
+
+    // The 201 happy path (compute balance → new invoice + brought-forward
+    // line → void original) is a multi-table transaction, exercised against
+    // real Postgres in tests/integration/invoice-carry-forward.test.js.
+});
