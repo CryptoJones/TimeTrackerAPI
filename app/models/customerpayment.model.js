@@ -31,8 +31,14 @@ module.exports = (sequelize, Sequelize) => {
         },
         cpayAmount: {
             field: 'cpayAmount',
-            type: Sequelize.DOUBLE,
+            // NUMERIC for exact cents; getter returns a Number so JSON
+            // stays numeric (node-postgres yields NUMERIC as a string).
+            type: Sequelize.DECIMAL(14, 2),
             allowNull: false,
+            get() {
+                const v = this.getDataValue('cpayAmount');
+                return v == null ? v : Number(v);
+            },
         },
         // Optional link to the specific invoice this payment applies to.
         // Nullable so account-level (non-invoice) credits still work.

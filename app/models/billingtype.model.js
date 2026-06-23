@@ -22,8 +22,14 @@ module.exports = (sequelize, Sequelize) => {
         },
         btHourlyRate: {
             field: 'btHourlyRate',
-            type: Sequelize.DOUBLE,
+            // NUMERIC for exact rates; getter returns a Number so JSON
+            // stays numeric (node-postgres yields NUMERIC as a string).
+            type: Sequelize.DECIMAL(14, 2),
             allowNull: false,
+            get() {
+                const v = this.getDataValue('btHourlyRate');
+                return v == null ? v : Number(v);
+            },
         },
         btArch: {
             field: 'btArch',

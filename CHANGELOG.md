@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.17] - 2026-06-23
+
+### Fixed
+- **Money is now exact (NUMERIC, not float).** The amount columns —
+  `InvoiceJob.injbAmount`, `CustomerPayment.cpayAmount`,
+  `BillingType.btHourlyRate` — migrate from double precision to
+  `NUMERIC(14,2)` so cents arithmetic can't accumulate binary-float
+  drift (a must for a billing product). The Sequelize models pair them
+  with a getter that returns a JS `Number`, so the API/JSON
+  representation is unchanged (numbers, not the strings node-postgres
+  yields for NUMERIC). Validated end-to-end by the existing real-Postgres
+  integration tests.
+
 ## [1.0.16] - 2026-06-22
 
 ### Changed
@@ -596,7 +609,8 @@ original SQL Server database to this Node.js + PostgreSQL API.
 
 ---
 
-[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.16...HEAD
+[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.17...HEAD
+[1.0.17]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.16...v1.0.17
 [1.0.16]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.15...v1.0.16
 [1.0.15]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.14...v1.0.15
 [1.0.14]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.13...v1.0.14

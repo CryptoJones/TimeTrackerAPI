@@ -33,8 +33,15 @@ module.exports = (sequelize, Sequelize) => {
         },
         injbAmount: {
             field: 'injbAmount',
-            type: Sequelize.DOUBLE,
+            // NUMERIC for exact cents; the getter returns a JS Number so
+            // the JSON contract stays numeric (node-postgres yields
+            // NUMERIC as a string otherwise).
+            type: Sequelize.DECIMAL(14, 2),
             allowNull: false,
+            get() {
+                const v = this.getDataValue('injbAmount');
+                return v == null ? v : Number(v);
+            },
         },
         injbArch: {
             field: 'injbArch',
