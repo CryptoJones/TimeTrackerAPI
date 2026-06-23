@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.8] - 2026-06-22
+
+### Added
+- **`GET /v1/invoice/:id/pdf`** — render an invoice as a downloadable
+  PDF (header, bill-to, line items, totals + status). Uses `pdfkit`
+  (pure-JS, ships standard fonts — no headless browser or font assets).
+  Rendering lives in a DB-free `app/services/invoice-pdf.js` (unit-tested
+  to emit a valid PDF), with a real-Postgres integration test for the
+  load→render→stream path. Company-scoped, secure-404.
+
+### Changed
+- **Test suite hardening:** `pdfkit` is lazy-required inside the renderer
+  (so the 50+ controller-loading test files don't pay its import cost),
+  and `vitest.config.js` gains `testTimeout: 20000` + `retry: 2` to absorb
+  a rare pre-existing environmental flake (a test occasionally starved
+  under parallel load while the auth layer waits on a DB connection). A
+  genuine failure still fails all attempts.
+
 ## [1.0.7] - 2026-06-22
 
 ### Added
@@ -487,7 +505,8 @@ original SQL Server database to this Node.js + PostgreSQL API.
 
 ---
 
-[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.7...HEAD
+[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.8...HEAD
+[1.0.8]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.4...v1.0.5

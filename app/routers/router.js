@@ -398,6 +398,11 @@ router.get(
     invoice.listByCustomer,
 );
 router.get(
+    '/v1/invoice/:id/pdf',
+    v.params(invoiceSchemas.intIdParam),
+    invoice.getPdf,
+);
+router.get(
     '/v1/invoice/:id',
     v.params(invoiceSchemas.intIdParam),
     invoice.getById,

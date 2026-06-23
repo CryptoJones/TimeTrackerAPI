@@ -1401,6 +1401,19 @@ const spec = {
                 },
             },
         },
+        '/v1/invoice/{id}/pdf': {
+            get: {
+                summary: 'Download the invoice as a PDF',
+                description: 'Renders the invoice (header, bill-to, lines, totals) as an application/pdf attachment.',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: {
+                    200: { description: 'PDF document', content: { 'application/pdf': { schema: { type: 'string', format: 'binary' } } } },
+                    404: { description: 'Not found (or cross-tenant)' },
+                    403: { description: 'Missing authKey' },
+                },
+            },
+        },
         '/v1/invoice/{id}/carry-forward': {
             post: {
                 summary: 'Carry an invoice\'s outstanding balance forward to a new invoice',

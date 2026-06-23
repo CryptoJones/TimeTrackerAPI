@@ -316,3 +316,20 @@ describe('POST /v1/invoice/:id/carry-forward — createCarryForward', () => {
     // line → void original) is a multi-table transaction, exercised against
     // real Postgres in tests/integration/invoice-carry-forward.test.js.
 });
+
+describe('GET /v1/invoice/:id/pdf — getPdf', () => {
+    test('403 when authKey header is missing', async () => {
+        const controller = require('../../app/controllers/invoicecontroller.js');
+        const req = { get: () => undefined, params: { id: 1 } };
+        const r = {
+            status(code) { this._code = code; return this; },
+            json(body) { this._body = body; return this; },
+        };
+        await controller.getPdf(req, r);
+        expect(r._code).toBe(403);
+    });
+
+    // PDF rendering is unit-tested in tests/unit/invoice-pdf.test.js; the
+    // load → render → stream path against real Postgres lives in
+    // tests/integration/invoice-pdf.test.js.
+});

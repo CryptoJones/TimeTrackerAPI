@@ -1,6 +1,6 @@
 {
   "name": "TimeTrackerAPI",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Open-source Node.js + PostgreSQL time-tracking REST API with customer/company-scoped auth, OpenAPI spec, idempotency, and CSV export.",
   "main": "server.js",
   "keywords": [
@@ -37,6 +37,7 @@
     "express": "^4.22.2",
     "express-rate-limit": "^8.5.2",
     "helmet": "^8.2.0",
+    "pdfkit": "^0.19.1",
     "pg": "^8.21.0",
     "pg-hstore": "^2.3.4",
     "pino": "^10.3.1",
