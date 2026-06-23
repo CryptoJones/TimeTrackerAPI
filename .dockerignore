@@ -4,6 +4,12 @@
 # Dependency directories (we install fresh inside the build).
 node_modules
 
+# Web sub-app: deps + build output are produced in the webbuild stage,
+# not copied from the host context (the bare `node_modules` above only
+# matches the top level).
+web/node_modules
+web/dist
+
 # Logs.
 *.log
 npm-debug.log*

@@ -4,6 +4,8 @@
 require('dotenv').config();
 
 const crypto = require('node:crypto');
+const path = require('node:path');
+const fs = require('node:fs');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -228,6 +230,26 @@ if (rateLimitMax !== 0) {
 app.use(metricsMiddleware);
 
 app.use('/', router);
+
+// Serve the built web SPA (web/dist) when present so a single container
+// serves both the API and the UI. The router above already claimed
+// /v1, /healthz, /metrics, /docs, /openapi.json; static assets are
+// served here, and any other GET falls back to index.html so client-side
+// deep links (e.g. /invoices/5) load the app instead of 404ing. When the
+// UI isn't built (e.g. API-only deploys, the test/CI checkout), this is
+// skipped entirely.
+const WEB_DIST = path.join(__dirname, 'web', 'dist');
+if (fs.existsSync(path.join(WEB_DIST, 'index.html'))) {
+    app.use(express.static(WEB_DIST));
+    app.use((req, res, next) => {
+        if (req.method !== 'GET') return next();
+        const p = req.path;
+        if (p.startsWith('/v1') || p === '/healthz' || p === '/metrics'
+            || p === '/openapi.json' || p.startsWith('/docs')) return next();
+        return res.sendFile(path.join(WEB_DIST, 'index.html'));
+    });
+    log.info({ dist: WEB_DIST }, 'serving web SPA');
+}
 
 // 404 fallthrough + global error handler. Order matters — these
 // must be last so they catch what the router didn't.

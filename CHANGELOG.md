@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.14] - 2026-06-22
+
+### Added
+- **Single-container deploy: the API serves the web app.** `server.js`
+  serves the built SPA (`web/dist`) — static assets plus an index.html
+  fallback for client-side routes — whenever it's present, so one
+  container serves both the `/v1` API and the UI (API routes still win;
+  `/healthz`, `/metrics`, `/docs`, `/openapi.json` are untouched). The
+  Dockerfile gains a dedicated `webbuild` stage (Vite build) and copies
+  `web/dist` into the runtime image; `.dockerignore` excludes
+  `web/node_modules`/`web/dist` from the context. API-only deploys (no
+  built UI) are unaffected — the static serving is skipped.
+
 ## [1.0.13] - 2026-06-22
 
 ### Added
@@ -566,7 +579,8 @@ original SQL Server database to this Node.js + PostgreSQL API.
 
 ---
 
-[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.13...HEAD
+[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.14...HEAD
+[1.0.14]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.13...v1.0.14
 [1.0.13]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.12...v1.0.13
 [1.0.12]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.11...v1.0.12
 [1.0.11]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.10...v1.0.11

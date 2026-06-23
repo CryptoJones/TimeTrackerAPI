@@ -30,6 +30,20 @@ COPY package.json package-lock.json ./
 # Production deps only; `npm ci --omit=dev` is faster + reproducible.
 RUN npm ci --omit=dev && npm cache clean --force
 
+# ---- web build ----
+# Build the React SPA to static files. Kept in its own stage so the
+# (dev) build toolchain never lands in the runtime image — only the
+# built web/dist is copied across.
+FROM node:26-bookworm-slim AS webbuild
+
+WORKDIR /web
+
+COPY web/package.json web/package-lock.json ./
+RUN npm ci
+
+COPY web/ ./
+RUN npm run build
+
 # ---- runtime ----
 FROM node:26-bookworm-slim AS runtime
 
@@ -55,6 +69,11 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy in the rest of the app. Doing this AFTER node_modules means a
 # small source change doesn't bust the deps layer.
 COPY . .
+
+# Bring in the built web UI from the webbuild stage. server.js serves
+# web/dist (static + SPA fallback) when it's present, so the single
+# container serves both the API and the app.
+COPY --from=webbuild /web/dist ./web/dist
 
 # Drop to the node user (uid 1000 in the official node images). Avoids
 # running the server as root inside the container.
