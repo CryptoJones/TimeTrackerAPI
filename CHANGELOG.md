@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.10] - 2026-06-22
+
+### Added
+- **`web/` — end-user web app scaffold** (React + Vite SPA). First slice
+  of the UI: signup / login / logout, a `/v1/auth/me`-backed auth context,
+  a session-key API client (stores the key in `localStorage`, sends it as
+  `authKey`), a protected app shell, and a dashboard framing the feature
+  areas to come. Dev server proxies `/v1` to the API. Standalone
+  sub-project — the root API test suite, lint, and Docker image are
+  unaffected (its build/deploy wiring lands in a later iteration). Builds
+  clean (`cd web && npm run build`).
+
 ## [1.0.9] - 2026-06-22
 
 ### Added
@@ -524,7 +536,8 @@ original SQL Server database to this Node.js + PostgreSQL API.
 
 ---
 
-[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.9...HEAD
+[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.10...HEAD
+[1.0.10]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.9...v1.0.10
 [1.0.9]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.6...v1.0.7

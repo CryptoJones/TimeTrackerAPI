@@ -1,0 +1,70 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+:root {
+    --bg: #0f1115;
+    --panel: #181b22;
+    --border: #262b35;
+    --text: #e6e8ec;
+    --muted: #9aa3b2;
+    --accent: #d00000; /* Go Big Red */
+    --accent-2: #ff6a00;
+    --error: #ff6b6b;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.app { display: flex; flex-direction: column; min-height: 100%; }
+.content { flex: 1; width: 100%; max-width: 980px; margin: 0 auto; padding: 24px; }
+.center { display: grid; place-items: center; min-height: 40vh; }
+.muted { color: var(--muted); }
+.spacer { flex: 1; }
+
+.topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 24px; border-bottom: 1px solid var(--border); background: var(--panel);
+}
+.brand { font-weight: 700; color: var(--text); text-decoration: none; }
+
+.footer {
+    text-align: center; padding: 16px; color: var(--muted);
+    border-top: 1px solid var(--border); font-style: italic; font-size: 13px;
+}
+
+.card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+}
+.auth-card { max-width: 380px; margin: 8vh auto; }
+.auth-card h1 { margin-top: 0; }
+
+form { display: flex; flex-direction: column; gap: 12px; }
+label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); }
+input {
+    padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);
+    background: #0d0f13; color: var(--text); font-size: 15px;
+}
+input:focus { outline: 2px solid var(--accent-2); border-color: transparent; }
+
+button {
+    padding: 10px 16px; border-radius: 8px; border: none; cursor: pointer;
+    background: var(--accent); color: white; font-weight: 600;
+}
+button:hover { background: #b00000; }
+button:disabled { opacity: .6; cursor: default; }
+button.ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+button.ghost:hover { background: #20242d; }
+
+.error { color: var(--error); margin: 0; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-top: 20px; }
+.section h2 { margin: 0 0 6px; font-size: 17px; }
+.badge {
+    display: inline-block; margin-top: 10px; padding: 2px 8px; border-radius: 999px;
+    font-size: 12px; background: #20242d; color: var(--muted);
+}
+.dashboard h1 { margin-bottom: 4px; }
