@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Aaron K. Clark
+#
+# Supply-chain + static-analysis security scanning. Findings surface in
+# the repo's Security tab (code scanning alerts); the jobs are
+# report-only and don't fail the build on a finding — the existing
+# `npm audit` step in tests.yml is the hard gate on production deps.
+name: security
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  schedule:
+    # Weekly resweep (Mon 06:00 UTC) so newly-disclosed advisories on
+    # unchanged code still get flagged.
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  # CodeQL static analysis for JavaScript (the API) — catches injection,
+  # unsafe patterns, etc. Free for public repositories.
+  codeql:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v6
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3
+
+  # Trivy filesystem scan: known-vulnerable dependencies + IaC/config
+  # misconfigurations across the repo (incl. web/). SARIF is uploaded to
+  # the Security tab; exit-code 0 keeps it advisory.
+  trivy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scanners: vuln,misconfig
+          severity: HIGH,CRITICAL
+          format: sarif
+          output: trivy.sarif
+          exit-code: '0'
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy.sarif

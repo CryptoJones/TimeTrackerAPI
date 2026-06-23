@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.18] - 2026-06-23
+
+### Added
+- **CI: supply-chain + static-analysis security scanning.** New
+  `security.yml` runs **CodeQL** (JavaScript SAST) and **Trivy**
+  (filesystem scan for vulnerable deps + IaC/config misconfig), surfacing
+  findings in the repo Security tab with a weekly resweep. Report-only —
+  the `npm audit` step in `tests.yml` stays the hard gate on production
+  deps. Rounds out the security posture expected of a sellable product.
+
 ## [1.0.17] - 2026-06-23
 
 ### Fixed
@@ -609,7 +619,8 @@ original SQL Server database to this Node.js + PostgreSQL API.
 
 ---
 
-[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.17...HEAD
+[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.18...HEAD
+[1.0.18]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.17...v1.0.18
 [1.0.17]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.16...v1.0.17
 [1.0.16]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.15...v1.0.16
 [1.0.15]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.14...v1.0.15
