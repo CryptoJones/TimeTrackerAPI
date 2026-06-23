@@ -60,3 +60,20 @@ export async function logout() {
 export async function me() {
     return api('/v1/auth/me');
 }
+
+// Pull the first array out of a list response, whatever the wrapper key
+// is (the API uses { customers }, { jobs }, { timeEntries }, …).
+export function listFrom(res) {
+    if (Array.isArray(res)) return res;
+    for (const v of Object.values(res || {})) if (Array.isArray(v)) return v;
+    return [];
+}
+
+// --- customers ---
+export const listCustomers = (companyId) => api(`/v1/customer/bycompany/${companyId}`);
+export const getCustomer = (id) => api(`/v1/customer/${id}`);
+export const createCustomer = (data) => api('/v1/customer', { method: 'POST', body: data });
+
+// --- jobs ---
+export const listJobs = (custId) => api(`/v1/job/bycustomer/${custId}`);
+export const createJob = (data) => api('/v1/job', { method: 'POST', body: data });

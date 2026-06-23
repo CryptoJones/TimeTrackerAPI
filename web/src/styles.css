@@ -68,3 +68,18 @@ button.ghost:hover { background: #20242d; }
     font-size: 12px; background: #20242d; color: var(--muted);
 }
 .dashboard h1 { margin-bottom: 4px; }
+
+.nav { display: flex; gap: 14px; margin-left: 18px; }
+.nav a { color: var(--muted); text-decoration: none; padding: 4px 2px; border-bottom: 2px solid transparent; }
+.nav a:hover { color: var(--text); }
+.nav a.active { color: var(--text); border-bottom-color: var(--accent-2); }
+
+.row-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.row-form input { flex: 1 1 160px; }
+.row-form button { flex: 0 0 auto; }
+
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.table th { color: var(--muted); font-weight: 600; font-size: 13px; }
+.table tr:hover td { background: #14171d; }
+.table a { color: var(--accent-2); text-decoration: none; }

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.11] - 2026-06-22
+
+### Added
+- **web: Clients & Jobs management.** New screens in the web app to list
+  and add clients (customers) and, per client, list and add their jobs —
+  wired to `/v1/customer/bycompany`, `POST /v1/customer`,
+  `/v1/job/bycustomer`, and `POST /v1/job` with the session key. Adds a
+  top nav (Dashboard · Clients), tables, and a tolerant list-response
+  helper. Builds clean.
+
 ## [1.0.10] - 2026-06-22
 
 ### Added
@@ -536,7 +546,8 @@ original SQL Server database to this Node.js + PostgreSQL API.
 
 ---
 
-[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.10...HEAD
+[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.11...HEAD
+[1.0.11]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.10...v1.0.11
 [1.0.10]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.9...v1.0.10
 [1.0.9]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.7...v1.0.8
