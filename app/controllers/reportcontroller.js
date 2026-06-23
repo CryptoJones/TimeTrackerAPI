@@ -21,9 +21,11 @@ const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
 const { escapeCsvCell } = require('./_csv-escape.js');
 
+const money = require('../services/money.js');
 const InvoiceJob = db.InvoiceJob;
 const Invoice = db.Invoice;
 const Customer = db.Customer;
+const CustomerPayment = db.CustomerPayment;
 
 const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
@@ -211,6 +213,51 @@ exports.invoiceListCsv = async (req, res) => {
     res.setHeader('Content-Disposition',
         `attachment; filename="invoice-list-company-${scope.companyId}.csv"`);
     return res.status(200).send(body);
+};
+
+/**
+ * GET /v1/report/aging — accounts-receivable aging. Buckets every
+ * open invoice's outstanding balance by how overdue it is (current /
+ * 1-30 / 31-60 / 61-90 / 90+), per customer plus grand totals.
+ * Company-scoped; optional `asOf` date (defaults to today). Voided and
+ * archived invoices are excluded; fully-paid invoices drop out (zero
+ * balance).
+ */
+exports.aging = async (req, res) => {
+    const scope = await resolveScope(req);
+    if (scope.status) return res.status(scope.status).json({ message: scope.message });
+
+    const asOf = req.query.asOf || new Date().toISOString().slice(0, 10);
+    const Op = db.Sequelize && db.Sequelize.Op;
+
+    let invoices;
+    try {
+        invoices = await Invoice.findAll({
+            where: Op ? { invStatus: { [Op.ne]: 'void' } } : {},
+            include: [
+                {
+                    model: Customer, as: 'customer', required: true,
+                    attributes: ['custId', 'custCompanyName'],
+                    where: { custCompId: scope.companyId },
+                },
+                { model: InvoiceJob, as: 'lines', required: false, attributes: ['injbAmount'] },
+                { model: CustomerPayment, as: 'payments', required: false, attributes: ['cpayAmount'] },
+            ],
+        });
+    } catch (error) {
+        log.error({ err: error }, 'report.aging query failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+
+    const items = invoices.map((inv) => ({
+        custId: inv.customer && inv.customer.custId,
+        customerName: inv.customer && inv.customer.custCompanyName,
+        invDueDate: inv.invDueDate,
+        balance: money.invoiceBalance(
+            money.invoiceTotal(inv.lines), money.invoicePaid(inv.payments)),
+    }));
+    const aging = money.computeAging(items, asOf);
+    return res.status(200).json({ message: "OK.", asOf, ...aging });
 };
 
 // Exposed for unit testing.

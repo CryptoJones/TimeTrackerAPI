@@ -71,3 +71,25 @@ describe('/v1/report/invoice-list query validation', () => {
         expect(res.status).toBe(400);
     });
 });
+
+describe('/v1/report/aging', () => {
+    test('GET aging is mounted and 403s without authKey', async () => {
+        const res = await request(app).get('/v1/report/aging');
+        expect(res.status).toBe(403);
+        expect(res.body.message).toMatch(/not sent/i);
+    });
+
+    test('rejects an unexpected query parameter', async () => {
+        const res = await request(app)
+            .get('/v1/report/aging?bogus=1')
+            .set('authKey', 'whatever');
+        expect(res.status).toBe(400);
+    });
+
+    test('rejects a malformed asOf date', async () => {
+        const res = await request(app)
+            .get('/v1/report/aging?asOf=not-a-date')
+            .set('authKey', 'whatever');
+        expect(res.status).toBe(400);
+    });
+});

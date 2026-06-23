@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.7] - 2026-06-22
+
+### Added
+- **`GET /v1/report/aging`** — accounts-receivable aging. Buckets every
+  open invoice's outstanding balance by how overdue it is (current /
+  1-30 / 31-60 / 61-90 / 90+ days past the due date), per customer plus
+  grand totals. Company-scoped (master passes `companyId`); optional
+  `asOf` date (defaults to today). Voided/archived and fully-paid
+  invoices are excluded. Bucketing math (`agingBucketKey`, `daysPastDue`,
+  `computeAging`) lives in `app/services/money.js` and is unit-tested;
+  the end-to-end query is covered by a real-Postgres integration test.
+
 ## [1.0.6] - 2026-06-22
 
 ### Added
@@ -475,7 +487,8 @@ original SQL Server database to this Node.js + PostgreSQL API.
 
 ---
 
-[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.6...HEAD
+[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.7...HEAD
+[1.0.7]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.3...v1.0.4

@@ -129,6 +129,56 @@ function computeJobBill(entries, rateByBillTypeId, defaultBillTypeByWorkerId) {
     return { amount: cents / 100, billedEntryIds, unratedCount };
 }
 
+// A/R aging buckets, keyed by days past the due date.
+const AGING_KEYS = ['current', 'd1_30', 'd31_60', 'd61_90', 'd90_plus'];
+
+function emptyBuckets() {
+    return { current: 0, d1_30: 0, d31_60: 0, d61_90: 0, d90_plus: 0, total: 0 };
+}
+
+/** Bucket key for a number of days past due (≤0 = not yet due → current). */
+function agingBucketKey(daysPastDue) {
+    if (!(daysPastDue > 0)) return 'current';
+    if (daysPastDue <= 30) return 'd1_30';
+    if (daysPastDue <= 60) return 'd31_60';
+    if (daysPastDue <= 90) return 'd61_90';
+    return 'd90_plus';
+}
+
+/** Whole days between an as-of date and a due date, both 'YYYY-MM-DD'. */
+function daysPastDue(asOf, dueDate) {
+    const ref = new Date(String(asOf) + 'T00:00:00Z').getTime();
+    const due = new Date(String(dueDate) + 'T00:00:00Z').getTime();
+    if (!Number.isFinite(ref) || !Number.isFinite(due)) return 0;
+    return Math.floor((ref - due) / 86400000);
+}
+
+/**
+ * Aggregate an A/R aging report from per-invoice items
+ * ({ custId, customerName, invDueDate, balance }) as of a date. Only
+ * positive balances count; each is placed in one bucket by how overdue
+ * it is. Returns per-customer rows + grand totals.
+ */
+function computeAging(items, asOf) {
+    const byCust = new Map();
+    const totals = emptyBuckets();
+    for (const it of (items || [])) {
+        const bal = roundCents(it.balance);
+        if (bal <= 0) continue;
+        const key = agingBucketKey(daysPastDue(asOf, it.invDueDate));
+        if (!byCust.has(it.custId)) {
+            byCust.set(it.custId, Object.assign(
+                { custId: it.custId, customerName: it.customerName }, emptyBuckets()));
+        }
+        const c = byCust.get(it.custId);
+        c[key] = roundCents(c[key] + bal);
+        c.total = roundCents(c.total + bal);
+        totals[key] = roundCents(totals[key] + bal);
+        totals.total = roundCents(totals.total + bal);
+    }
+    return { customers: [...byCust.values()], totals };
+}
+
 module.exports = {
     roundCents,
     sumField,
@@ -139,4 +189,8 @@ module.exports = {
     summarize,
     jobBillRate,
     computeJobBill,
+    AGING_KEYS,
+    agingBucketKey,
+    daysPastDue,
+    computeAging,
 };

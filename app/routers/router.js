@@ -188,6 +188,11 @@ router.get(
     v.query(reportSchemas.invoiceListQuery),
     report.invoiceList,
 );
+router.get(
+    '/v1/report/aging',
+    v.query(reportSchemas.agingQuery),
+    report.aging,
+);
 
 // v1 worker routes.
 //

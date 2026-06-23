@@ -964,6 +964,52 @@ const spec = {
                 },
             },
         },
+        '/v1/report/aging': {
+            get: {
+                summary: 'Accounts-receivable aging report',
+                description:
+                    "Buckets every open invoice's outstanding balance by how overdue " +
+                    'it is (current / 1-30 / 31-60 / 61-90 / 90+ days past due), per ' +
+                    'customer plus grand totals. Company-scoped; voided/archived and ' +
+                    'fully-paid invoices are excluded.',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys.' },
+                    { name: 'asOf', in: 'query', schema: { type: 'string', format: 'date' }, description: 'Aging reference date. Defaults to today.' },
+                ],
+                responses: {
+                    200: {
+                        description: 'Aging buckets per customer + totals',
+                        content: { 'application/json': { schema: {
+                            type: 'object',
+                            properties: {
+                                message: { type: 'string' },
+                                asOf: { type: 'string', format: 'date' },
+                                customers: {
+                                    type: 'array',
+                                    items: {
+                                        type: 'object',
+                                        properties: {
+                                            custId: { type: 'integer' },
+                                            customerName: { type: 'string' },
+                                            current: { type: 'number' },
+                                            d1_30: { type: 'number' },
+                                            d31_60: { type: 'number' },
+                                            d61_90: { type: 'number' },
+                                            d90_plus: { type: 'number' },
+                                            total: { type: 'number' },
+                                        },
+                                    },
+                                },
+                                totals: { type: 'object' },
+                            },
+                        } } },
+                    },
+                    400: { description: 'Master without companyId' },
+                    403: { description: 'Missing authKey or cross-tenant attempt' },
+                },
+            },
+        },
         '/v1/report/invoice-list': {
             get: {
                 summary: 'Invoice list report (restores the v_InvoiceList view)',

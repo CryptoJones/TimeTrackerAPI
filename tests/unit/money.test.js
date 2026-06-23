@@ -159,3 +159,53 @@ describe('computeJobBill', () => {
         expect(money.computeJobBill([], rateByBt, defByWorker)).toEqual({ amount: 0, billedEntryIds: [], unratedCount: 0 });
     });
 });
+
+describe('agingBucketKey', () => {
+    test('maps days-past-due to the right bucket', () => {
+        expect(money.agingBucketKey(-5)).toBe('current');
+        expect(money.agingBucketKey(0)).toBe('current');
+        expect(money.agingBucketKey(1)).toBe('d1_30');
+        expect(money.agingBucketKey(30)).toBe('d1_30');
+        expect(money.agingBucketKey(31)).toBe('d31_60');
+        expect(money.agingBucketKey(60)).toBe('d31_60');
+        expect(money.agingBucketKey(61)).toBe('d61_90');
+        expect(money.agingBucketKey(90)).toBe('d61_90');
+        expect(money.agingBucketKey(91)).toBe('d90_plus');
+    });
+});
+
+describe('daysPastDue', () => {
+    test('whole days between as-of and due date', () => {
+        expect(money.daysPastDue('2026-02-15', '2026-02-01')).toBe(14);
+        expect(money.daysPastDue('2026-02-01', '2026-02-15')).toBe(-14);
+        expect(money.daysPastDue('2026-02-01', '2026-02-01')).toBe(0);
+    });
+});
+
+describe('computeAging', () => {
+    test('buckets balances per customer, skips zero balances', () => {
+        const items = [
+            { custId: 1, customerName: 'A', invDueDate: '2026-01-01', balance: 100 }, // 59d → d31_60
+            { custId: 1, customerName: 'A', invDueDate: '2026-02-25', balance: 50 },  // 4d  → d1_30
+            { custId: 2, customerName: 'B', invDueDate: '2026-02-25', balance: 0 },   // skipped
+        ];
+        const out = money.computeAging(items, '2026-03-01');
+        expect(out.customers).toEqual([
+            { custId: 1, customerName: 'A', current: 0, d1_30: 50, d31_60: 100, d61_90: 0, d90_plus: 0, total: 150 },
+        ]);
+        expect(out.totals).toEqual({ current: 0, d1_30: 50, d31_60: 100, d61_90: 0, d90_plus: 0, total: 150 });
+    });
+
+    test('not-yet-due balances land in current', () => {
+        const items = [{ custId: 9, customerName: 'C', invDueDate: '2026-12-31', balance: 200 }];
+        const out = money.computeAging(items, '2026-03-01');
+        expect(out.totals.current).toBe(200);
+        expect(out.totals.total).toBe(200);
+    });
+
+    test('empty input → zero totals, no rows', () => {
+        const out = money.computeAging([], '2026-03-01');
+        expect(out.customers).toEqual([]);
+        expect(out.totals.total).toBe(0);
+    });
+});

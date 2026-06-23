@@ -33,7 +33,21 @@ const invoiceListCsvQuery = z.object({
     message: 'Unexpected query parameter. Allowed: companyId, customerId, limit, offset.',
 });
 
+/**
+ * GET /v1/report/aging query. Company-scoped like the other report
+ * endpoints; optional `asOf` date (YYYY-MM-DD) defaults to today.
+ */
+const agingQuery = z.object({
+    companyId: z.coerce.number().int().positive().optional(),
+    asOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
+        message: 'asOf must be an ISO 8601 date (YYYY-MM-DD).',
+    }).optional(),
+}).strict({
+    message: 'Unexpected query parameter. Allowed: companyId, asOf.',
+});
+
 module.exports = {
     invoiceListQuery,
     invoiceListCsvQuery,
+    agingQuery,
 };
