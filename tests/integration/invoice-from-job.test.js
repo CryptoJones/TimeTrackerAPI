@@ -31,7 +31,12 @@ beforeAll(async () => {
         console.warn('[integration] PG unreachable, skipping suite:', err.message);
         return;
     }
-    const master = await db.ApiMaster.create({ amKEY: auth.hashKey(MASTER_KEY), amArchive: false });
+    const master = await db.ApiMaster.create({
+        amKEY: auth.hashKey(MASTER_KEY), amArchive: false,
+        // amArchiveDate is NOT NULL in the schema; a sentinel is fine for
+        // an active (amArchive=false) key — auth only checks amArchive.
+        amArchiveDate: '2000-01-01T00:00:00Z',
+    });
     ids.master = master.amId;
     const company = await db.Company.create({ compName: `${MASTER_KEY}_co`, compArch: false });
     ids.company = company.compId;
