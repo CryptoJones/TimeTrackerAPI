@@ -5,6 +5,7 @@
 const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
+const money = require('../services/money.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
 const { makeBulkCreateIndirect } = require('./_bulk-helpers.js');
 const Invoice = db.Invoice;
@@ -65,7 +66,16 @@ exports.getById = async (req, res) => {
 
     let invoice;
     try {
-        invoice = await Invoice.findByPk(req.params.id);
+        // Eager-load line items + applied payments so the response can
+        // carry the money summary (total / paid / balance / status).
+        // Includes are best-effort: the money module treats a missing
+        // association as an empty list.
+        invoice = await Invoice.findByPk(req.params.id, {
+            include: [
+                { model: db.InvoiceJob, as: 'lines', required: false },
+                { model: db.CustomerPayment, as: 'payments', required: false },
+            ],
+        });
     } catch (error) {
         log.error({ err: error }, 'Invoice.findByPk failed');
         return res.status(500).json({ message: "Error!" });
@@ -88,7 +98,8 @@ exports.getById = async (req, res) => {
             return res.status(404).json({ message: "Not found." });
         }
     }
-    return res.status(200).json({ message: "Found.", invoice });
+    const summary = money.summarize(invoice, invoice.lines, invoice.payments);
+    return res.status(200).json({ message: "Found.", invoice, ...summary });
 };
 
 exports.listByCustomer = async (req, res) => {

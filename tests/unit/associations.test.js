@@ -71,6 +71,18 @@ describe('association graph: Job line items', () => {
     });
 });
 
+describe('association graph: Invoice payments + balance-forward', () => {
+    test('CustomerPayment belongsTo Invoice via cpayInvId', () => {
+        assertAssoc('CustomerPayment', 'BelongsTo', 'cpayInvId', 'Invoice');
+    });
+    test('Invoice hasMany CustomerPayment via cpayInvId', () => {
+        assertAssoc('Invoice', 'HasMany', 'cpayInvId', 'CustomerPayment');
+    });
+    test('Invoice belongsTo Invoice via invBalanceForwardFrom', () => {
+        assertAssoc('Invoice', 'BelongsTo', 'invBalanceForwardFrom', 'Invoice');
+    });
+});
+
 describe('association graph: InventoryItem fan-in', () => {
     test('ProductEntry belongsTo InventoryItem via pentInvtId', () => {
         assertAssoc('ProductEntry', 'BelongsTo', 'pentInvtId', 'InventoryItem');

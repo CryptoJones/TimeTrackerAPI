@@ -33,6 +33,18 @@ module.exports = (sequelize, Sequelize) => {
             allowNull: false,
             defaultValue: false,
         },
+        // Payment-state source of truth (invPaid can't express 'partial').
+        invStatus: {
+            field: 'invStatus',
+            type: Sequelize.STRING(16),
+            allowNull: false,
+            defaultValue: 'draft',
+        },
+        // Links a balance-carried invoice to its predecessor (carry-forward).
+        invBalanceForwardFrom: {
+            field: 'invBalanceForwardFrom',
+            type: Sequelize.INTEGER,
+        },
         invArch: {
             field: 'invArch',
             type: Sequelize.BOOLEAN,

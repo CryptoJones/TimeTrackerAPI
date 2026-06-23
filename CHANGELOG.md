@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-06-22
+
+### Added
+- **Invoicing & payments foundation** (first step of the invoicing engine —
+  see `PRODUCT-BACKLOG.md` Appendix A). Additive, nullable/defaulted schema:
+  `CustomerPayment.cpayInvId` (FK → Invoice, so a payment can apply to a
+  specific invoice — the keystone for per-invoice balance + partial payments),
+  `Invoice.invStatus` (`draft`/`sent`/`partial`/`paid`/`void`, backfilled from
+  `invPaid`), and `Invoice.invBalanceForwardFrom` (links a balance-carried
+  invoice to its predecessor). New `app/services/money.js` centralizes
+  cents-accurate money math (total / paid / balance / status derivation),
+  insulating against `float` drift until the amount columns migrate to
+  decimal. `GET /v1/invoice/:id` now eager-loads lines + payments and returns
+  `{ total, paid, balance, status }`. +22 tests.
+
 ## [1.0.2] - 2026-06-22
 
 ### Added
@@ -412,7 +427,8 @@ original SQL Server database to this Node.js + PostgreSQL API.
 
 ---
 
-[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/CryptoJones/TimeTrackerAPI/releases/tag/v1.0.0

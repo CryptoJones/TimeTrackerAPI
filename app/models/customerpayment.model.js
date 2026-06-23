@@ -34,6 +34,12 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.DOUBLE,
             allowNull: false,
         },
+        // Optional link to the specific invoice this payment applies to.
+        // Nullable so account-level (non-invoice) credits still work.
+        cpayInvId: {
+            field: 'cpayInvId',
+            type: Sequelize.INTEGER,
+        },
         cpayArch: {
             field: 'cpayArch',
             type: Sequelize.BOOLEAN,

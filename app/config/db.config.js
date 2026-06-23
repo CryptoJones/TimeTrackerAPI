@@ -138,6 +138,12 @@ db.ProductEntry.belongsTo(db.Job,  { foreignKey: 'pentJobId', as: 'job' });
 db.Invoice.hasMany(db.InvoiceJob,  { foreignKey: 'injbInvId', as: 'lines' });
 db.InvoiceJob.belongsTo(db.Invoice,{ foreignKey: 'injbInvId', as: 'invoice' });
 
+// Invoice <- payments (a payment may apply to a specific invoice), and the
+// balance-forward self-reference linking a carried invoice to its predecessor.
+db.Invoice.hasMany(db.CustomerPayment,   { foreignKey: 'cpayInvId', as: 'payments' });
+db.CustomerPayment.belongsTo(db.Invoice, { foreignKey: 'cpayInvId', as: 'invoice' });
+db.Invoice.belongsTo(db.Invoice,         { foreignKey: 'invBalanceForwardFrom', as: 'balanceForwardFrom' });
+
 // InventoryItem is referenced by product entries, inventory
 // transactions, and PO lines.
 db.InventoryItem.hasMany(db.ProductEntry,         { foreignKey: 'pentInvtId',  as: 'productEntries' });
