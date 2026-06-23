@@ -66,6 +66,7 @@ db.PurchaseOrderVendor = require('../models/purchaseordervendor.model.js')(seque
 db.PurchaseOrderHeader = require('../models/purchaseorderheader.model.js')(sequelize, Sequelize);
 db.PurchaseOrderLine = require('../models/purchaseorderline.model.js')(sequelize, Sequelize);
 db.InventoryTransaction = require('../models/inventorytransaction.model.js')(sequelize, Sequelize);
+db.User = require('../models/user.model.js')(sequelize, Sequelize);
 
 // ----------------------------------------------------------------------
 // Associations — centralized so the relationship graph is visible
@@ -92,6 +93,8 @@ db.Company.hasMany(db.ApiKey,               { foreignKey: 'akCompanyId',    as: 
 db.Company.hasMany(db.TimeEntry,            { foreignKey: 'teCompId',       as: 'timeEntries' });
 db.Company.hasMany(db.PurchaseOrderVendor,  { foreignKey: 'povCompId',      as: 'purchaseOrderVendors' });
 db.Company.hasMany(db.InventoryTransaction, { foreignKey: 'invtCompanyId',  as: 'inventoryTransactions' });
+db.Company.hasMany(db.User,                 { foreignKey: 'usrCompId',      as: 'users' });
+db.User.belongsTo(db.Company,               { foreignKey: 'usrCompId',      as: 'company' });
 
 db.Customer.belongsTo(db.Company,           { foreignKey: 'custCompId',     as: 'company' });
 db.Worker.belongsTo(db.Company,             { foreignKey: 'workerCompId',   as: 'company' });

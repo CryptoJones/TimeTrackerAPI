@@ -545,6 +545,71 @@ const spec = {
                 },
             },
         },
+        '/v1/auth/signup': {
+            post: {
+                summary: 'Create a user account + workspace',
+                description: 'Creates a user (bcrypt-hashed password) and their workspace (Company), and returns a session API key (raw, shown once) to use as the `authKey` header on subsequent calls.',
+                requestBody: {
+                    required: true,
+                    content: { 'application/json': { schema: {
+                        type: 'object',
+                        required: ['email', 'password'],
+                        properties: {
+                            email: { type: 'string', format: 'email' },
+                            password: { type: 'string', minLength: 8 },
+                            companyName: { type: 'string', description: 'Workspace name; defaults to the email.' },
+                        },
+                    } } },
+                },
+                responses: {
+                    201: { description: 'Account created; returns { user, apiKey }' },
+                    400: { description: 'Invalid body' },
+                    409: { description: 'Email already registered' },
+                },
+            },
+        },
+        '/v1/auth/login': {
+            post: {
+                summary: 'Log in; returns a fresh session API key',
+                requestBody: {
+                    required: true,
+                    content: { 'application/json': { schema: {
+                        type: 'object',
+                        required: ['email', 'password'],
+                        properties: {
+                            email: { type: 'string', format: 'email' },
+                            password: { type: 'string' },
+                        },
+                    } } },
+                },
+                responses: {
+                    200: { description: 'Logged in; returns { user, apiKey }' },
+                    400: { description: 'Invalid body' },
+                    401: { description: 'Invalid email or password' },
+                },
+            },
+        },
+        '/v1/auth/logout': {
+            post: {
+                summary: 'Archive the session API key in the authKey header',
+                security: [{ authKey: [] }],
+                responses: {
+                    200: { description: 'Logged out' },
+                    403: { description: 'Missing authKey' },
+                },
+            },
+        },
+        '/v1/auth/me': {
+            get: {
+                summary: 'Resolve the session key to its user + workspace',
+                security: [{ authKey: [] }],
+                responses: {
+                    200: { description: 'OK; returns { user }' },
+                    403: { description: 'Missing authKey' },
+                    404: { description: 'No user for this key' },
+                },
+            },
+        },
         '/v1/whoami': {
             get: {
                 summary: 'Identity probe — what does the calling authKey resolve to?',

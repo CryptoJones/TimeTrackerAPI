@@ -26,6 +26,8 @@ const purchaseOrderHeader = require('../controllers/purchaseorderheadercontrolle
 const purchaseOrderLine = require('../controllers/purchaseorderlinecontroller.js');
 const inventoryTransaction = require('../controllers/inventorytransactioncontroller.js');
 const report = require('../controllers/reportcontroller.js');
+const authController = require('../controllers/authcontroller.js');
+const authSchemas = require('../schemas/auth.schema.js');
 const whoami = require('../controllers/whoamicontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
@@ -138,6 +140,21 @@ router.post(
     v.body(customerSchemas.createCustomerBody),
     customer.createCustomer,
 );
+
+// v1 auth routes (web-app accounts). signup/login need no authKey;
+// logout/me read the session key from the authKey header.
+router.post(
+    '/v1/auth/signup',
+    v.body(authSchemas.signupBody),
+    authController.signup,
+);
+router.post(
+    '/v1/auth/login',
+    v.body(authSchemas.loginBody),
+    authController.login,
+);
+router.post('/v1/auth/logout', authController.logout);
+router.get('/v1/auth/me', authController.me);
 
 // v1 time-entry routes.
 router.post(

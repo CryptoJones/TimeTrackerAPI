@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.9] - 2026-06-22
+
+### Added
+- **Web-app user accounts** (the auth layer the end-user UI will sit on).
+  New `User` table (bcrypt-hashed passwords, one user ↔ one workspace
+  Company) and `/v1/auth/*` endpoints:
+  - `POST /v1/auth/signup` — create a user + workspace, returns a session
+    API key (raw, shown once).
+  - `POST /v1/auth/login` — verify credentials, mint a fresh session key
+    (constant-time-ish compare; no account-existence leak).
+  - `POST /v1/auth/logout` — archive the session key.
+  - `GET /v1/auth/me` — resolve the session key to its user + workspace.
+  The session credential is a company API key, so the web app drives the
+  existing company-scoped `/v1` surface unchanged (no per-controller
+  rewrite). `bcryptjs` (pure-JS) added. Covered by schema/contract unit
+  tests and a real-Postgres integration test of the full
+  signup→login→me flow (incl. the key authenticating a normal endpoint,
+  wrong-password 401, duplicate-email 409).
+
 ## [1.0.8] - 2026-06-22
 
 ### Added
@@ -505,7 +524,8 @@ original SQL Server database to this Node.js + PostgreSQL API.
 
 ---
 
-[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.8...HEAD
+[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.9...HEAD
+[1.0.9]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.5...v1.0.6

@@ -1,6 +1,6 @@
 {
   "name": "TimeTrackerAPI",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Open-source Node.js + PostgreSQL time-tracking REST API with customer/company-scoped auth, OpenAPI spec, idempotency, and CSV export.",
   "main": "server.js",
   "keywords": [
@@ -32,6 +32,7 @@
   "author": "https://github.com/CryptoJones",
   "license": "Apache-2.0",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^4.22.2",
