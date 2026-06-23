@@ -82,3 +82,27 @@ export const createJob = (data) => api('/v1/job', { method: 'POST', body: data }
 export const listTimeEntries = (companyId, query = '') =>
     api(`/v1/timeentry/bycompany/${companyId}${query}`);
 export const createTimeEntry = (data) => api('/v1/timeentry', { method: 'POST', body: data });
+
+// --- invoices ---
+export const listInvoices = (custId) => api(`/v1/invoice/bycustomer/${custId}`);
+export const getInvoice = (id) => api(`/v1/invoice/${id}`);
+export const autoBillJob = (jobId, body = {}) => api(`/v1/invoice/from-job/${jobId}`, { method: 'POST', body });
+export const recordPayment = (id, body) => api(`/v1/invoice/${id}/payment`, { method: 'POST', body });
+export const carryForward = (id, body = {}) => api(`/v1/invoice/${id}/carry-forward`, { method: 'POST', body });
+export const aging = (companyId) => api(`/v1/report/aging${companyId ? `?companyId=${companyId}` : ''}`);
+
+/** Download the invoice PDF (needs the authKey header, so fetch → blob). */
+export async function downloadInvoicePdf(id) {
+    const key = getApiKey();
+    const res = await fetch(`/v1/invoice/${id}/pdf`, { headers: key ? { authKey: key } : {} });
+    if (!res.ok) throw new Error(`Couldn't download the PDF (${res.status}).`);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `invoice-${id}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}

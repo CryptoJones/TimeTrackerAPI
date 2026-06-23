@@ -1,18 +1,35 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Aaron K. Clark
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { getCustomer, listJobs, createJob, listFrom } from '../api.js';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { getCustomer, listJobs, createJob, autoBillJob, listFrom } from '../api.js';
 
 export default function CustomerDetail() {
     const { id } = useParams();
+    const nav = useNavigate();
     const custId = Number(id);
     const [customer, setCustomer] = useState(null);
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [note, setNote] = useState(null);
     const [jobDesc, setJobDesc] = useState('');
     const [busy, setBusy] = useState(false);
+    const [billing, setBilling] = useState(null);
+
+    async function onAutoBill(jobId) {
+        setBilling(jobId);
+        setError(null);
+        setNote(null);
+        try {
+            const out = await autoBillJob(jobId);
+            nav(`/invoices/${out.invoice.invId}`);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setBilling(null);
+        }
+    }
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -62,16 +79,23 @@ export default function CustomerDetail() {
                 </form>
             </div>
 
+            {note && <p className="note">{note}</p>}
             {error && <p className="error">{error}</p>}
             {loading ? <p className="muted">Loading…</p> : (
                 <table className="table">
-                    <thead><tr><th>Job</th><th>Invoiced</th></tr></thead>
+                    <thead><tr><th>Job</th><th>Invoiced</th><th></th></tr></thead>
                     <tbody>
-                        {jobs.length === 0 && <tr><td colSpan={2} className="muted">No jobs yet.</td></tr>}
+                        {jobs.length === 0 && <tr><td colSpan={3} className="muted">No jobs yet.</td></tr>}
                         {jobs.map((j) => (
                             <tr key={j.jobId}>
                                 <td>{j.jobDesc}</td>
                                 <td className="muted">{j.jobInvoiced ? 'Yes' : 'No'}</td>
+                                <td>
+                                    <button className="ghost small" disabled={billing === j.jobId}
+                                        onClick={() => onAutoBill(j.jobId)}>
+                                        {billing === j.jobId ? 'Billing…' : 'Auto-bill →'}
+                                    </button>
+                                </td>
                             </tr>
                         ))}
                     </tbody>

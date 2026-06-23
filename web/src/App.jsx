@@ -8,6 +8,8 @@ import Dashboard from './pages/Dashboard.jsx';
 import Clients from './pages/Clients.jsx';
 import CustomerDetail from './pages/CustomerDetail.jsx';
 import TimeTracking from './pages/TimeTracking.jsx';
+import Invoices from './pages/Invoices.jsx';
+import InvoiceDetail from './pages/InvoiceDetail.jsx';
 
 function Protected({ children }) {
     const { user, loading } = useAuth();
@@ -26,6 +28,7 @@ function Header() {
                 <NavLink to="/" end>Dashboard</NavLink>
                 <NavLink to="/time">Time</NavLink>
                 <NavLink to="/clients">Clients</NavLink>
+                <NavLink to="/invoices">Invoices</NavLink>
             </nav>
             <div className="spacer" />
             <span className="muted">{user.email}</span>
@@ -48,6 +51,8 @@ export default function App() {
                     <Route path="/time" element={<Protected><TimeTracking /></Protected>} />
                     <Route path="/clients" element={<Protected><Clients /></Protected>} />
                     <Route path="/clients/:id" element={<Protected><CustomerDetail /></Protected>} />
+                    <Route path="/invoices" element={<Protected><Invoices /></Protected>} />
+                    <Route path="/invoices/:id" element={<Protected><InvoiceDetail /></Protected>} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </main>

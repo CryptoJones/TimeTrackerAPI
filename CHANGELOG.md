@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.13] - 2026-06-22
+
+### Added
+- **web: Invoicing.** Closes the core "track time → bill → get paid" loop
+  in the UI: one-click **auto-bill** a job into an invoice (from the
+  client page), an **invoice detail** view with total / paid / balance /
+  status, line items and payments, a **record-payment** form (full or
+  partial), **download PDF** (authenticated blob fetch), and **carry
+  balance forward**. New Invoices nav + an invoice list per client.
+  Builds clean.
+
 ## [1.0.12] - 2026-06-22
 
 ### Added
@@ -555,7 +566,8 @@ original SQL Server database to this Node.js + PostgreSQL API.
 
 ---
 
-[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.12...HEAD
+[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.13...HEAD
+[1.0.13]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.12...v1.0.13
 [1.0.12]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.11...v1.0.12
 [1.0.11]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.10...v1.0.11
 [1.0.10]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.9...v1.0.10
