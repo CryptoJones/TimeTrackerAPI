@@ -103,3 +103,8 @@ button.small { padding: 5px 10px; font-size: 13px; }
 .cols { display: grid; grid-template-columns: 1fr; gap: 24px; margin-top: 8px; }
 @media (min-width: 760px) { .cols { grid-template-columns: 2fr 1fr; } }
 .cols h2 { font-size: 16px; margin: 14px 0 8px; }
+
+.linkcard { text-decoration: none; color: inherit; display: block; transition: border-color .12s; }
+.linkcard:hover { border-color: var(--accent-2); }
+.linkcard h2 { color: var(--text); }
+.dashboard h2 { font-size: 17px; }

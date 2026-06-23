@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.15] - 2026-06-22
+
+### Added
+- **web: A/R dashboard.** The home screen now shows accounts-receivable
+  at a glance — total outstanding, the aging buckets (current / 1–30 /
+  31–60 / 61–90 / 90+), and a "who owes you" table — wired to
+  `/v1/report/aging`. The quick-action cards (Track time / Clients /
+  Invoices) are now real links. Builds clean.
+
 ## [1.0.14] - 2026-06-22
 
 ### Added
@@ -579,7 +588,8 @@ original SQL Server database to this Node.js + PostgreSQL API.
 
 ---
 
-[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.14...HEAD
+[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.15...HEAD
+[1.0.15]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.14...v1.0.15
 [1.0.14]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.13...v1.0.14
 [1.0.13]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.12...v1.0.13
 [1.0.12]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.11...v1.0.12
