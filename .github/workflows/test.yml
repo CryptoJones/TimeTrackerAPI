@@ -89,3 +89,23 @@ jobs:
         run: npm run audit
       - name: Run vitest (unit + api + integration)
         run: npm test
+
+  # Build the web SPA so a broken build is caught on every push/PR
+  # instead of only at release time (where the Docker webbuild stage
+  # would fail). Runs in parallel with the API test job.
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+      - name: Install web dependencies
+        run: npm ci
+        working-directory: web
+      - name: Build web app
+        run: npm run build
+        working-directory: web

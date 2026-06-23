@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.16] - 2026-06-22
+
+### Changed
+- **CI: gate the web build.** `test.yml` gains a parallel `web` job that
+  runs `npm ci && npm run build` in `web/`, so a broken SPA build is
+  caught on every push/PR instead of only when the Docker `webbuild`
+  stage fails at release time.
+
 ## [1.0.15] - 2026-06-22
 
 ### Added
@@ -588,7 +596,8 @@ original SQL Server database to this Node.js + PostgreSQL API.
 
 ---
 
-[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.15...HEAD
+[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.16...HEAD
+[1.0.16]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.15...v1.0.16
 [1.0.15]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.14...v1.0.15
 [1.0.14]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.13...v1.0.14
 [1.0.13]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.12...v1.0.13
