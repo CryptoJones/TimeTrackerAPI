@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.5] - 2026-06-22
+
+### Added
+- **`POST /v1/invoice/from-job/:id`** — auto-bill a job. Gathers its
+  billable, un-invoiced, closed time entries, computes Σ(hours × rate)
+  (rate from each entry's `teBillTypeId`, else the worker's default
+  billing type), creates a **draft** invoice + one `InvoiceJob` line for
+  the total, and marks the billed entries consumed via the new
+  `TimeEntry.teInvoiceJobId` so the same hours can't be billed twice.
+  Optional body `{ invDate, netDays }` (defaults: today, net-30).
+  Unrated entries are reported (`unratedCount`) and left un-consumed so
+  they can be billed once a rate is set. Transaction-wrapped,
+  company-scoped (secure-404), idempotent. New `teInvoiceJobId` migration
+  + association; rate/amount math in `app/services/money.js`
+  (`computeJobBill`), unit-tested; full flow covered by a real-Postgres
+  integration test (incl. the no-double-bill guard).
+
 ## [1.0.4] - 2026-06-22
 
 ### Added
@@ -441,7 +458,8 @@ original SQL Server database to this Node.js + PostgreSQL API.
 
 ---
 
-[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.4...HEAD
+[Unreleased]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.5...HEAD
+[1.0.5]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/CryptoJones/TimeTrackerAPI/compare/v1.0.1...v1.0.2

@@ -260,3 +260,32 @@ describe('POST /v1/invoice/:id/payment — recordPayment', () => {
     // tests/unit/money.test.js; the full record-payment flow against real
     // Postgres lives in tests/integration/invoice-payments.test.js.
 });
+
+describe('POST /v1/invoice/from-job/:id — createFromJob', () => {
+    const schemas = require('../../app/schemas/invoice.schema.js');
+
+    test('fromJobBody: optional fields validate; bad ones rejected', () => {
+        expect(schemas.fromJobBody.safeParse({}).success).toBe(true);
+        expect(schemas.fromJobBody.safeParse({ invDate: '2026-01-01', netDays: 30 }).success).toBe(true);
+        expect(schemas.fromJobBody.safeParse({ invDate: 'nope' }).success).toBe(false);
+        expect(schemas.fromJobBody.safeParse({ netDays: -1 }).success).toBe(false);
+        expect(schemas.fromJobBody.safeParse({ netDays: 9999 }).success).toBe(false);
+        expect(schemas.fromJobBody.safeParse({ bogus: 1 }).success).toBe(false);
+    });
+
+    test('403 when authKey header is missing', async () => {
+        const controller = require('../../app/controllers/invoicecontroller.js');
+        const req = { get: () => undefined, params: { id: 1 }, body: {} };
+        const r = {
+            status(code) { this._code = code; return this; },
+            json(body) { this._body = body; return this; },
+        };
+        await controller.createFromJob(req, r);
+        expect(r._code).toBe(403);
+    });
+
+    // The 201 auto-bill happy path (gather time → compute → create invoice
+    // → consume entries) is a multi-table DB transaction; it's exercised
+    // against real Postgres in tests/integration/invoice-from-job.test.js,
+    // and the rate/amount math is unit-tested in tests/unit/money.test.js.
+});

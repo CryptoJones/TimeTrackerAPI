@@ -144,6 +144,10 @@ db.Invoice.hasMany(db.CustomerPayment,   { foreignKey: 'cpayInvId', as: 'payment
 db.CustomerPayment.belongsTo(db.Invoice, { foreignKey: 'cpayInvId', as: 'invoice' });
 db.Invoice.belongsTo(db.Invoice,         { foreignKey: 'invBalanceForwardFrom', as: 'balanceForwardFrom' });
 
+// A billed time entry links to the invoice line that consumed it.
+db.InvoiceJob.hasMany(db.TimeEntry,   { foreignKey: 'teInvoiceJobId', as: 'timeEntries' });
+db.TimeEntry.belongsTo(db.InvoiceJob, { foreignKey: 'teInvoiceJobId', as: 'invoiceLine' });
+
 // InventoryItem is referenced by product entries, inventory
 // transactions, and PO lines.
 db.InventoryItem.hasMany(db.ProductEntry,         { foreignKey: 'pentInvtId',  as: 'productEntries' });

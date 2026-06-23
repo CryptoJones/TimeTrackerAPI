@@ -69,6 +69,16 @@ const recordPaymentBody = z.object({
     message: 'Unexpected field in body. Whitelist: amount, date, description.',
 });
 
+// POST /v1/invoice/from-job/:id — auto-bill a job's billable time.
+// Body is optional: invDate defaults to today, netDays (payment terms)
+// defaults to 30.
+const fromJobBody = z.object({
+    invDate: isoDate.optional(),
+    netDays: z.coerce.number().int().min(0).max(365).optional(),
+}).strict({
+    message: 'Unexpected field in body. Whitelist: invDate, netDays.',
+});
+
 const listByCustomerQuery = z.object({
     limit: z.coerce.number().int().positive().max(500).optional(),
     offset: z.coerce.number().int().nonnegative().optional(),
@@ -87,6 +97,7 @@ module.exports = {
     createInvoiceBody,
     updateInvoiceBody,
     recordPaymentBody,
+    fromJobBody,
     listByCustomerQuery,
     bulkInvoiceBody,
 };

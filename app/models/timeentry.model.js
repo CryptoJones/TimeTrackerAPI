@@ -73,6 +73,12 @@ module.exports = (sequelize, Sequelize) => {
             field: 'teBillTypeId',
             type: Sequelize.INTEGER,
         },
+        // Set when this entry's billable time is rolled into an invoice
+        // line (auto-bill). NULL = un-invoiced / available to bill.
+        teInvoiceJobId: {
+            field: 'teInvoiceJobId',
+            type: Sequelize.INTEGER,
+        },
         teArch: {
             field: 'teArch',
             type: Sequelize.BOOLEAN,

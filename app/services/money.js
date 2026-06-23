@@ -86,6 +86,49 @@ function summarize(invoice, lines, payments) {
     return { total, paid, balance, status };
 }
 
+/**
+ * Resolve the hourly rate for a time entry: its explicit billing type
+ * first, else the worker's default billing type. Returns null when no
+ * rate can be resolved (the entry is "unrated" and won't be billed).
+ *
+ * Maps are id -> value: rateByBillTypeId (btId -> btHourlyRate) and
+ * defaultBillTypeByWorkerId (workerId -> workerDefaultBillType id).
+ */
+function jobBillRate(entry, rateByBillTypeId, defaultBillTypeByWorkerId) {
+    const bt = entry.teBillTypeId;
+    if (bt != null && rateByBillTypeId.has(bt)) return rateByBillTypeId.get(bt);
+    const w = entry.teWorkerId;
+    if (w != null && defaultBillTypeByWorkerId.has(w)) {
+        const dbt = defaultBillTypeByWorkerId.get(w);
+        if (dbt != null && rateByBillTypeId.has(dbt)) return rateByBillTypeId.get(dbt);
+    }
+    return null;
+}
+
+/**
+ * Compute the billable amount for a job from its time entries:
+ * Σ (minutes/60 × rate), to the cent. Entries with no resolvable rate
+ * are counted (unratedCount) but contribute nothing and are NOT marked
+ * billed, so they can be invoiced later once a rate is set. Zero/null
+ * minute entries are skipped silently.
+ *
+ * Returns { amount, billedEntryIds, unratedCount }.
+ */
+function computeJobBill(entries, rateByBillTypeId, defaultBillTypeByWorkerId) {
+    let cents = 0;
+    const billedEntryIds = [];
+    let unratedCount = 0;
+    for (const e of (entries || [])) {
+        const mins = Number(e.teMinutes);
+        if (!Number.isFinite(mins) || mins <= 0) continue;
+        const rate = jobBillRate(e, rateByBillTypeId, defaultBillTypeByWorkerId);
+        if (rate == null) { unratedCount++; continue; }
+        cents += Math.round((mins / 60) * Number(rate) * 100);
+        billedEntryIds.push(e.teId);
+    }
+    return { amount: cents / 100, billedEntryIds, unratedCount };
+}
+
 module.exports = {
     roundCents,
     sumField,
@@ -94,4 +137,6 @@ module.exports = {
     invoiceBalance,
     deriveStatus,
     summarize,
+    jobBillRate,
+    computeJobBill,
 };

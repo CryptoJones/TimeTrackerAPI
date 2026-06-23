@@ -13,6 +13,7 @@ const Invoice = db.Invoice;
 const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
 const GetCompanyIdByCustomerId = auth.getCompanyIdByCustomerId;
+const GetCompanyIdByJobId = auth.getCompanyIdByJobId;
 
 const ALLOWED_FIELDS_CREATE = ['invCustId', 'invDate', 'invDueDate', 'invPaid'];
 const ALLOWED_FIELDS_UPDATE = ['invDate', 'invDueDate', 'invPaid'];
@@ -307,6 +308,136 @@ exports.recordPayment = async (req, res) => {
     } catch (error) {
         if (t && typeof t.rollback === 'function') await t.rollback();
         log.error({ err: error }, 'Invoice.recordPayment failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+};
+
+/**
+ * POST /v1/invoice/from-job/:id
+ *
+ * Auto-bill a job: gather its billable, un-invoiced, closed time
+ * entries, compute Σ(hours × rate) (rate from each entry's billing type,
+ * else the worker's default), create a draft Invoice + one InvoiceJob
+ * line for the total, and mark the billed entries consumed
+ * (teInvoiceJobId) so they can't be billed twice. Transaction-wrapped.
+ */
+exports.createFromJob = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+    const jobId = Number(req.params.id);
+
+    let job;
+    try {
+        job = await db.Job.findByPk(jobId);
+    } catch (error) {
+        log.error({ err: error }, 'Job.findByPk (createFromJob) failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (!job || job.jobArch) {
+        return res.status(404).json({ message: "Not found." });
+    }
+
+    const isMaster = await IsMaster(authKey);
+    if (!isMaster) {
+        const authCompanyId = await GetCompanyId(authKey);
+        const jobCompanyId = await GetCompanyIdByJobId(jobId);
+        if (authCompanyId === -1 || jobCompanyId === -1 || authCompanyId !== jobCompanyId) {
+            return res.status(404).json({ message: "Not found." });
+        }
+    }
+
+    const Op = db.Sequelize && db.Sequelize.Op;
+    let entries;
+    try {
+        entries = await db.TimeEntry.findAll({
+            where: {
+                teJobId: jobId,
+                teBillable: true,
+                teInvoiceJobId: null,
+                teMinutes: Op ? { [Op.ne]: null } : null,
+            },
+        });
+    } catch (error) {
+        log.error({ err: error }, 'TimeEntry.findAll (createFromJob) failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (!entries.length) {
+        return res.status(400).json({
+            message: "No billable, un-invoiced time entries to bill for this job.",
+        });
+    }
+
+    // Resolve rate maps: explicit billing types + worker defaults.
+    const billTypeIds = new Set();
+    const workerIds = new Set();
+    for (const e of entries) {
+        if (e.teBillTypeId != null) billTypeIds.add(e.teBillTypeId);
+        if (e.teWorkerId != null) workerIds.add(e.teWorkerId);
+    }
+    const defaultBillTypeByWorkerId = new Map();
+    try {
+        if (workerIds.size) {
+            const workers = await db.Worker.findAll({
+                where: { workerId: [...workerIds] },
+                attributes: ['workerId', 'workerDefaultBillType'],
+            });
+            for (const w of workers) {
+                defaultBillTypeByWorkerId.set(w.workerId, w.workerDefaultBillType);
+                if (w.workerDefaultBillType != null) billTypeIds.add(w.workerDefaultBillType);
+            }
+        }
+        const rateByBillTypeId = new Map();
+        if (billTypeIds.size) {
+            const bts = await db.BillingType.findAll({
+                where: { btId: [...billTypeIds] },
+                attributes: ['btId', 'btHourlyRate'],
+            });
+            for (const bt of bts) rateByBillTypeId.set(bt.btId, bt.btHourlyRate);
+        }
+
+        const { amount, billedEntryIds, unratedCount } =
+            money.computeJobBill(entries, rateByBillTypeId, defaultBillTypeByWorkerId);
+        if (billedEntryIds.length === 0) {
+            return res.status(400).json({
+                message: "No rateable time entries (set a billing type or a worker default rate).",
+            });
+        }
+
+        const invDate = (req.body && req.body.invDate) || new Date().toISOString().slice(0, 10);
+        const netDays = req.body && Number.isInteger(Number(req.body.netDays))
+            ? Number(req.body.netDays) : 30;
+        const due = new Date(invDate + 'T00:00:00Z');
+        due.setUTCDate(due.getUTCDate() + netDays);
+        const invDueDate = due.toISOString().slice(0, 10);
+
+        const t = await db.sequelize.transaction();
+        try {
+            const invoice = await db.Invoice.create({
+                invCustId: job.jobCustId, invDate, invDueDate,
+                invPaid: false, invStatus: 'draft', invArch: false,
+            }, { transaction: t });
+            const line = await db.InvoiceJob.create({
+                injbInvId: invoice.invId, injbJobId: jobId,
+                injbAmount: amount, injbArch: false,
+            }, { transaction: t });
+            await db.TimeEntry.update(
+                { teInvoiceJobId: line.injbId },
+                { where: { teId: billedEntryIds }, transaction: t },
+            );
+            await t.commit();
+            return res.status(201).json({
+                message: "Invoice created from job.",
+                invoice, line, amount,
+                billedCount: billedEntryIds.length, unratedCount,
+            });
+        } catch (error) {
+            if (t && typeof t.rollback === 'function') await t.rollback();
+            throw error;
+        }
+    } catch (error) {
+        log.error({ err: error }, 'Invoice.createFromJob failed');
         return res.status(500).json({ message: "Error!" });
     }
 };

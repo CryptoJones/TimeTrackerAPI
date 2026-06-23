@@ -1355,6 +1355,37 @@ const spec = {
                 },
             },
         },
+        '/v1/invoice/from-job/{id}': {
+            post: {
+                summary: 'Auto-bill a job: create a draft invoice from its billable time',
+                description:
+                    "Gathers the job's billable, un-invoiced, closed time entries, " +
+                    'computes Σ(hours × rate) (rate from each entry\'s billing type, ' +
+                    'else the worker default), creates a draft invoice + one line, and ' +
+                    "marks the billed entries consumed so they can't be billed twice.",
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Job id.' },
+                    idempotencyKeyHeader,
+                ],
+                requestBody: {
+                    required: false,
+                    content: { 'application/json': { schema: {
+                        type: 'object',
+                        properties: {
+                            invDate: { type: 'string', format: 'date', description: 'Defaults to today.' },
+                            netDays: { type: 'integer', minimum: 0, maximum: 365, description: 'Due date = invDate + netDays. Defaults to 30.' },
+                        },
+                    } } },
+                },
+                responses: {
+                    201: { description: 'Invoice created from job (returns invoice, line, amount, billedCount, unratedCount)', headers: idempotencyReplayResponseHeader },
+                    400: { description: 'No billable / no rateable entries' },
+                    404: { description: 'Job not found (or cross-tenant)' },
+                    403: { description: 'Missing authKey' },
+                },
+            },
+        },
         '/v1/invoice/{id}': {
             get: { summary: 'Get one invoice (with total/paid/balance/status)', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
             patch: { summary: 'Partial update of an invoice', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/Invoice' } } } }, responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },

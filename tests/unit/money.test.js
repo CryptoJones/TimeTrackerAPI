@@ -94,3 +94,68 @@ describe('summarize', () => {
         expect(out).toEqual({ total: 0, paid: 0, balance: 0, status: 'draft' });
     });
 });
+
+describe('jobBillRate', () => {
+    const rateByBt = new Map([[1, 100], [2, 50]]);
+    const defByWorker = new Map([[5, 2]]); // worker 5 defaults to billtype 2
+
+    test('uses the entry billing type first', () => {
+        expect(money.jobBillRate({ teBillTypeId: 1, teWorkerId: 5 }, rateByBt, defByWorker)).toBe(100);
+    });
+    test('falls back to the worker default', () => {
+        expect(money.jobBillRate({ teBillTypeId: null, teWorkerId: 5 }, rateByBt, defByWorker)).toBe(50);
+    });
+    test('null when neither resolves', () => {
+        expect(money.jobBillRate({ teBillTypeId: null, teWorkerId: null }, rateByBt, defByWorker)).toBeNull();
+        expect(money.jobBillRate({ teBillTypeId: 99, teWorkerId: null }, rateByBt, defByWorker)).toBeNull();
+    });
+});
+
+describe('computeJobBill', () => {
+    const rateByBt = new Map([[1, 100], [2, 50]]);
+    const defByWorker = new Map([[5, 2]]);
+
+    test('sums hours × rate across entries', () => {
+        const entries = [
+            { teId: 10, teMinutes: 120, teBillTypeId: 1 }, // 2h × 100 = 200
+            { teId: 11, teMinutes: 30, teBillTypeId: 2 },  // 0.5h × 50 = 25
+        ];
+        const r = money.computeJobBill(entries, rateByBt, defByWorker);
+        expect(r.amount).toBe(225);
+        expect(r.billedEntryIds).toEqual([10, 11]);
+        expect(r.unratedCount).toBe(0);
+    });
+
+    test('uses worker default rate when entry has no billing type', () => {
+        const entries = [{ teId: 12, teMinutes: 60, teBillTypeId: null, teWorkerId: 5 }];
+        const r = money.computeJobBill(entries, rateByBt, defByWorker);
+        expect(r.amount).toBe(50);
+        expect(r.billedEntryIds).toEqual([12]);
+    });
+
+    test('counts unrated entries but does not bill them', () => {
+        const entries = [
+            { teId: 13, teMinutes: 60, teBillTypeId: 1 },          // billed: 100
+            { teId: 14, teMinutes: 60, teBillTypeId: null, teWorkerId: null }, // unrated
+        ];
+        const r = money.computeJobBill(entries, rateByBt, defByWorker);
+        expect(r.amount).toBe(100);
+        expect(r.billedEntryIds).toEqual([13]);
+        expect(r.unratedCount).toBe(1);
+    });
+
+    test('skips zero / null / in-flight minute entries', () => {
+        const entries = [
+            { teId: 15, teMinutes: 0, teBillTypeId: 1 },
+            { teId: 16, teMinutes: null, teBillTypeId: 1 },
+            { teId: 17, teMinutes: 60, teBillTypeId: 1 },
+        ];
+        const r = money.computeJobBill(entries, rateByBt, defByWorker);
+        expect(r.amount).toBe(100);
+        expect(r.billedEntryIds).toEqual([17]);
+    });
+
+    test('empty input → zero', () => {
+        expect(money.computeJobBill([], rateByBt, defByWorker)).toEqual({ amount: 0, billedEntryIds: [], unratedCount: 0 });
+    });
+});
