@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Invoice discounts & write-offs** (#421). `invDiscount` reduces the
+  subtotal **before** tax at roll-up time (`discount` in the roll-up
+  body, clamped to `[0, subtotal]`); `invWriteOff` records an
+  uncollectible amount, settable via `PATCH /v1/invoice/{id}`, that
+  counts toward "settled" in the payment-driven status/balance
+  derivation (so a fully written-off invoice reads `paid`, balance `0`).
+  Migration `20260528000000`; both `NUMERIC(14,2)`, exact-cent.
 - **Invoice sales tax** (#420). A per-company default tax rate
   (`compTaxRate`, a fraction like `0.0725`) plus a per-invoice effective
   rate (`invTaxRate`), migration `20260527000000`. The time→invoice
