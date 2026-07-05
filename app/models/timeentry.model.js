@@ -46,6 +46,12 @@ module.exports = (sequelize, Sequelize) => {
             // billable minutes roll up to a project (and its invoice).
             type: Sequelize.INTEGER,
         },
+        teBillTypeId: {
+            field: 'teBillTypeId',
+            // Nullable per-entry rate override (a BillingType). Top tier
+            // of rate resolution; NULL means "use the worker default".
+            type: Sequelize.INTEGER,
+        },
         teDescription: {
             field: 'teDescription',
             type: Sequelize.TEXT,

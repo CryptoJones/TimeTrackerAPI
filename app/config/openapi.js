@@ -860,7 +860,7 @@ const spec = {
                 parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
                 responses: {
                     200: {
-                        description: 'Found — {message, timeEntry} envelope',
+                        description: 'Found — {message, timeEntry, billing} envelope',
                         content: {
                             'application/json': {
                                 schema: {
@@ -868,6 +868,14 @@ const spec = {
                                     properties: {
                                         message: { type: 'string' },
                                         timeEntry: { $ref: '#/components/schemas/TimeEntry' },
+                                        billing: {
+                                            type: 'object',
+                                            description: 'Computed (not stored): the resolved hourly rate and billable amount (rate × hours; 0 when non-billable; null when no rate resolves).',
+                                            properties: {
+                                                rate: { type: 'number', nullable: true },
+                                                billableAmount: { type: 'number', nullable: true },
+                                            },
+                                        },
                                     },
                                 },
                             },

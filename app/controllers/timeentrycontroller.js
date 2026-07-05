@@ -7,6 +7,7 @@ const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
 const { escapeCsvCell } = require('./_csv-escape.js');
+const rate = require('../services/rate.js');
 const TimeEntry = db.TimeEntry;
 
 // Auth helpers used to live inline here — they now share a single
@@ -16,12 +17,12 @@ const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
 
 const ALLOWED_FIELDS_CREATE = [
-    'teCustId', 'teWorkerId', 'teJobId', 'teDescription', 'teStartedAt',
-    'teEndedAt', 'teBillable',
+    'teCustId', 'teWorkerId', 'teJobId', 'teBillTypeId', 'teDescription',
+    'teStartedAt', 'teEndedAt', 'teBillable',
 ];
 const ALLOWED_FIELDS_UPDATE = [
-    'teWorkerId', 'teJobId', 'teDescription', 'teStartedAt', 'teEndedAt',
-    'teBillable',
+    'teWorkerId', 'teJobId', 'teBillTypeId', 'teDescription', 'teStartedAt',
+    'teEndedAt', 'teBillable',
 ];
 
 function computeMinutes(startedAt, endedAt) {
@@ -72,19 +73,23 @@ function isInvertedRange(startedAt, endedAt) {
 }
 
 /**
- * Validate an optional worker/job link against the entry's company and
- * customer. Both are optional; a `null` value (update-only, to unlink)
- * is skipped. Returns `null` when the links are legal, or a
- * `{ status, message }` object the caller sends as-is.
+ * Validate the optional worker / job / billtype links against the
+ * entry's company and customer. Each is optional; a `null` value
+ * (update-only, to unlink) is skipped. Returns `null` when the links are
+ * legal, or a `{ status, message }` object the caller sends as-is.
  *
- *   - teWorkerId: must reference a Worker in `companyId`.
- *   - teJobId:    must reference a Job whose customer sits in
+ *   - teWorkerId:   must reference a Worker in `companyId`.
+ *   - teJobId:      must reference a Job whose customer sits in
  *     `companyId` AND — when `custId` is known — whose customer IS
  *     `custId`, so time for one client can't be booked against another
- *     client's job. Archived workers/jobs are filtered by defaultScope
- *     and therefore read as "not found" → 400.
+ *     client's job.
+ *   - teBillTypeId: must reference a BillingType in `companyId` (the
+ *     per-entry rate override).
+ *
+ * Archived rows are filtered by defaultScope and therefore read as
+ * "not found" → 400.
  */
-async function checkWorkerJobLinks({ teWorkerId, teJobId }, companyId, custId) {
+async function checkEntryLinks({ teWorkerId, teJobId, teBillTypeId }, companyId, custId) {
     if (teWorkerId !== undefined && teWorkerId !== null) {
         const worker = await db.Worker.findByPk(Number(teWorkerId), {
             attributes: ['workerCompId'],
@@ -111,6 +116,14 @@ async function checkWorkerJobLinks({ teWorkerId, teJobId }, companyId, custId) {
                 status: 400,
                 message: 'teJobId must belong to the same customer as the time entry (teCustId).',
             };
+        }
+    }
+    if (teBillTypeId !== undefined && teBillTypeId !== null) {
+        const bt = await db.BillingType.findByPk(Number(teBillTypeId), {
+            attributes: ['btCompId'],
+        });
+        if (!bt || bt.btCompId !== companyId) {
+            return { status: 400, message: 'teBillTypeId must reference a billing type in your company.' };
         }
     }
     return null;
@@ -166,7 +179,7 @@ exports.create = async (req, res) => {
 
     let linkError;
     try {
-        linkError = await checkWorkerJobLinks(payload, companyId, payload.teCustId);
+        linkError = await checkEntryLinks(payload, companyId, payload.teCustId);
     } catch (error) {
         log.error({ err: error }, 'TimeEntry worker/job link validation failed');
         return res.status(500).json({ message: "Error!" });
@@ -197,7 +210,22 @@ exports.getById = async (req, res) => {
 
     let entry;
     try {
-        entry = await TimeEntry.findByPk(req.params.id);
+        // Eager-load the rate sources so the response can carry the
+        // resolved rate + billable amount without extra round-trips:
+        // the entry's own BillingType (override) and the worker's
+        // default BillingType. required:false — any of these may be
+        // absent (nullable FKs) or archived (defaultScope hides them).
+        entry = await TimeEntry.findByPk(req.params.id, {
+            include: [
+                { model: db.BillingType, as: 'billingType', required: false },
+                {
+                    model: db.Worker,
+                    as: 'worker',
+                    required: false,
+                    include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }],
+                },
+            ],
+        });
     } catch (error) {
         log.error({ err: error }, 'TimeEntry.findByPk failed');
         return res.status(500).json({ message: "Error!" });
@@ -218,7 +246,18 @@ exports.getById = async (req, res) => {
             return res.status(404).json({ message: "Not found." });
         }
     }
-    return res.status(200).json({ message: "Found.", timeEntry: entry });
+    // Computed billing view: the resolved hourly rate and the billable
+    // amount (rate × hours, or 0 for non-billable, or null when a rate
+    // can't be resolved yet). Derived, not stored — see money.js/rate.js.
+    const resolvedRate = rate.resolveHourlyRate(entry);
+    return res.status(200).json({
+        message: "Found.",
+        timeEntry: entry,
+        billing: {
+            rate: resolvedRate,
+            billableAmount: rate.billableAmount(entry, resolvedRate),
+        },
+    });
 };
 
 /**
@@ -367,7 +406,7 @@ exports.update = async (req, res) => {
 
     let linkError;
     try {
-        linkError = await checkWorkerJobLinks(updates, entry.teCompId, entry.teCustId);
+        linkError = await checkEntryLinks(updates, entry.teCompId, entry.teCustId);
     } catch (error) {
         log.error({ err: error }, 'TimeEntry worker/job link validation failed');
         return res.status(500).json({ message: "Error!" });

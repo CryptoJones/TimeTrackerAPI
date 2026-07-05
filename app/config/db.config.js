@@ -127,6 +127,11 @@ db.TimeEntry.belongsTo(db.Worker, { foreignKey: 'teWorkerId', as: 'worker' });
 db.Job.hasMany(db.TimeEntry,      { foreignKey: 'teJobId',    as: 'timeEntries' });
 db.TimeEntry.belongsTo(db.Job,    { foreignKey: 'teJobId',    as: 'job' });
 
+// TimeEntry → BillingType (per-entry rate override, teBillTypeId). Top
+// tier of rate resolution; see app/services/rate.js.
+db.BillingType.hasMany(db.TimeEntry,   { foreignKey: 'teBillTypeId', as: 'timeEntries' });
+db.TimeEntry.belongsTo(db.BillingType, { foreignKey: 'teBillTypeId', as: 'billingType' });
+
 // Job has lines (InvoiceJob) and product entries.
 db.Job.hasMany(db.InvoiceJob,      { foreignKey: 'injbJobId', as: 'invoiceLines' });
 db.Job.hasMany(db.ProductEntry,    { foreignKey: 'pentJobId', as: 'productEntries' });
