@@ -197,6 +197,145 @@ exports.create = async (req, res) => {
     }
 };
 
+const START_FIELDS = [
+    'teCustId', 'teWorkerId', 'teJobId', 'teBillTypeId', 'teDescription', 'teBillable',
+];
+
+/**
+ * POST /v1/timeentry/start — begin an in-flight timer (#396).
+ *
+ * The server stamps teStartedAt = now and leaves teEndedAt null
+ * (teMinutes null) — a live entry to be closed later by /stop. Company
+ * scoping and worker/job/billtype link validation mirror create. If a
+ * worker is named and already has a running timer, this 409s so a
+ * worker never has two clocks going at once.
+ */
+exports.start = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+
+    const isMaster = await IsMaster(authKey);
+    let companyId;
+    if (isMaster) {
+        companyId = Number(req.body && req.body.teCompId);
+        if (!Number.isInteger(companyId) || companyId <= 0) {
+            return res.status(400).json({ message: "Master-key requests must specify teCompId." });
+        }
+    } else {
+        companyId = await GetCompanyId(authKey);
+        if (companyId === -1) {
+            return res.status(403).json({ message: "Invalid Authorization Key." });
+        }
+        if (req.body && req.body.teCompId !== undefined &&
+            Number(req.body.teCompId) !== companyId) {
+            return res.status(403).json({
+                message: "Cannot start a timer for a company you do not belong to.",
+            });
+        }
+    }
+
+    const body = req.body || {};
+    const payload = {};
+    for (const f of START_FIELDS) {
+        if (body[f] !== undefined) payload[f] = body[f];
+    }
+    if (!payload.teCustId || !Number.isInteger(Number(payload.teCustId))) {
+        return res.status(400).json({ message: "teCustId is required and must be an integer." });
+    }
+    payload.teCompId = companyId;
+    payload.teArch = false;
+    payload.teStartedAt = new Date(); // server clock; timer is now running
+    payload.teEndedAt = null;
+    payload.teMinutes = null;
+
+    let linkError;
+    try {
+        linkError = await checkEntryLinks(payload, companyId, payload.teCustId);
+    } catch (error) {
+        log.error({ err: error }, 'timer start: link validation failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (linkError) {
+        return res.status(linkError.status).json({ message: linkError.message });
+    }
+
+    // One running timer per worker: reject a second concurrent clock.
+    if (payload.teWorkerId != null) {
+        let running;
+        try {
+            running = await TimeEntry.findOne({
+                where: { teCompId: companyId, teWorkerId: Number(payload.teWorkerId), teEndedAt: null },
+            });
+        } catch (error) {
+            log.error({ err: error }, 'timer start: running-timer check failed');
+            return res.status(500).json({ message: "Error!" });
+        }
+        if (running) {
+            return res.status(409).json({
+                message: "This worker already has a running timer.",
+                runningId: running.teId,
+            });
+        }
+    }
+
+    try {
+        const created = await TimeEntry.create(payload);
+        return res.status(201).json({ message: "Timer started.", timeEntry: created });
+    } catch (error) {
+        log.error({ err: error }, 'timer start: TimeEntry.create failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+};
+
+/**
+ * POST /v1/timeentry/:id/stop — stop a running timer (#396).
+ *
+ * Stamps teEndedAt = now and computes teMinutes. Secure-404 scoped like
+ * the other single-entry routes. A timer that's already stopped
+ * (teEndedAt set) 409s rather than silently re-clocking.
+ */
+exports.stop = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+
+    let entry;
+    try {
+        entry = await TimeEntry.findByPk(req.params.id);
+    } catch (error) {
+        log.error({ err: error }, 'timer stop: TimeEntry.findByPk failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (!entry || entry.teArch) {
+        return res.status(404).json({ message: "Not found." });
+    }
+
+    const isMaster = await IsMaster(authKey);
+    if (!isMaster) {
+        const companyId = await GetCompanyId(authKey);
+        if (companyId === -1 || entry.teCompId !== companyId) {
+            return res.status(404).json({ message: "Not found." });
+        }
+    }
+
+    if (entry.teEndedAt) {
+        return res.status(409).json({ message: "Timer is already stopped." });
+    }
+
+    const endedAt = new Date();
+    const minutes = computeMinutes(entry.teStartedAt, endedAt);
+    try {
+        await entry.update({ teEndedAt: endedAt, teMinutes: minutes });
+        return res.status(200).json({ message: "Timer stopped.", timeEntry: entry });
+    } catch (error) {
+        log.error({ err: error }, 'timer stop: TimeEntry.update failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+};
+
 /**
  * GET /v1/timeentry/:id — fetch a single time entry by id.
  *

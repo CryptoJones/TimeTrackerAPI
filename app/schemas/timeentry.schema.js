@@ -107,10 +107,29 @@ const listByCompanyQuery = z.object({
     message: 'Unexpected query parameter. Allowed: customerId, from, to, limit, offset.',
 });
 
+/**
+ * POST /v1/timeentry/start body — begins an in-flight timer (#396). The
+ * server sets teStartedAt (now) and leaves teEndedAt open, so neither
+ * timestamp is accepted here. teCustId required; teCompId optional
+ * (master specifies).
+ */
+const startTimerBody = z.object({
+    teCustId: z.coerce.number().int().positive(),
+    teCompId: z.coerce.number().int().positive().optional(),
+    teWorkerId: z.coerce.number().int().positive().optional(),
+    teJobId: z.coerce.number().int().positive().optional(),
+    teBillTypeId: z.coerce.number().int().positive().optional(),
+    teDescription: z.string().max(10000).optional(),
+    teBillable: z.boolean().optional(),
+}).strict({
+    message: 'Unexpected field in body. Whitelist: teCustId, teCompId, teWorkerId, teJobId, teBillTypeId, teDescription, teBillable.',
+});
+
 module.exports = {
     intIdParam,
     createTimeEntryBody,
     updateTimeEntryBody,
+    startTimerBody,
     listByCompanyQuery,
     exportCsvQuery,
 };
