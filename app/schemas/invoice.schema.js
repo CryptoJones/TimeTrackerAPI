@@ -53,8 +53,10 @@ const updateInvoiceBody = z.object({
     invDate: isoDate.optional(),
     invDueDate: isoDate.optional(),
     invPaid: z.boolean().optional(),
+    // Amount written off as uncollectible (>= 0); null clears it.
+    invWriteOff: z.coerce.number().min(0).nullable().optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: invDate, invDueDate, invPaid.',
+    message: 'Unexpected field in body. Whitelist: invDate, invDueDate, invPaid, invWriteOff.',
 }).refine(refineDueDateAfterIssue, DUE_BEFORE_ISSUE);
 
 const listByCustomerQuery = z.object({
@@ -85,8 +87,10 @@ const rollupInvoiceBody = z.object({
     // Optional tax-rate override (fraction 0..1); defaults to the
     // company's compTaxRate.
     taxRate: z.coerce.number().min(0).max(1).optional(),
+    // Optional discount applied to the subtotal before tax (>= 0).
+    discount: z.coerce.number().min(0).optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: invCustId, invDate, invDueDate, from, to, taxRate.',
+    message: 'Unexpected field in body. Whitelist: invCustId, invDate, invDueDate, from, to, taxRate, discount.',
 }).refine(refineDueDateAfterIssue, DUE_BEFORE_ISSUE);
 
 // GET /v1/invoice/aging query. companyId required for master keys

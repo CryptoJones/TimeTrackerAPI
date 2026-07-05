@@ -38,21 +38,29 @@ describe('invoice-status.summarize', () => {
         const invoice = { invTotal: 150, invDueDate: '2026-08-01' };
         const payments = [{ cpayAmount: 50 }, { cpayAmount: 25.5 }];
         expect(summarize(invoice, payments, TODAY)).toEqual({
-            status: 'partial', total: 150, amountPaid: 75.5, balance: 74.5,
+            status: 'partial', total: 150, amountPaid: 75.5, writeOff: 0, balance: 74.5,
         });
     });
     test('no payments → full balance, status sent', () => {
         expect(summarize({ invTotal: 100, invDueDate: '2026-08-01' }, [], TODAY)).toEqual({
-            status: 'sent', total: 100, amountPaid: 0, balance: 100,
+            status: 'sent', total: 100, amountPaid: 0, writeOff: 0, balance: 100,
         });
     });
     test('fully paid → zero balance, status paid', () => {
         const r = summarize({ invTotal: 100, invDueDate: '2026-08-01' }, [{ cpayAmount: 100 }], TODAY);
-        expect(r).toEqual({ status: 'paid', total: 100, amountPaid: 100, balance: 0 });
+        expect(r).toEqual({ status: 'paid', total: 100, amountPaid: 100, writeOff: 0, balance: 0 });
     });
     test('untotalled invoice → null total/balance, draft', () => {
         const r = summarize({ invTotal: null, invDueDate: '2026-08-01' }, [{ cpayAmount: 10 }], TODAY);
-        expect(r).toEqual({ status: 'draft', total: null, amountPaid: 10, balance: null });
+        expect(r).toEqual({ status: 'draft', total: null, amountPaid: 10, writeOff: 0, balance: null });
+    });
+    test('a write-off settles the balance like a payment', () => {
+        const r = summarize({ invTotal: 100, invDueDate: '2026-08-01', invWriteOff: 100 }, [], TODAY);
+        expect(r).toEqual({ status: 'paid', total: 100, amountPaid: 0, writeOff: 100, balance: 0 });
+    });
+    test('partial payment + partial write-off combine toward settled', () => {
+        const r = summarize({ invTotal: 100, invDueDate: '2026-08-01', invWriteOff: 40 }, [{ cpayAmount: 60 }], TODAY);
+        expect(r).toEqual({ status: 'paid', total: 100, amountPaid: 60, writeOff: 40, balance: 0 });
     });
     test('no float drift summing many payments', () => {
         const payments = Array.from({ length: 3 }, () => ({ cpayAmount: 0.1 }));

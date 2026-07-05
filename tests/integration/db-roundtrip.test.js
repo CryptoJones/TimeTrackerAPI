@@ -169,7 +169,7 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         });
         expect(Array.isArray(companies)).toBe(true);
         const invoices = await db.Invoice.findAll({
-            attributes: ['invId', 'invNumber', 'invTaxRate'],
+            attributes: ['invId', 'invNumber', 'invTaxRate', 'invDiscount', 'invWriteOff'],
             limit: 1,
         });
         expect(Array.isArray(invoices)).toBe(true);

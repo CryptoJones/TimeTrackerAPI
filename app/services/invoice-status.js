@@ -44,14 +44,18 @@ function deriveStatus({ total, amountPaid, dueDate, today }) {
 function summarize(invoice, payments, today) {
     const total = invoice && invoice.invTotal != null ? Number(invoice.invTotal) : null;
     const amountPaid = money.sum((payments || []).map((p) => p.cpayAmount));
-    const balance = total == null ? null : money.subtract(total, amountPaid);
+    const writeOff = invoice && invoice.invWriteOff != null ? Number(invoice.invWriteOff) : 0;
+    // A write-off settles balance the same way a payment does — it's
+    // deliberately-forgiven money, so it counts toward "settled".
+    const settled = money.add(amountPaid, writeOff);
+    const balance = total == null ? null : money.subtract(total, settled);
     const status = deriveStatus({
         total,
-        amountPaid,
+        amountPaid: settled,
         dueDate: invoice ? invoice.invDueDate : null,
         today,
     });
-    return { status, total, amountPaid, balance };
+    return { status, total, amountPaid, writeOff, balance };
 }
 
 module.exports = { deriveStatus, summarize };

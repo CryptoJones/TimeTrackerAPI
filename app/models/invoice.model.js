@@ -89,6 +89,26 @@ module.exports = (sequelize, Sequelize) => {
                 return v == null ? null : Number(v);
             },
         },
+        invDiscount: {
+            field: 'invDiscount',
+            // Discount applied to the subtotal before tax (#421). Number
+            // getter; null = none.
+            type: Sequelize.DECIMAL(14, 2),
+            get() {
+                const v = this.getDataValue('invDiscount');
+                return v == null ? null : Number(v);
+            },
+        },
+        invWriteOff: {
+            field: 'invWriteOff',
+            // Amount written off as uncollectible (#421). Reduces the
+            // outstanding balance. Number getter; null = none.
+            type: Sequelize.DECIMAL(14, 2),
+            get() {
+                const v = this.getDataValue('invWriteOff');
+                return v == null ? null : Number(v);
+            },
+        },
     }, {
         tableName: 'Invoice',
         timestamps: true,

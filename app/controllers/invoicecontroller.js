@@ -32,7 +32,7 @@ const GetCompanyId = auth.getCompanyId;
 const GetCompanyIdByCustomerId = auth.getCompanyIdByCustomerId;
 
 const ALLOWED_FIELDS_CREATE = ['invCustId', 'invDate', 'invDueDate', 'invPaid'];
-const ALLOWED_FIELDS_UPDATE = ['invDate', 'invDueDate', 'invPaid'];
+const ALLOWED_FIELDS_UPDATE = ['invDate', 'invDueDate', 'invPaid', 'invWriteOff'];
 
 exports.create = async (req, res) => {
     const authKey = req.get('authKey');
@@ -364,8 +364,14 @@ exports.rollup = async (req, res) => {
         }
     }
     const taxRate = invoiceTax.resolveRate({ override: req.body.taxRate, companyDefault: companyDefaultRate });
-    const tax = invoiceTax.computeTax(subtotal, taxRate);
-    const total = money.add(subtotal, tax);
+    // Discount applies to the subtotal before tax; clamp to [0, subtotal].
+    let discount = Number(req.body.discount);
+    if (!Number.isFinite(discount) || discount < 0) discount = 0;
+    if (money.subtract(subtotal, discount) < 0) discount = subtotal;
+    discount = money.round(discount);
+    const taxableBase = money.subtract(subtotal, discount);
+    const tax = invoiceTax.computeTax(taxableBase, taxRate);
+    const total = money.add(taxableBase, tax);
 
     let result;
     try {
@@ -379,6 +385,7 @@ exports.rollup = async (req, res) => {
                 invPaid: false,
                 invArch: false,
                 invSubtotal: subtotal,
+                invDiscount: discount,
                 invTax: tax,
                 invTotal: total,
                 invTaxRate: taxRate,
