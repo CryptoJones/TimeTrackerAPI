@@ -812,6 +812,30 @@ const spec = {
                 },
             },
         },
+        '/v1/timeentry/start': {
+            post: {
+                summary: 'Start an in-flight timer',
+                security: [{ authKey: [] }],
+                responses: {
+                    201: { description: 'Timer started' },
+                    400: { description: 'Validation error' },
+                    403: { description: 'Auth failure' },
+                    409: { description: 'Worker already has a running timer' },
+                },
+            },
+        },
+        '/v1/timeentry/{id}/stop': {
+            post: {
+                summary: 'Stop a running timer (sets end + computes minutes)',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: {
+                    200: { description: 'Timer stopped' },
+                    404: { description: 'Not found' },
+                    409: { description: 'Timer already stopped' },
+                },
+            },
+        },
         '/v1/timeentry': {
             post: {
                 summary: 'Create a time entry',

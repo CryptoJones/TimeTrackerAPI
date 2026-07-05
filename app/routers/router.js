@@ -147,6 +147,17 @@ router.post(
     v.body(timeEntrySchemas.createTimeEntryBody),
     timeEntry.create,
 );
+// Timer capture (#396): start begins an in-flight entry, stop closes it.
+router.post(
+    '/v1/timeentry/start',
+    v.body(timeEntrySchemas.startTimerBody),
+    timeEntry.start,
+);
+router.post(
+    '/v1/timeentry/:id/stop',
+    v.params(timeEntrySchemas.intIdParam),
+    timeEntry.stop,
+);
 // Literal paths declared BEFORE /:id so express doesn't try to
 // parse "export.csv" / "bycompany" as a customer id.
 router.get(

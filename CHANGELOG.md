@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Start/stop timer endpoints** (#396). `POST /v1/timeentry/start`
+  opens an in-flight entry stamped with the server clock (teEndedAt
+  null), rejecting a second concurrent timer for the same worker (409);
+  `POST /v1/timeentry/{id}/stop` stamps the end time and computes
+  `teMinutes`, 409-ing if already stopped. Reuses the existing columns —
+  no migration. Same company-scoping / secure-404 / link validation as
+  the rest of the time-entry API.
 - **Expenses roll into invoices** (#418). `POST /v1/invoice/rollup` now
   takes `includeExpenses: true` — the customer's billable, un-invoiced
   expenses are priced (cost + markup) and added to the invoice subtotal
