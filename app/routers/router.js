@@ -368,6 +368,11 @@ router.get(
     v.params(invoiceSchemas.intIdParam),
     invoice.getById,
 );
+router.get(
+    '/v1/invoice/:id/pdf',
+    v.params(invoiceSchemas.intIdParam),
+    invoice.pdf,
+);
 router.patch(
     '/v1/invoice/:id',
     v.params(invoiceSchemas.intIdParam),

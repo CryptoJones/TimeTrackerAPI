@@ -11,6 +11,7 @@ const money = require('../services/money.js');
 const { buildRollup } = require('../services/invoice-rollup.js');
 const invoiceStatus = require('../services/invoice-status.js');
 const invoiceNumber = require('../services/invoice-number.js');
+const { renderInvoicePdf } = require('../services/invoice-pdf.js');
 const Invoice = db.Invoice;
 
 /** Today as an ISO date (YYYY-MM-DD), UTC. */
@@ -407,6 +408,87 @@ exports.rollup = async (req, res) => {
         total,
         skipped: skippedCounts,
     });
+};
+
+/**
+ * GET /v1/invoice/:id/pdf — stream a branded PDF of the invoice
+ * (company header, bill-to, line items, totals, balance). Same
+ * secure-404 scoping as getById.
+ */
+exports.pdf = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+
+    let invoice;
+    try {
+        invoice = await Invoice.findByPk(req.params.id, {
+            include: [
+                {
+                    model: db.InvoiceJob, as: 'lines', required: false,
+                    include: [{ model: db.Job, as: 'job', required: false }],
+                },
+                { model: db.CustomerPayment, as: 'payments', required: false },
+                {
+                    model: db.Customer, as: 'customer', required: false,
+                    include: [{ model: db.Company, as: 'company', required: false }],
+                },
+            ],
+        });
+    } catch (error) {
+        log.error({ err: error }, 'Invoice.findByPk (pdf) failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (!invoice || invoice.invArch) {
+        return res.status(404).json({ message: "Not found." });
+    }
+
+    const isMaster = await IsMaster(authKey);
+    if (!isMaster) {
+        const authCompanyId = await GetCompanyId(authKey);
+        const invCompanyId = await GetCompanyIdByCustomerId(invoice.invCustId);
+        // Secure-404 on cross-tenant, same rationale as getById.
+        if (authCompanyId === -1 || invCompanyId === -1 || authCompanyId !== invCompanyId) {
+            return res.status(404).json({ message: "Not found." });
+        }
+    }
+
+    const billing = invoiceStatus.summarize(invoice, invoice.payments, todayISO());
+    const cust = invoice.customer || null;
+    const company = cust && cust.company ? cust.company : null;
+    const custName = cust
+        ? (cust.custCompanyName || [cust.custFName, cust.custLName].filter(Boolean).join(' ') || null)
+        : null;
+    const data = {
+        company: company ? {
+            name: company.compName,
+            address1: company.compAddress1, address2: company.compAddress2,
+            city: company.compCity, state: company.compState, zip: company.compZip,
+            phone: company.compPhone, email: company.compEmail,
+        } : null,
+        customer: { name: custName },
+        invoice: { number: invoice.invNumber, date: invoice.invDate, dueDate: invoice.invDueDate },
+        lines: (invoice.lines || []).map((l) => ({
+            description: (l.job && l.job.jobDesc) || `Job #${l.injbJobId}`,
+            amount: l.injbAmount == null ? null : Number(l.injbAmount),
+        })),
+        totals: { subtotal: invoice.invSubtotal, tax: invoice.invTax, total: invoice.invTotal },
+        payment: billing,
+    };
+
+    let pdf;
+    try {
+        pdf = await renderInvoicePdf(data);
+    } catch (error) {
+        log.error({ err: error }, 'Invoice PDF render failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+
+    const safeName = String(invoice.invNumber || invoice.invId).replace(/[^A-Za-z0-9._-]/g, '-');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="invoice-${safeName}.pdf"`);
+    return res.status(200).send(pdf);
 };
 
 exports.bulkCreate = makeBulkCreateIndirect({

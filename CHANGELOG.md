@@ -38,6 +38,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Invoice PDF** (#391) — `GET /v1/invoice/{id}/pdf` streams a branded
+  PDF (company header, bill-to, line items, subtotal/tax/total, amount
+  paid + balance due, status) built by `app/services/invoice-pdf.js`.
+  `pdfkit` is a new dependency, required lazily so it only loads on the
+  PDF path. Same secure-404 tenant scoping as the JSON endpoint.
 - **Configurable per-company invoice numbering** (#390). `Company` gains
   a sequence — `compInvPrefix` / `compInvPad` / `compInvNextSeq`
   (migration `20260526000000`, defaults `INV-` / `4` / `1`, settable via
