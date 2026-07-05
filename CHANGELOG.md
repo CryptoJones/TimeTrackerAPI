@@ -38,6 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Worker target hours & alerts** (#400). `Worker.workerTargetMinsPerWeek`
+  (migration `20260606000000`, settable on worker create/PATCH) sets a
+  weekly capacity target. New `GET /v1/report/targets?from=&to=` scales
+  each target by the number of ISO weeks in the range, compares it to
+  actual logged time, and flags `under` / `on` (±10%) / `over`, with an
+  `underCount`. New pure `app/services/report-targets.js`.
 - **Invoice currency** (#427). A per-company default currency
   (`compCurrency`, ISO-4217, defaults `USD`) and a per-invoice
   `invCurrency`; migration `20260605000000`. The roll-up stamps the

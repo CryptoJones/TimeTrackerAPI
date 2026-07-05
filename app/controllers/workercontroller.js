@@ -14,10 +14,10 @@ const GetCompanyId = auth.getCompanyId;
 
 const ALLOWED_FIELDS_CREATE = [
     'workerFName', 'workerLName', 'workerTitle',
-    'workerDefaultBillType', 'workerCompId',
+    'workerDefaultBillType', 'workerCompId', 'workerTargetMinsPerWeek',
 ];
 const ALLOWED_FIELDS_UPDATE = [
-    'workerFName', 'workerLName', 'workerTitle', 'workerDefaultBillType',
+    'workerFName', 'workerLName', 'workerTitle', 'workerDefaultBillType', 'workerTargetMinsPerWeek',
 ];
 
 /**

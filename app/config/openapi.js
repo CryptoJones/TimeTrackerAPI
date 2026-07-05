@@ -1374,6 +1374,22 @@ const spec = {
                 responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
             },
         },
+        '/v1/report/targets': {
+            get: {
+                summary: 'Worker target hours vs actuals (under/on/over)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys.' },
+                    { name: 'from', in: 'query', required: true, schema: { type: 'string', format: 'date' } },
+                    { name: 'to', in: 'query', required: true, schema: { type: 'string', format: 'date' } },
+                ],
+                responses: {
+                    200: { description: 'Targets — {weeks, workers[] (target/actual/ratio/status), underCount}' },
+                    400: { description: 'Missing from/to, or master keys must specify companyId' },
+                    403: { description: 'Auth failure' },
+                },
+            },
+        },
         '/v1/report/budget': {
             get: {
                 summary: 'Project budget vs actuals (hours + amount, with alerts)',

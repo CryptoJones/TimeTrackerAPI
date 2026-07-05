@@ -18,6 +18,7 @@ const { buildRevenue } = require('../services/report-revenue.js');
 const { buildBillableSummary } = require('../services/report-billable-summary.js');
 const { buildTimesheet } = require('../services/report-timesheet.js');
 const { buildBudget } = require('../services/report-budget.js');
+const { buildTargets, weeksBetween } = require('../services/report-targets.js');
 const rate = require('../services/rate.js');
 
 const IsMaster = auth.isMaster;
@@ -454,6 +455,76 @@ exports.budget = async (req, res) => {
 
     const report = buildBudget(jobRows);
     return res.status(200).json({ message: "Budget vs actuals.", companyId, ...report });
+};
+
+/**
+ * GET /v1/report/targets — worker capacity: actual hours vs the weekly
+ * target scaled over the date range (#400), flagged under/on/over. from
+ * and to are required. Company-scoped.
+ */
+exports.targets = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+    req.authKey = authKey;
+
+    const scope = await resolveCompany(req);
+    if (scope.error) {
+        return res.status(scope.error.status).json({ message: scope.error.message });
+    }
+    const { companyId } = scope;
+
+    const fromISO = req.query.from;
+    const toISO = req.query.to;
+    const from = parseDate(fromISO, false);
+    const to = parseDate(toISO, true);
+    const Op = db.Sequelize && db.Sequelize.Op;
+
+    let workers;
+    try {
+        workers = await db.Worker.findAll({
+            where: { workerCompId: companyId, workerTargetMinsPerWeek: { [Op.ne]: null } },
+            attributes: ['workerId', 'workerFName', 'workerLName', 'workerTargetMinsPerWeek'],
+        });
+    } catch (error) {
+        log.error({ err: error }, 'targets: Worker.findAll failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (workers.length === 0) {
+        return res.status(200).json({
+            message: "Targets vs actuals.", companyId,
+            weeks: weeksBetween(fromISO, toISO), workers: [], count: 0, underCount: 0,
+        });
+    }
+
+    const workerIds = workers.map((w) => w.workerId);
+    let entries;
+    try {
+        const where = { teCompId: companyId, teWorkerId: { [Op.in]: workerIds } };
+        if (Op && from) where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.gte]: from });
+        if (Op && to) where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.lte]: to });
+        entries = await db.TimeEntry.findAll({ where, attributes: ['teWorkerId', 'teMinutes'] });
+    } catch (error) {
+        log.error({ err: error }, 'targets: TimeEntry.findAll failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+
+    const actual = new Map();
+    for (const e of entries) {
+        if (e.teWorkerId == null || e.teMinutes == null) continue;
+        actual.set(e.teWorkerId, (actual.get(e.teWorkerId) || 0) + (Number(e.teMinutes) || 0));
+    }
+
+    const rows = workers.map((w) => ({
+        workerId: w.workerId,
+        workerName: [w.workerFName, w.workerLName].filter(Boolean).join(' ') || null,
+        targetMinsPerWeek: w.workerTargetMinsPerWeek,
+        actualMins: actual.get(w.workerId) || 0,
+    }));
+
+    const report = buildTargets(rows, weeksBetween(fromISO, toISO));
+    return res.status(200).json({ message: "Targets vs actuals.", companyId, ...report });
 };
 
 exports._internals = { resolveCompany, parseDate };
