@@ -180,7 +180,7 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         // Selecting the columns proves the 20260529 migration created the
         // table; a missing column/table would throw here.
         const rows = await db.Expense.findAll({
-            attributes: ['expId', 'expCompId', 'expCustId', 'expJobId', 'expAmount', 'expDate', 'expBillable', 'expMarkupPct'],
+            attributes: ['expId', 'expCompId', 'expCustId', 'expJobId', 'expAmount', 'expDate', 'expBillable', 'expMarkupPct', 'expInvId'],
             limit: 1,
         });
         expect(Array.isArray(rows)).toBe(true);
@@ -191,6 +191,7 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
                 { model: db.Customer, as: 'customer', required: false },
                 { model: db.Job, as: 'job', required: false },
                 { model: db.Company, as: 'company', required: false },
+                { model: db.Invoice, as: 'invoice', required: false },
             ],
         });
         expect(Array.isArray(withLinks)).toBe(true);

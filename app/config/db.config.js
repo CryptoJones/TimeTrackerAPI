@@ -177,5 +177,9 @@ db.Customer.hasMany(db.Expense,   { foreignKey: 'expCustId', as: 'expenses' });
 db.Expense.belongsTo(db.Customer, { foreignKey: 'expCustId', as: 'customer' });
 db.Job.hasMany(db.Expense,        { foreignKey: 'expJobId',  as: 'expenses' });
 db.Expense.belongsTo(db.Job,      { foreignKey: 'expJobId',  as: 'job' });
+// Expense → Invoice (expInvId): the invoice a billable expense was rolled
+// into (#418); doubles as the "invoiced" marker (NULL = unbilled).
+db.Invoice.hasMany(db.Expense,    { foreignKey: 'expInvId',  as: 'expenses' });
+db.Expense.belongsTo(db.Invoice,  { foreignKey: 'expInvId',  as: 'invoice' });
 
 module.exports = db;
