@@ -38,6 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Invoice branding & narratives** (#423). A per-company invoice footer
+  (`compInvFooter`, settable on company create/PATCH) and a per-invoice
+  note (`invNotes`, settable on invoice create/PATCH and via the roll-up
+  body's `notes`); migration `20260604000000`. Both render on the invoice
+  PDF — the note in a `NOTES` block above the footer, the company footer
+  replacing the default line.
 - **Budget vs actuals** (#434). Per-project budgets on Job —
   `jobBudgetMinutes` (effort) and `jobBudgetAmount` (value), migration
   `20260603000000`, settable on job create/PATCH. New

@@ -32,8 +32,8 @@ const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
 const GetCompanyIdByCustomerId = auth.getCompanyIdByCustomerId;
 
-const ALLOWED_FIELDS_CREATE = ['invCustId', 'invDate', 'invDueDate', 'invPaid'];
-const ALLOWED_FIELDS_UPDATE = ['invDate', 'invDueDate', 'invPaid', 'invWriteOff'];
+const ALLOWED_FIELDS_CREATE = ['invCustId', 'invDate', 'invDueDate', 'invPaid', 'invNotes'];
+const ALLOWED_FIELDS_UPDATE = ['invDate', 'invDueDate', 'invPaid', 'invWriteOff', 'invNotes'];
 
 exports.create = async (req, res) => {
     const authKey = req.get('authKey');
@@ -413,6 +413,7 @@ exports.rollup = async (req, res) => {
                 invTax: tax,
                 invTotal: total,
                 invTaxRate: taxRate,
+                invNotes: req.body.notes,
             }, { transaction: t });
 
             const createdLines = [];
@@ -605,9 +606,10 @@ exports.pdf = async (req, res) => {
             address1: company.compAddress1, address2: company.compAddress2,
             city: company.compCity, state: company.compState, zip: company.compZip,
             phone: company.compPhone, email: company.compEmail,
+            footer: company.compInvFooter,
         } : null,
         customer: { name: custName },
-        invoice: { number: invoice.invNumber, date: invoice.invDate, dueDate: invoice.invDueDate },
+        invoice: { number: invoice.invNumber, date: invoice.invDate, dueDate: invoice.invDueDate, notes: invoice.invNotes },
         lines: (invoice.lines || []).map((l) => ({
             description: (l.job && l.job.jobDesc) || `Job #${l.injbJobId}`,
             amount: l.injbAmount == null ? null : Number(l.injbAmount),
