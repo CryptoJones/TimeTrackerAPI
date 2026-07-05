@@ -15,6 +15,7 @@ const money = require('../services/money.js');
 const { buildUnbilled } = require('../services/report-unbilled.js');
 const { buildHours } = require('../services/report-hours.js');
 const { buildRevenue } = require('../services/report-revenue.js');
+const { buildBillableSummary } = require('../services/report-billable-summary.js');
 
 const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
@@ -263,6 +264,55 @@ exports.revenue = async (req, res) => {
 
     const report = buildRevenue(items);
     return res.status(200).json({ message: "Revenue summary.", companyId, ...report });
+};
+
+/**
+ * GET /v1/report/billable-summary — billable vs non-billable time split
+ * by month, with the overall billable ratio and the billable amount.
+ * Company-scoped; optional customerId and from/to (entry start) filters.
+ */
+exports.billableSummary = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+    req.authKey = authKey;
+
+    const scope = await resolveCompany(req);
+    if (scope.error) {
+        return res.status(scope.error.status).json({ message: scope.error.message });
+    }
+    const { companyId } = scope;
+
+    const Op = db.Sequelize && db.Sequelize.Op;
+    const where = { teCompId: companyId };
+    const customerId = Number(req.query.customerId);
+    if (Number.isInteger(customerId) && customerId > 0) where.teCustId = customerId;
+    const from = parseDate(req.query.from, false);
+    const to = parseDate(req.query.to, true);
+    if (Op && from) where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.gte]: from });
+    if (Op && to) where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.lte]: to });
+
+    let entries;
+    try {
+        entries = await db.TimeEntry.findAll({
+            where,
+            include: [
+                { model: db.BillingType, as: 'billingType', required: false },
+                { model: db.Job, as: 'job', required: false, attributes: ['jobId', 'jobFlatRate'] },
+                {
+                    model: db.Worker, as: 'worker', required: false,
+                    include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }],
+                },
+            ],
+        });
+    } catch (error) {
+        log.error({ err: error }, 'billable-summary: TimeEntry.findAll failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+
+    const report = buildBillableSummary(entries);
+    return res.status(200).json({ message: "Billable vs non-billable summary.", companyId, ...report });
 };
 
 exports._internals = { resolveCompany, parseDate };

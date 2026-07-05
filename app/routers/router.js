@@ -725,5 +725,10 @@ router.get(
     v.query(reportSchemas.revenueQuery),
     report.revenue,
 );
+router.get(
+    '/v1/report/billable-summary',
+    v.query(reportSchemas.billableSummaryQuery),
+    report.billableSummary,
+);
 
 module.exports = router;
