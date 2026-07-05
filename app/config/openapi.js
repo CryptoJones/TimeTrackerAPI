@@ -1066,6 +1066,24 @@ const spec = {
                 responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } },
             },
         },
+        '/v1/worker/{id}/timeentries': {
+            get: {
+                summary: "List a worker's time entries",
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'customerId', in: 'query', schema: { type: 'integer' } },
+                    { name: 'from', in: 'query', schema: { type: 'string', format: 'date-time' } },
+                    { name: 'to', in: 'query', schema: { type: 'string', format: 'date-time' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer' } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer' } },
+                ],
+                responses: {
+                    200: { description: 'Found (paginated)' },
+                    404: { description: 'Worker not found / cross-tenant' },
+                },
+            },
+        },
         '/v1/worker/bycompany/{id}': {
             get: {
                 summary: 'List workers in a company (paginated)',

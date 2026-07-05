@@ -214,6 +214,14 @@ router.get(
     v.params(workerSchemas.intIdParam),
     worker.getById,
 );
+// A worker's own time entries (#397) — handled by the timeentry
+// controller since it owns the TimeEntry model + list helpers.
+router.get(
+    '/v1/worker/:id/timeentries',
+    v.params(workerSchemas.intIdParam),
+    v.query(timeEntrySchemas.listByCompanyQuery),
+    timeEntry.listByWorker,
+);
 router.patch(
     '/v1/worker/:id',
     v.params(workerSchemas.intIdParam),
