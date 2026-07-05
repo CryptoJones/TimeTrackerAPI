@@ -37,6 +37,16 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.BOOLEAN,
             defaultValue: false,
         },
+        jobFlatRate: {
+            field: 'jobFlatRate',
+            // Per-project flat hourly rate (#410); null = fall through to
+            // worker/entry rate resolution. Number getter (pg NUMERIC→string).
+            type: Sequelize.DECIMAL(14, 2),
+            get() {
+                const v = this.getDataValue('jobFlatRate');
+                return v == null ? null : Number(v);
+            },
+        },
     }, {
         tableName: 'Job',
         timestamps: true,

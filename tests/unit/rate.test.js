@@ -21,6 +21,25 @@ describe('rate.resolveHourlyRate — precedence', () => {
         expect(rate.resolveHourlyRate(entry)).toBe(100);
     });
 
+    test("entry's own BillingType wins over the project flat rate", () => {
+        const entry = { billingType: bt(150), job: { jobFlatRate: 200 }, worker: { defaultBillingType: bt(100) } };
+        expect(rate.resolveHourlyRate(entry)).toBe(150);
+    });
+
+    test('project flat rate wins over the worker default', () => {
+        const entry = { billingType: null, job: { jobFlatRate: 200 }, worker: { defaultBillingType: bt(100) } };
+        expect(rate.resolveHourlyRate(entry)).toBe(200);
+    });
+
+    test('falls through a null project flat rate to the worker default', () => {
+        const entry = { billingType: null, job: { jobFlatRate: null }, worker: { defaultBillingType: bt(100) } };
+        expect(rate.resolveHourlyRate(entry)).toBe(100);
+    });
+
+    test('coerces a NUMERIC-string project flat rate', () => {
+        expect(rate.resolveHourlyRate({ job: { jobFlatRate: '175.00' } })).toBe(175);
+    });
+
     test('null when neither a per-entry nor a worker rate is present', () => {
         expect(rate.resolveHourlyRate({ billingType: null, worker: null })).toBeNull();
         expect(rate.resolveHourlyRate({})).toBeNull();

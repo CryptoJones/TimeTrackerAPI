@@ -92,7 +92,7 @@ exports.unbilled = async (req, res) => {
                     model: db.Worker, as: 'worker', required: false,
                     include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }],
                 },
-                { model: db.Job, as: 'job', required: false, attributes: ['jobId', 'jobDesc'] },
+                { model: db.Job, as: 'job', required: false, attributes: ['jobId', 'jobDesc', 'jobFlatRate'] },
                 {
                     model: db.Customer, as: 'customer', required: false,
                     attributes: ['custId', 'custCompanyName', 'custFName', 'custLName'],
@@ -114,6 +114,8 @@ exports.unbilled = async (req, res) => {
             teBillable: e.teBillable,
             billingType: e.billingType,
             worker: e.worker,
+            // Pass the job so rate.js can read the per-project flat rate (#410).
+            job: e.job,
             custName: c ? (c.custCompanyName || [c.custFName, c.custLName].filter(Boolean).join(' ') || null) : null,
             jobDesc: e.job ? e.job.jobDesc : null,
         };
@@ -166,7 +168,7 @@ exports.hours = async (req, res) => {
         entries = await db.TimeEntry.findAll({
             where,
             include: [
-                { model: db.Job, as: 'job', required: false, attributes: ['jobId', 'jobDesc'] },
+                { model: db.Job, as: 'job', required: false, attributes: ['jobId', 'jobDesc', 'jobFlatRate'] },
                 {
                     model: db.Customer, as: 'customer', required: false,
                     attributes: ['custId', 'custCompanyName', 'custFName', 'custLName'],

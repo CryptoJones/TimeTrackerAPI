@@ -38,6 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Per-project flat rate** (#410). `Job.jobFlatRate` (migration
+  `20260601000000`) is an hourly rate applied to all time on the job —
+  the **middle tier** of rate resolution in `rate.js`: per-entry
+  `BillingType` override → **project flat rate** → worker default. It
+  flows through the time-entry billing view, the invoice roll-up, and the
+  unbilled report. Settable on job create/PATCH.
 - **Worker time-list route** (#397) — `GET /v1/worker/{id}/timeentries`
   lists one worker's time entries, secure-404 scoped through the worker
   (missing / archived / cross-tenant read the same 404), with
