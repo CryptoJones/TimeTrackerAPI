@@ -14,8 +14,9 @@ const invNumberingFields = {
     compInvPrefix: z.string().max(16).optional(),
     compInvPad: z.coerce.number().int().min(0).max(12).optional(),
     compInvNextSeq: z.coerce.number().int().positive().optional(),
+    compTaxRate: z.coerce.number().min(0).max(1).optional(),
 };
-const NUMBERING_WHITELIST = ', compInvPrefix, compInvPad, compInvNextSeq';
+const NUMBERING_WHITELIST = ', compInvPrefix, compInvPad, compInvNextSeq, compTaxRate';
 
 const createCompanyBody = z.object({
     compName: z.string().min(1).max(255),

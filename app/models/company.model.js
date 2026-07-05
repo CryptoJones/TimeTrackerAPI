@@ -36,6 +36,18 @@ module.exports = (sequelize, Sequelize) => {
         compInvPrefix:  { field: 'compInvPrefix',  type: Sequelize.TEXT,    allowNull: false, defaultValue: 'INV-' },
         compInvPad:     { field: 'compInvPad',     type: Sequelize.INTEGER, allowNull: false, defaultValue: 4 },
         compInvNextSeq: { field: 'compInvNextSeq', type: Sequelize.INTEGER, allowNull: false, defaultValue: 1 },
+        // Default sales-tax rate as a fraction (e.g. 0.0725 = 7.25%),
+        // #420. pg returns NUMERIC as a string; getter hands out a Number.
+        compTaxRate: {
+            field: 'compTaxRate',
+            type: Sequelize.DECIMAL(6, 4),
+            allowNull: false,
+            defaultValue: 0,
+            get() {
+                const v = this.getDataValue('compTaxRate');
+                return v == null ? 0 : Number(v);
+            },
+        },
         compArch: {
             field: 'compArch',
             type: Sequelize.BOOLEAN,
