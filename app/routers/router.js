@@ -399,6 +399,7 @@ router.get(
 router.get(
     '/v1/invoice/:id/pdf',
     v.params(invoiceSchemas.intIdParam),
+    v.query(invoiceSchemas.pdfQuery),
     invoice.pdf,
 );
 router.patch(

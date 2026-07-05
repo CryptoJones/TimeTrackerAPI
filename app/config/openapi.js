@@ -1492,7 +1492,10 @@ const spec = {
             get: {
                 summary: 'Download an invoice as a branded PDF',
                 security: [{ authKey: [] }],
-                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'format', in: 'query', schema: { type: 'string', enum: ['summary', 'detailed'] }, description: 'Detailed (default) itemizes lines; summary collapses them.' },
+                ],
                 responses: {
                     200: {
                         description: 'PDF document (attachment)',

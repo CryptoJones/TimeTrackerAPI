@@ -53,6 +53,9 @@ function drawInvoice(doc, data) {
     doc.fontSize(11).font('Helvetica').text(customer.name || 'Customer', 50, 176);
 
     // ---- Line items table ----
+    // Summary format (#424) collapses the per-line breakdown into a
+    // single "professional services" row; detailed (default) itemizes.
+    const summary = data.format === 'summary';
     let y = 220;
     doc.fontSize(9).font('Helvetica-Bold');
     doc.text('DESCRIPTION', 50, y);
@@ -63,11 +66,17 @@ function drawInvoice(doc, data) {
     if (lines.length === 0) {
         doc.text('No billable line items.', 50, y);
         y += 18;
-    }
-    for (const line of lines) {
-        doc.text(String(line.description || ''), 50, y, { width: 320 });
-        doc.text(usd(line.amount), 380, y, { align: 'right', width: 165 });
+    } else if (summary) {
+        const sum = money.sum(lines.map((l) => (l.amount == null ? 0 : l.amount)));
+        doc.text(`Professional services (${lines.length} item${lines.length === 1 ? '' : 's'})`, 50, y, { width: 320 });
+        doc.text(usd(sum), 380, y, { align: 'right', width: 165 });
         y += 18;
+    } else {
+        for (const line of lines) {
+            doc.text(String(line.description || ''), 50, y, { width: 320 });
+            doc.text(usd(line.amount), 380, y, { align: 'right', width: 165 });
+            y += 18;
+        }
     }
 
     // ---- Totals ----

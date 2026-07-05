@@ -616,6 +616,7 @@ exports.pdf = async (req, res) => {
         })),
         totals: { subtotal: invoice.invSubtotal, tax: invoice.invTax, total: invoice.invTotal },
         payment: billing,
+        format: req.query.format, // 'summary' | 'detailed' (default) — #424
     };
 
     let pdf;

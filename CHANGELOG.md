@@ -38,6 +38,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Invoice summary vs detailed PDF** (#424) —
+  `GET /v1/invoice/{id}/pdf?format=summary|detailed`. `detailed`
+  (default) itemizes every line; `summary` collapses them into a single
+  "Professional services (N items)" row at the same total. No schema
+  change — a render option on the existing PDF endpoint.
 - **Invoice branding & narratives** (#423). A per-company invoice footer
   (`compInvFooter`, settable on company create/PATCH) and a per-invoice
   note (`invNotes`, settable on invoice create/PATCH and via the roll-up
