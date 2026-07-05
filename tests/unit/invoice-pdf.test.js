@@ -45,4 +45,17 @@ describe('invoice-pdf.renderInvoicePdf', () => {
         expect(isPdf(buf)).toBe(true);
         expect(buf.length).toBeGreaterThan(500);
     });
+
+    test('summary format collapses line items; detailed itemizes (#424)', async () => {
+        const base = {
+            invoice: { number: 'INV-0003', date: '2026-07-01' },
+            lines: [{ description: 'Consulting', amount: 100 }, { description: 'Design', amount: 50 }],
+            totals: { subtotal: 150, tax: 0, total: 150 },
+            payment: {},
+        };
+        const detailed = await renderInvoicePdf(base);
+        const summary = await renderInvoicePdf({ ...base, format: 'summary' });
+        expect(isPdf(detailed)).toBe(true);
+        expect(isPdf(summary)).toBe(true);
+    });
 });

@@ -108,6 +108,16 @@ const agingQuery = z.object({
     message: 'Unexpected query parameter. Allowed: companyId.',
 });
 
+/**
+ * GET /v1/invoice/:id/pdf query — optional render format (#424).
+ * 'detailed' (default) itemizes lines; 'summary' collapses them.
+ */
+const pdfQuery = z.object({
+    format: z.enum(['summary', 'detailed']).optional(),
+}).strict({
+    message: 'Unexpected query parameter. Allowed: format.',
+});
+
 module.exports = {
     intIdParam,
     createInvoiceBody,
@@ -116,4 +126,5 @@ module.exports = {
     bulkInvoiceBody,
     rollupInvoiceBody,
     agingQuery,
+    pdfQuery,
 };
