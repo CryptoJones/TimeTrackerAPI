@@ -10,6 +10,7 @@ const { makeBulkCreateIndirect } = require('./_bulk-helpers.js');
 const money = require('../services/money.js');
 const { buildRollup } = require('../services/invoice-rollup.js');
 const invoiceStatus = require('../services/invoice-status.js');
+const invoiceNumber = require('../services/invoice-number.js');
 const Invoice = db.Invoice;
 
 /** Today as an ISO date (YYYY-MM-DD), UTC. */
@@ -45,13 +46,25 @@ exports.create = async (req, res) => {
         return res.status(400).json({ message: "invCustId is required." });
     }
 
+    // The invoice's company is the customer's company — resolved once
+    // for both the scope check and invoice numbering.
     const isMaster = await IsMaster(authKey);
-    if (!isMaster) {
+    let custCompanyId;
+    try {
+        custCompanyId = await GetCompanyIdByCustomerId(payload.invCustId);
+    } catch (error) {
+        log.error({ err: error }, 'Invoice create: company resolve failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (isMaster) {
+        if (custCompanyId === -1) {
+            return res.status(404).json({ message: "Customer not found." });
+        }
+    } else {
         const authCompanyId = await GetCompanyId(authKey);
         if (authCompanyId === -1) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
         }
-        const custCompanyId = await GetCompanyIdByCustomerId(payload.invCustId);
         if (custCompanyId === -1 || custCompanyId !== authCompanyId) {
             return res.status(403).json({
                 message: "Cannot create an invoice for a customer in a company you do not belong to.",
@@ -63,7 +76,12 @@ exports.create = async (req, res) => {
     payload.invArch = false;
 
     try {
-        const created = await Invoice.create(payload);
+        // Allocate the invoice number and create the row in one
+        // transaction so a concurrent create can't reuse the sequence.
+        const created = await db.sequelize.transaction(async (t) => {
+            payload.invNumber = await invoiceNumber.allocateNumber(db, custCompanyId, t);
+            return Invoice.create(payload, { transaction: t });
+        });
         return res.status(201).json({ message: "Invoice created.", invoice: created });
     } catch (error) {
         log.error({ err: error }, 'Invoice.create failed');
@@ -337,8 +355,10 @@ exports.rollup = async (req, res) => {
     let result;
     try {
         result = await db.sequelize.transaction(async (t) => {
+            const invNumber = await invoiceNumber.allocateNumber(db, custCompanyId, t);
             const invoice = await db.Invoice.create({
                 invCustId: custId,
+                invNumber,
                 invDate,
                 invDueDate,
                 invPaid: false,

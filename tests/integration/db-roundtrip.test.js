@@ -161,6 +161,20 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         expect(Array.isArray(withInvoice)).toBe(true);
     });
 
+    test('invoice-numbering columns exist (Company config + Invoice.invNumber)', async () => {
+        if (!connected) return;
+        const companies = await db.Company.findAll({
+            attributes: ['compId', 'compInvPrefix', 'compInvPad', 'compInvNextSeq'],
+            limit: 1,
+        });
+        expect(Array.isArray(companies)).toBe(true);
+        const invoices = await db.Invoice.findAll({
+            attributes: ['invId', 'invNumber'],
+            limit: 1,
+        });
+        expect(Array.isArray(invoices)).toBe(true);
+    });
+
     test('/healthz reports a non-null migration name (dbo-qualified read)', async () => {
         // sequelize-cli writes the SequelizeMeta table into the `dbo`
         // schema (`migrationStorageTableSchema: 'dbo'` in

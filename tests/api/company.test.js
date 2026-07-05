@@ -34,6 +34,12 @@ beforeAll(async () => {
 });
 
 describe('Company auth contract', () => {
+    test('POST rejects an out-of-range compInvPad at the schema', async () => {
+        const res = await request(app).post('/v1/company')
+            .set('authKey', 'k')
+            .send({ compName: 'X', compInvPad: 99 });
+        expect(res.status).toBe(400);
+    });
     test('GET /v1/company/:id returns 403 when authKey missing', async () => {
         expect((await request(app).get('/v1/company/1')).status).toBe(403);
     });

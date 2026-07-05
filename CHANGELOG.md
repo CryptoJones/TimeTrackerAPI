@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Configurable per-company invoice numbering** (#390). `Company` gains
+  a sequence — `compInvPrefix` / `compInvPad` / `compInvNextSeq`
+  (migration `20260526000000`, defaults `INV-` / `4` / `1`, settable via
+  company create/PATCH) — and `Invoice` gains `invNumber`. Every invoice
+  (manual create and the roll-up) is stamped with a human-facing number
+  like `INV-0001` at creation, allocated under a row lock so concurrent
+  creates never collide. `setup/*.sql` untouched.
 - **Invoice status + outstanding balance** (#389). `GET /v1/invoice/{id}`
   now returns a derived `billing` object — `{ status, total, amountPaid,
   balance }` — computed from the payments allocated to the invoice

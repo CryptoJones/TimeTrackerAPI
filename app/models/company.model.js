@@ -30,6 +30,12 @@ module.exports = (sequelize, Sequelize) => {
         compZip:      { field: 'compZip',      type: Sequelize.TEXT },
         compPhone:    { field: 'compPhone',    type: Sequelize.STRING(32) },
         compEmail:    { field: 'compEmail',    type: Sequelize.TEXT },
+        // Invoice numbering config (#390): prefix + zero-pad width +
+        // next counter. Assigned at invoice creation via the
+        // row-locked allocator in app/services/invoice-number.js.
+        compInvPrefix:  { field: 'compInvPrefix',  type: Sequelize.TEXT,    allowNull: false, defaultValue: 'INV-' },
+        compInvPad:     { field: 'compInvPad',     type: Sequelize.INTEGER, allowNull: false, defaultValue: 4 },
+        compInvNextSeq: { field: 'compInvNextSeq', type: Sequelize.INTEGER, allowNull: false, defaultValue: 1 },
         compArch: {
             field: 'compArch',
             type: Sequelize.BOOLEAN,

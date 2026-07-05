@@ -72,6 +72,13 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.INTEGER,
             allowNull: false,
         },
+        invNumber: {
+            field: 'invNumber',
+            // Human-facing invoice number (e.g. "INV-0001"), assigned per
+            // company at creation (#390). Null on invoices created before
+            // numbering existed.
+            type: Sequelize.TEXT,
+        },
     }, {
         tableName: 'Invoice',
         timestamps: true,
