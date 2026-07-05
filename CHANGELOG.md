@@ -38,6 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Unbilled-time report** (#48) — `GET /v1/report/unbilled` (new
+  `report` controller). Surfaces billable, not-yet-invoiced, job-linked
+  time grouped customer → job, priced via the rate service and summed
+  exactly, with hours + amount per job/customer and a grand total — the
+  "money you haven't billed yet" view that drives the next roll-up.
+  Company-scoped; optional `customerId` and `from`/`to` filters.
 - **Accounts-receivable aging report** (#40) — `GET /v1/invoice/aging`.
   Buckets a company's outstanding invoice balances by how overdue they
   are (`current` / `d1_30` / `d31_60` / `d61_90` / `d90plus`), each with
