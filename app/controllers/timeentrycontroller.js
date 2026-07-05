@@ -16,11 +16,12 @@ const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
 
 const ALLOWED_FIELDS_CREATE = [
-    'teCustId', 'teDescription', 'teStartedAt', 'teEndedAt',
-    'teBillable',
+    'teCustId', 'teWorkerId', 'teJobId', 'teDescription', 'teStartedAt',
+    'teEndedAt', 'teBillable',
 ];
 const ALLOWED_FIELDS_UPDATE = [
-    'teDescription', 'teStartedAt', 'teEndedAt', 'teBillable',
+    'teWorkerId', 'teJobId', 'teDescription', 'teStartedAt', 'teEndedAt',
+    'teBillable',
 ];
 
 function computeMinutes(startedAt, endedAt) {
@@ -71,6 +72,51 @@ function isInvertedRange(startedAt, endedAt) {
 }
 
 /**
+ * Validate an optional worker/job link against the entry's company and
+ * customer. Both are optional; a `null` value (update-only, to unlink)
+ * is skipped. Returns `null` when the links are legal, or a
+ * `{ status, message }` object the caller sends as-is.
+ *
+ *   - teWorkerId: must reference a Worker in `companyId`.
+ *   - teJobId:    must reference a Job whose customer sits in
+ *     `companyId` AND — when `custId` is known — whose customer IS
+ *     `custId`, so time for one client can't be booked against another
+ *     client's job. Archived workers/jobs are filtered by defaultScope
+ *     and therefore read as "not found" → 400.
+ */
+async function checkWorkerJobLinks({ teWorkerId, teJobId }, companyId, custId) {
+    if (teWorkerId !== undefined && teWorkerId !== null) {
+        const worker = await db.Worker.findByPk(Number(teWorkerId), {
+            attributes: ['workerCompId'],
+        });
+        if (!worker || worker.workerCompId !== companyId) {
+            return { status: 400, message: 'teWorkerId must reference a worker in your company.' };
+        }
+    }
+    if (teJobId !== undefined && teJobId !== null) {
+        const job = await db.Job.findByPk(Number(teJobId), {
+            attributes: ['jobCustId'],
+            include: [{
+                model: db.Customer,
+                as: 'customer',
+                attributes: ['custCompId'],
+                required: true,
+            }],
+        });
+        if (!job || !job.customer || job.customer.custCompId !== companyId) {
+            return { status: 400, message: 'teJobId must reference a job in your company.' };
+        }
+        if (custId !== undefined && custId !== null && job.jobCustId !== Number(custId)) {
+            return {
+                status: 400,
+                message: 'teJobId must belong to the same customer as the time entry (teCustId).',
+            };
+        }
+    }
+    return null;
+}
+
+/**
  * POST /v1/timeentry
  *
  * Create a new time entry for a customer in the auth'd company.
@@ -117,6 +163,17 @@ exports.create = async (req, res) => {
     payload.teCompId = companyId;
     payload.teArch = false;
     payload.teMinutes = computeMinutes(payload.teStartedAt, payload.teEndedAt);
+
+    let linkError;
+    try {
+        linkError = await checkWorkerJobLinks(payload, companyId, payload.teCustId);
+    } catch (error) {
+        log.error({ err: error }, 'TimeEntry worker/job link validation failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (linkError) {
+        return res.status(linkError.status).json({ message: linkError.message });
+    }
 
     try {
         const created = await TimeEntry.create(payload);
@@ -307,6 +364,18 @@ exports.update = async (req, res) => {
         }
         updates.teMinutes = computeMinutes(mergedStart, mergedEnd);
     }
+
+    let linkError;
+    try {
+        linkError = await checkWorkerJobLinks(updates, entry.teCompId, entry.teCustId);
+    } catch (error) {
+        log.error({ err: error }, 'TimeEntry worker/job link validation failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (linkError) {
+        return res.status(linkError.status).json({ message: linkError.message });
+    }
+
     try {
         await entry.update(updates);
         return res.status(200).json({ message: "Updated.", timeEntry: entry });

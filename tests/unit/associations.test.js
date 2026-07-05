@@ -99,3 +99,18 @@ describe('association graph: Worker.defaultBillingType', () => {
         assertAssoc('Worker', 'BelongsTo', 'workerDefaultBillType', 'BillingType');
     });
 });
+
+describe('association graph: TimeEntry worker + job links', () => {
+    test('TimeEntry belongsTo Worker via teWorkerId', () => {
+        assertAssoc('TimeEntry', 'BelongsTo', 'teWorkerId', 'Worker');
+    });
+    test('TimeEntry belongsTo Job via teJobId', () => {
+        assertAssoc('TimeEntry', 'BelongsTo', 'teJobId', 'Job');
+    });
+    test('Worker hasMany TimeEntry via teWorkerId', () => {
+        assertAssoc('Worker', 'HasMany', 'teWorkerId', 'TimeEntry');
+    });
+    test('Job hasMany TimeEntry via teJobId', () => {
+        assertAssoc('Job', 'HasMany', 'teJobId', 'TimeEntry');
+    });
+});

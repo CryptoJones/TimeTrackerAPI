@@ -113,6 +113,28 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         expect(true).toBe(true);
     });
 
+    test('TimeEntry has teWorkerId / teJobId columns and worker/job includes resolve', async () => {
+        if (!connected) return;
+        // Selecting the new attributes proves the 20260521 migration
+        // added the columns (a missing column would throw here).
+        const rows = await db.TimeEntry.findAll({
+            attributes: ['teId', 'teWorkerId', 'teJobId'],
+            limit: 1,
+        });
+        expect(Array.isArray(rows)).toBe(true);
+        // Eager-loading through the new aliases proves the association
+        // wiring in db.config.js (a bad alias would throw). required:
+        // false so an empty table (or null FKs) is fine.
+        const withLinks = await db.TimeEntry.findAll({
+            limit: 1,
+            include: [
+                { model: db.Worker, as: 'worker', required: false },
+                { model: db.Job, as: 'job', required: false },
+            ],
+        });
+        expect(Array.isArray(withLinks)).toBe(true);
+    });
+
     test('/healthz reports a non-null migration name (dbo-qualified read)', async () => {
         // sequelize-cli writes the SequelizeMeta table into the `dbo`
         // schema (`migrationStorageTableSchema: 'dbo'` in

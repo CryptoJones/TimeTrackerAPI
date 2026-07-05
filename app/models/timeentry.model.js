@@ -33,6 +33,19 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.INTEGER,
             allowNull: false,
         },
+        teWorkerId: {
+            field: 'teWorkerId',
+            // Nullable: the Worker who logged the time. Pre-existing
+            // entries and quick ad-hoc time may have none. When set, it
+            // resolves the billable rate (Worker.defaultBillingType).
+            type: Sequelize.INTEGER,
+        },
+        teJobId: {
+            field: 'teJobId',
+            // Nullable: the Job this time was worked against. Lets
+            // billable minutes roll up to a project (and its invoice).
+            type: Sequelize.INTEGER,
+        },
         teDescription: {
             field: 'teDescription',
             type: Sequelize.TEXT,

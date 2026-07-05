@@ -31,12 +31,14 @@ const isoDatetime = z.string().datetime({
 const createTimeEntryBody = z.object({
     teCustId: z.coerce.number().int().positive(),
     teCompId: z.coerce.number().int().positive().optional(),
+    teWorkerId: z.coerce.number().int().positive().optional(),
+    teJobId: z.coerce.number().int().positive().optional(),
     teDescription: z.string().max(10000).optional(),
     teStartedAt: isoDatetime,
     teEndedAt: isoDatetime.optional(),
     teBillable: z.boolean().optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: teCustId, teCompId, teDescription, teStartedAt, teEndedAt, teBillable.',
+    message: 'Unexpected field in body. Whitelist: teCustId, teCompId, teWorkerId, teJobId, teDescription, teStartedAt, teEndedAt, teBillable.',
 }).refine(
     (data) => !data.teEndedAt || new Date(data.teEndedAt) >= new Date(data.teStartedAt),
     {
@@ -59,12 +61,15 @@ const createTimeEntryBody = z.object({
  * row; controller already returns `teMinutes = null` there.)
  */
 const updateTimeEntryBody = z.object({
+    // Nullable: pass null to unlink the worker / job from an entry.
+    teWorkerId: z.coerce.number().int().positive().nullable().optional(),
+    teJobId: z.coerce.number().int().positive().nullable().optional(),
     teDescription: z.string().max(10000).optional(),
     teStartedAt: isoDatetime.optional(),
     teEndedAt: isoDatetime.nullable().optional(),
     teBillable: z.boolean().optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: teDescription, teStartedAt, teEndedAt, teBillable.',
+    message: 'Unexpected field in body. Whitelist: teWorkerId, teJobId, teDescription, teStartedAt, teEndedAt, teBillable.',
 }).refine(
     (data) => !(data.teStartedAt && data.teEndedAt) ||
         new Date(data.teEndedAt) >= new Date(data.teStartedAt),
