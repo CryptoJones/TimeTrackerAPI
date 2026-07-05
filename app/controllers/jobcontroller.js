@@ -20,8 +20,8 @@ const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
 const GetCompanyIdByCustomerId = auth.getCompanyIdByCustomerId;
 
-const ALLOWED_FIELDS_CREATE = ['jobCustId', 'jobDesc', 'jobFlatRate'];
-const ALLOWED_FIELDS_UPDATE = ['jobDesc', 'jobInvoiced', 'jobFlatRate'];
+const ALLOWED_FIELDS_CREATE = ['jobCustId', 'jobDesc', 'jobFlatRate', 'jobBudgetMinutes', 'jobBudgetAmount'];
+const ALLOWED_FIELDS_UPDATE = ['jobDesc', 'jobInvoiced', 'jobFlatRate', 'jobBudgetMinutes', 'jobBudgetAmount'];
 
 exports.create = async (req, res) => {
     const authKey = req.get('authKey');

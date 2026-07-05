@@ -47,6 +47,20 @@ module.exports = (sequelize, Sequelize) => {
                 return v == null ? null : Number(v);
             },
         },
+        jobBudgetMinutes: {
+            field: 'jobBudgetMinutes',
+            // Effort budget in minutes (#434); null = no hours budget.
+            type: Sequelize.INTEGER,
+        },
+        jobBudgetAmount: {
+            field: 'jobBudgetAmount',
+            // Value budget (#434); null = no amount budget. Number getter.
+            type: Sequelize.DECIMAL(14, 2),
+            get() {
+                const v = this.getDataValue('jobBudgetAmount');
+                return v == null ? null : Number(v);
+            },
+        },
     }, {
         tableName: 'Job',
         timestamps: true,

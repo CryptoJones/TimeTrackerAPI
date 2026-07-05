@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Budget vs actuals** (#434). Per-project budgets on Job —
+  `jobBudgetMinutes` (effort) and `jobBudgetAmount` (value), migration
+  `20260603000000`, settable on job create/PATCH. New
+  `GET /v1/report/budget` sums each budgeted job's logged minutes +
+  billable amount (via `rate.js`) and flags **each dimension**
+  `under` / `near` (≥ 80%) / `over` (> 100%), with an `overCount`. New
+  pure `app/services/report-budget.js`.
 - **Timesheet aggregation** (#398) — `GET /v1/report/timesheet`. A
   hours-per-worker-per-**day** (`period=day`, default) or per-**week**
   (`period=week`, bucketed to the ISO Monday) grid over a date range,
