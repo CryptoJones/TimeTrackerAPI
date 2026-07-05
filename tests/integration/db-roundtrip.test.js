@@ -113,12 +113,12 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         expect(true).toBe(true);
     });
 
-    test('TimeEntry has teWorkerId / teJobId columns and worker/job includes resolve', async () => {
+    test('TimeEntry has worker/job/billtype columns and their includes resolve', async () => {
         if (!connected) return;
-        // Selecting the new attributes proves the 20260521 migration
-        // added the columns (a missing column would throw here).
+        // Selecting the new attributes proves the 20260521 + 20260523
+        // migrations added the columns (a missing column would throw).
         const rows = await db.TimeEntry.findAll({
-            attributes: ['teId', 'teWorkerId', 'teJobId'],
+            attributes: ['teId', 'teWorkerId', 'teJobId', 'teBillTypeId'],
             limit: 1,
         });
         expect(Array.isArray(rows)).toBe(true);
@@ -130,6 +130,7 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
             include: [
                 { model: db.Worker, as: 'worker', required: false },
                 { model: db.Job, as: 'job', required: false },
+                { model: db.BillingType, as: 'billingType', required: false },
             ],
         });
         expect(Array.isArray(withLinks)).toBe(true);

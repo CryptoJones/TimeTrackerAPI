@@ -113,4 +113,10 @@ describe('association graph: TimeEntry worker + job links', () => {
     test('Job hasMany TimeEntry via teJobId', () => {
         assertAssoc('Job', 'HasMany', 'teJobId', 'TimeEntry');
     });
+    test('TimeEntry belongsTo BillingType via teBillTypeId', () => {
+        assertAssoc('TimeEntry', 'BelongsTo', 'teBillTypeId', 'BillingType');
+    });
+    test('BillingType hasMany TimeEntry via teBillTypeId', () => {
+        assertAssoc('BillingType', 'HasMany', 'teBillTypeId', 'TimeEntry');
+    });
 });

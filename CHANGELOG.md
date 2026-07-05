@@ -38,6 +38,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Billing-rate resolution + computed billable amount** (#387). New
+  `app/services/rate.js` resolves a time entry's effective hourly rate —
+  the entry's own `BillingType` (new nullable `teBillTypeId` override,
+  migration `20260523000000`) first, then the worker's default
+  `BillingType` — and computes the billable amount through the exact
+  `money.js` (rate × hours; `0` for non-billable; `null` when no rate
+  resolves). `GET /v1/timeentry/{id}` now returns a `billing`
+  `{ rate, billableAmount }` object alongside the entry. `teBillTypeId`
+  is accepted on create/PATCH (validated to a billing type in the
+  caller's company; PATCH `null` clears the override).
 - **Exact-money service + stored invoice totals** (#388). New
   `app/services/money.js` does all billing arithmetic in integer cents
   (rounding half away from zero) so decimal amounts never drift
