@@ -46,6 +46,9 @@ describe('Invoice auth contract', () => {
     test('GET /:id/pdf 403 without authKey', async () => {
         expect((await request(app).get('/v1/invoice/1/pdf')).status).toBe(403);
     });
+    test('GET /aging 403 without authKey', async () => {
+        expect((await request(app).get('/v1/invoice/aging')).status).toBe(403);
+    });
 });
 
 describe('Invoice route mounting', () => {

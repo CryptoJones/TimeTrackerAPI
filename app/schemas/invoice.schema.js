@@ -86,6 +86,14 @@ const rollupInvoiceBody = z.object({
     message: 'Unexpected field in body. Whitelist: invCustId, invDate, invDueDate, from, to.',
 }).refine(refineDueDateAfterIssue, DUE_BEFORE_ISSUE);
 
+// GET /v1/invoice/aging query. companyId required for master keys
+// (controller enforces); scoped keys default to their own company.
+const agingQuery = z.object({
+    companyId: z.coerce.number().int().positive().optional(),
+}).strict({
+    message: 'Unexpected query parameter. Allowed: companyId.',
+});
+
 module.exports = {
     intIdParam,
     createInvoiceBody,
@@ -93,4 +101,5 @@ module.exports = {
     listByCustomerQuery,
     bulkInvoiceBody,
     rollupInvoiceBody,
+    agingQuery,
 };
