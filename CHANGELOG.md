@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Billable vs non-billable summary** (#432) —
+  `GET /v1/report/billable-summary`. Splits a company's tracked time into
+  billable / non-billable minutes + hours **by month**, prices the
+  billable portion (via `rate.js`), and reports the overall **billable
+  ratio** and total billable amount — the utilization trend. Company-
+  scoped; optional `customerId` / `from` / `to`. New pure
+  `app/services/report-billable-summary.js`. **Completes the v1.1
+  milestone.**
 - **Tags on time entries** (#406). `TimeEntry.teTags` — a JSONB array of
   freeform labels (≤ 50 tags, each ≤ 64 chars), migration
   `20260602000000` with a GIN index. Settable on create / PATCH / timer

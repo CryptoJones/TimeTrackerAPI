@@ -49,4 +49,17 @@ const revenueQuery = z.object({
     message: 'Unexpected query parameter. Allowed: companyId, customerId, from, to.',
 });
 
-module.exports = { unbilledQuery, hoursQuery, revenueQuery };
+/**
+ * GET /v1/report/billable-summary query. companyId required for master
+ * keys. Optional customerId filter and from/to (entry start) bounds.
+ */
+const billableSummaryQuery = z.object({
+    companyId: z.coerce.number().int().positive().optional(),
+    customerId: z.coerce.number().int().positive().optional(),
+    from: isoDate.optional(),
+    to: isoDate.optional(),
+}).strict({
+    message: 'Unexpected query parameter. Allowed: companyId, customerId, from, to.',
+});
+
+module.exports = { unbilledQuery, hoursQuery, revenueQuery, billableSummaryQuery };
