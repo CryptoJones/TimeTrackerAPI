@@ -741,5 +741,10 @@ router.get(
     v.query(reportSchemas.budgetQuery),
     report.budget,
 );
+router.get(
+    '/v1/report/targets',
+    v.query(reportSchemas.targetsQuery),
+    report.targets,
+);
 
 module.exports = router;

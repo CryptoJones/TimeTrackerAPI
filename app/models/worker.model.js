@@ -52,6 +52,11 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.INTEGER,
             allowNull: false,
         },
+        workerTargetMinsPerWeek: {
+            field: 'workerTargetMinsPerWeek',
+            // Weekly capacity target in minutes (#400); null = no target.
+            type: Sequelize.INTEGER,
+        },
     }, {
         tableName: 'Worker',
         timestamps: true,
