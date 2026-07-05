@@ -66,6 +66,7 @@ db.PurchaseOrderVendor = require('../models/purchaseordervendor.model.js')(seque
 db.PurchaseOrderHeader = require('../models/purchaseorderheader.model.js')(sequelize, Sequelize);
 db.PurchaseOrderLine = require('../models/purchaseorderline.model.js')(sequelize, Sequelize);
 db.InventoryTransaction = require('../models/inventorytransaction.model.js')(sequelize, Sequelize);
+db.Expense = require('../models/expense.model.js')(sequelize, Sequelize);
 
 // ----------------------------------------------------------------------
 // Associations — centralized so the relationship graph is visible
@@ -167,5 +168,14 @@ db.PurchaseOrderVendor.hasMany(db.PurchaseOrderHeader, { foreignKey: 'pohPovId',
 db.PurchaseOrderHeader.belongsTo(db.PurchaseOrderVendor,{ foreignKey: 'pohPovId', as: 'vendor' });
 db.PurchaseOrderHeader.hasMany(db.PurchaseOrderLine,   { foreignKey: 'polpoh',   as: 'lines' });
 db.PurchaseOrderLine.belongsTo(db.PurchaseOrderHeader, { foreignKey: 'polpoh',   as: 'header' });
+
+// Expense (#416): scoped to a company, optionally linked to a customer
+// and a job. JS-side only (no FK constraints), like the rest here.
+db.Company.hasMany(db.Expense,    { foreignKey: 'expCompId', as: 'expenses' });
+db.Expense.belongsTo(db.Company,  { foreignKey: 'expCompId', as: 'company' });
+db.Customer.hasMany(db.Expense,   { foreignKey: 'expCustId', as: 'expenses' });
+db.Expense.belongsTo(db.Customer, { foreignKey: 'expCustId', as: 'customer' });
+db.Job.hasMany(db.Expense,        { foreignKey: 'expJobId',  as: 'expenses' });
+db.Expense.belongsTo(db.Job,      { foreignKey: 'expJobId',  as: 'job' });
 
 module.exports = db;
