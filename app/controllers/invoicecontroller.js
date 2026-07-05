@@ -12,6 +12,7 @@ const { buildRollup } = require('../services/invoice-rollup.js');
 const invoiceStatus = require('../services/invoice-status.js');
 const invoiceNumber = require('../services/invoice-number.js');
 const { renderInvoicePdf } = require('../services/invoice-pdf.js');
+const { buildAging } = require('../services/invoice-aging.js');
 const Invoice = db.Invoice;
 
 /** Today as an ISO date (YYYY-MM-DD), UTC. */
@@ -407,6 +408,85 @@ exports.rollup = async (req, res) => {
         tax,
         total,
         skipped: skippedCounts,
+    });
+};
+
+/**
+ * GET /v1/invoice/aging — accounts-receivable aging for a company.
+ * Buckets outstanding invoice balances by days overdue (current /
+ * 1-30 / 31-60 / 61-90 / 90+). Master keys must pass ?companyId; scoped
+ * keys use their own company.
+ */
+exports.aging = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+
+    const isMaster = await IsMaster(authKey);
+    let companyId;
+    if (isMaster) {
+        companyId = Number(req.query.companyId);
+        if (!Number.isInteger(companyId) || companyId <= 0) {
+            return res.status(400).json({ message: "Master keys must specify companyId." });
+        }
+    } else {
+        companyId = await GetCompanyId(authKey);
+        if (companyId === -1) {
+            return res.status(403).json({ message: "Invalid Authorization Key." });
+        }
+        if (req.query.companyId !== undefined && Number(req.query.companyId) !== companyId) {
+            return res.status(403).json({
+                message: "Cannot view AR aging for a company you do not belong to.",
+            });
+        }
+    }
+
+    let invoices;
+    try {
+        // Invoice scopes through Customer (no compId column), so join the
+        // customer and filter by company. defaultScope hides archived
+        // invoices / customers / payments.
+        invoices = await Invoice.findAll({
+            include: [
+                {
+                    model: db.Customer, as: 'customer', required: true,
+                    where: { custCompId: companyId },
+                    attributes: ['custCompanyName', 'custFName', 'custLName'],
+                },
+                { model: db.CustomerPayment, as: 'payments', required: false },
+            ],
+            order: [['invDueDate', 'ASC']],
+        });
+    } catch (error) {
+        log.error({ err: error }, 'AR aging: Invoice.findAll failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+
+    const today = todayISO();
+    const items = invoices.map((inv) => {
+        const summary = invoiceStatus.summarize(inv, inv.payments, today);
+        const c = inv.customer;
+        const custName = c
+            ? (c.custCompanyName || [c.custFName, c.custLName].filter(Boolean).join(' ') || null)
+            : null;
+        return {
+            invId: inv.invId,
+            invNumber: inv.invNumber,
+            custName,
+            dueDate: inv.invDueDate,
+            balance: summary.balance,
+        };
+    });
+
+    const aging = buildAging(items, today);
+    return res.status(200).json({
+        message: "AR aging.",
+        companyId,
+        asOf: today,
+        buckets: aging.buckets,
+        totalOutstanding: aging.totalOutstanding,
+        invoices: aging.invoices,
     });
 };
 

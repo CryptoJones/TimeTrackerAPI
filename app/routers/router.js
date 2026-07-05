@@ -358,6 +358,11 @@ router.post(
     invoice.rollup,
 );
 router.get(
+    '/v1/invoice/aging',
+    v.query(invoiceSchemas.agingQuery),
+    invoice.aging,
+);
+router.get(
     '/v1/invoice/bycustomer/:id',
     v.params(invoiceSchemas.intIdParam),
     v.query(invoiceSchemas.listByCustomerQuery),

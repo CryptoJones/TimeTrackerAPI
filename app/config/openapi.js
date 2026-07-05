@@ -1287,6 +1287,18 @@ const spec = {
             patch: { summary: 'Partial update of an invoice', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/Invoice' } } } }, responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
             delete: { summary: 'Soft-delete an invoice', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
         },
+        '/v1/invoice/aging': {
+            get: {
+                summary: 'Accounts-receivable aging for a company',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys; scoped keys use their own company.' }],
+                responses: {
+                    200: { description: 'AR aging — {buckets, totalOutstanding, invoices}; buckets = current / d1_30 / d31_60 / d61_90 / d90plus with {count, amount}' },
+                    400: { description: 'Master keys must specify companyId' },
+                    403: { description: 'Auth failure' },
+                },
+            },
+        },
         '/v1/invoice/{id}/pdf': {
             get: {
                 summary: 'Download an invoice as a branded PDF',

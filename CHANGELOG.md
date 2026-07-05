@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Accounts-receivable aging report** (#40) — `GET /v1/invoice/aging`.
+  Buckets a company's outstanding invoice balances by how overdue they
+  are (`current` / `d1_30` / `d31_60` / `d61_90` / `d90plus`), each with
+  a count + exact total, plus the outstanding invoices (most overdue
+  first) and a grand total. Balances come from the payment-driven
+  derivation (`invoice-status`) and settled invoices are excluded.
+  Company-scoped (master keys pass `?companyId`).
 - **Invoice PDF** (#391) — `GET /v1/invoice/{id}/pdf` streams a branded
   PDF (company header, bill-to, line items, subtotal/tax/total, amount
   paid + balance due, status) built by `app/services/invoice-pdf.js`.
