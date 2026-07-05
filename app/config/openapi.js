@@ -1287,6 +1287,24 @@ const spec = {
             patch: { summary: 'Partial update of an invoice', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/Invoice' } } } }, responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
             delete: { summary: 'Soft-delete an invoice', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
         },
+        '/v1/report/hours': {
+            get: {
+                summary: 'Hours summary grouped by customer, job, and worker',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys.' },
+                    { name: 'customerId', in: 'query', schema: { type: 'integer' } },
+                    { name: 'workerId', in: 'query', schema: { type: 'integer' } },
+                    { name: 'from', in: 'query', schema: { type: 'string', format: 'date' } },
+                    { name: 'to', in: 'query', schema: { type: 'string', format: 'date' } },
+                ],
+                responses: {
+                    200: { description: 'Hours — {totalHours, billableHours, nonBillableHours, byCustomer[], byJob[], byWorker[]}' },
+                    400: { description: 'Master keys must specify companyId' },
+                    403: { description: 'Auth failure' },
+                },
+            },
+        },
         '/v1/report/unbilled': {
             get: {
                 summary: 'Unbilled billable time, grouped customer → job',
