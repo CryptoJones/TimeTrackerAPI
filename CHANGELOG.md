@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Invoice status + outstanding balance** (#389). `GET /v1/invoice/{id}`
+  now returns a derived `billing` object — `{ status, total, amountPaid,
+  balance }` — computed from the payments allocated to the invoice
+  (#392's `cpayInvId`) and its due date via the new
+  `app/services/invoice-status.js`. Status is `draft` (no total yet) →
+  `sent` → `partial` → `overdue` (past due, not settled) → `paid`;
+  amounts are summed exactly through `money.js`. Derivation only — the
+  stored `invPaid` flag is untouched.
 - **Payments can be allocated to a specific invoice** (#392). New
   nullable `cpayInvId` on `CustomerPayment` (migration `20260525000000`)
   links a payment to the invoice it pays — `NULL` leaves it "on account"
