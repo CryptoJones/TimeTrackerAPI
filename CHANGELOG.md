@@ -38,6 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Tags on time entries** (#406). `TimeEntry.teTags` — a JSONB array of
+  freeform labels (≤ 50 tags, each ≤ 64 chars), migration
+  `20260602000000` with a GIN index. Settable on create / PATCH / timer
+  start; the model getter normalizes null → `[]`. Both list routes
+  (`bycompany`, `worker/{id}/timeentries`) accept `?tag=` to filter by a
+  containing tag.
 - **Per-project flat rate** (#410). `Job.jobFlatRate` (migration
   `20260601000000`) is an hourly rate applied to all time on the job —
   the **middle tier** of rate resolution in `rate.js`: per-entry

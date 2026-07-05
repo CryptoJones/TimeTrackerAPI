@@ -13,6 +13,10 @@ const isoDatetime = z.string().datetime({
     message: 'Must be an ISO 8601 datetime (e.g. 2026-05-16T09:00:00Z).',
 });
 
+// Freeform labels on a time entry (#406): up to 50 non-empty strings,
+// each ≤ 64 chars.
+const tagsField = z.array(z.string().min(1).max(64)).max(50);
+
 /**
  * POST /v1/timeentry body. teCompId is optional for non-master keys
  * (defaults to authKey's company) and required for master keys
@@ -38,8 +42,9 @@ const createTimeEntryBody = z.object({
     teStartedAt: isoDatetime,
     teEndedAt: isoDatetime.optional(),
     teBillable: z.boolean().optional(),
+    teTags: tagsField.optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: teCustId, teCompId, teWorkerId, teJobId, teBillTypeId, teDescription, teStartedAt, teEndedAt, teBillable.',
+    message: 'Unexpected field in body. Whitelist: teCustId, teCompId, teWorkerId, teJobId, teBillTypeId, teDescription, teStartedAt, teEndedAt, teBillable, teTags.',
 }).refine(
     (data) => !data.teEndedAt || new Date(data.teEndedAt) >= new Date(data.teStartedAt),
     {
@@ -70,8 +75,9 @@ const updateTimeEntryBody = z.object({
     teStartedAt: isoDatetime.optional(),
     teEndedAt: isoDatetime.nullable().optional(),
     teBillable: z.boolean().optional(),
+    teTags: tagsField.optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: teWorkerId, teJobId, teBillTypeId, teDescription, teStartedAt, teEndedAt, teBillable.',
+    message: 'Unexpected field in body. Whitelist: teWorkerId, teJobId, teBillTypeId, teDescription, teStartedAt, teEndedAt, teBillable, teTags.',
 }).refine(
     (data) => !(data.teStartedAt && data.teEndedAt) ||
         new Date(data.teEndedAt) >= new Date(data.teStartedAt),
@@ -99,12 +105,13 @@ const exportCsvQuery = z.object({
 
 const listByCompanyQuery = z.object({
     customerId: z.coerce.number().int().positive().optional(),
+    tag: z.string().min(1).max(64).optional(),
     from: isoDatetime.optional(),
     to: isoDatetime.optional(),
     limit: z.coerce.number().int().positive().max(500).optional(),
     offset: z.coerce.number().int().nonnegative().optional(),
 }).strict({
-    message: 'Unexpected query parameter. Allowed: customerId, from, to, limit, offset.',
+    message: 'Unexpected query parameter. Allowed: customerId, tag, from, to, limit, offset.',
 });
 
 /**
@@ -121,8 +128,9 @@ const startTimerBody = z.object({
     teBillTypeId: z.coerce.number().int().positive().optional(),
     teDescription: z.string().max(10000).optional(),
     teBillable: z.boolean().optional(),
+    teTags: tagsField.optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: teCustId, teCompId, teWorkerId, teJobId, teBillTypeId, teDescription, teBillable.',
+    message: 'Unexpected field in body. Whitelist: teCustId, teCompId, teWorkerId, teJobId, teBillTypeId, teDescription, teBillable, teTags.',
 });
 
 module.exports = {
