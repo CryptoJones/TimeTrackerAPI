@@ -38,6 +38,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Worker time-list route** (#397) — `GET /v1/worker/{id}/timeentries`
+  lists one worker's time entries, secure-404 scoped through the worker
+  (missing / archived / cross-tenant read the same 404), with
+  `customerId` / `from` / `to` filters and RFC-5988 pagination. No
+  migration.
 - **Start/stop timer endpoints** (#396). `POST /v1/timeentry/start`
   opens an in-flight entry stamped with the server clock (teEndedAt
   null), rejecting a second concurrent timer for the same worker (409);

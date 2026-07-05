@@ -481,6 +481,93 @@ exports.listByCompany = async (req, res) => {
 };
 
 /**
+ * GET /v1/worker/:id/timeentries — list one worker's time entries (#397).
+ *
+ * Secure-404 scoped through the worker: a missing / archived /
+ * cross-tenant worker id reads the same 404, so a scoped caller can't
+ * probe which worker ids exist across the tenant table. Honors
+ * ?customerId, ?from / ?to (date range), and pagination — same shape as
+ * listByCompany.
+ */
+exports.listByWorker = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+
+    const workerId = Number(req.params.id);
+    if (!Number.isInteger(workerId) || workerId <= 0) {
+        return res.status(400).json({ message: "Invalid worker id." });
+    }
+
+    let worker;
+    try {
+        // defaultScope hides archived workers → they read as "not found".
+        worker = await db.Worker.findByPk(workerId, { attributes: ['workerId', 'workerCompId'] });
+    } catch (error) {
+        log.error({ err: error }, 'listByWorker: Worker.findByPk failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (!worker) {
+        return res.status(404).json({ message: "Not found." });
+    }
+
+    const isMaster = await IsMaster(authKey);
+    if (!isMaster) {
+        const companyId = await GetCompanyId(authKey);
+        if (companyId === -1 || worker.workerCompId !== companyId) {
+            return res.status(404).json({ message: "Not found." });
+        }
+    }
+
+    const where = { teWorkerId: workerId, teCompId: worker.workerCompId };
+    const customerId = Number(req.query.customerId);
+    if (Number.isInteger(customerId) && customerId > 0) {
+        where.teCustId = customerId;
+    }
+    const Op = db.Sequelize && db.Sequelize.Op;
+    const fromDate = parseDateOrNull(req.query.from);
+    const toDate = parseDateOrNull(req.query.to);
+    if (Op && fromDate) {
+        where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.gte]: fromDate });
+    }
+    if (Op && toDate) {
+        where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.lte]: toDate });
+    }
+
+    const requestedLimit = parseInt(req.query.limit, 10);
+    const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
+        ? Math.min(requestedLimit, 500)
+        : 100;
+    const requestedOffset = parseInt(req.query.offset, 10);
+    const offset = Number.isInteger(requestedOffset) && requestedOffset >= 0
+        ? requestedOffset
+        : 0;
+
+    try {
+        const { count, rows } = await TimeEntry.findAndCountAll({
+            where,
+            limit,
+            offset,
+            order: [['teStartedAt', 'DESC']],
+        });
+        const link = buildLinkHeader({ req, limit, offset, count });
+        if (link) res.setHeader('Link', link);
+        return res.status(200).json({
+            message: "Found.",
+            workerId,
+            count,
+            limit,
+            offset,
+            timeEntries: rows,
+        });
+    } catch (error) {
+        log.error({ err: error }, 'listByWorker: TimeEntry.findAndCountAll failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+};
+
+/**
  * PATCH /v1/timeentry/:id — partial update.
  *
  * Only ALLOWED_FIELDS_UPDATE may be patched. teCompId / teCustId /
