@@ -730,5 +730,10 @@ router.get(
     v.query(reportSchemas.billableSummaryQuery),
     report.billableSummary,
 );
+router.get(
+    '/v1/report/timesheet',
+    v.query(reportSchemas.timesheetQuery),
+    report.timesheet,
+);
 
 module.exports = router;

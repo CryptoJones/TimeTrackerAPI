@@ -38,6 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Timesheet aggregation** (#398) — `GET /v1/report/timesheet`. A
+  hours-per-worker-per-**day** (`period=day`, default) or per-**week**
+  (`period=week`, bucketed to the ISO Monday) grid over a date range,
+  with per-worker row totals, per-period column totals, and a grand
+  total. Company-scoped; optional `customerId` / `workerId` / `from` /
+  `to`. New pure `app/services/report-timesheet.js`. First v1.2 item.
 - **Billable vs non-billable summary** (#432) —
   `GET /v1/report/billable-summary`. Splits a company's tracked time into
   billable / non-billable minutes + hours **by month**, prices the

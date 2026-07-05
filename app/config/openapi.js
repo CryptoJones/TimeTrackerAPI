@@ -1374,6 +1374,25 @@ const spec = {
                 responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
             },
         },
+        '/v1/report/timesheet': {
+            get: {
+                summary: 'Timesheet grid — hours per worker per day or week',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys.' },
+                    { name: 'customerId', in: 'query', schema: { type: 'integer' } },
+                    { name: 'workerId', in: 'query', schema: { type: 'integer' } },
+                    { name: 'from', in: 'query', schema: { type: 'string', format: 'date' } },
+                    { name: 'to', in: 'query', schema: { type: 'string', format: 'date' } },
+                    { name: 'period', in: 'query', schema: { type: 'string', enum: ['day', 'week'] }, description: 'Default day.' },
+                ],
+                responses: {
+                    200: { description: 'Grid — {period, buckets[], rows[] (worker × period), bucketTotals[], grandTotalHours}' },
+                    400: { description: 'Master keys must specify companyId, or bad period' },
+                    403: { description: 'Auth failure' },
+                },
+            },
+        },
         '/v1/report/billable-summary': {
             get: {
                 summary: 'Billable vs non-billable time by month (+ ratio)',
