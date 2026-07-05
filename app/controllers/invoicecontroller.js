@@ -9,6 +9,7 @@ const { buildLinkHeader } = require('../middleware/pagination.js');
 const { makeBulkCreateIndirect } = require('./_bulk-helpers.js');
 const money = require('../services/money.js');
 const { buildRollup } = require('../services/invoice-rollup.js');
+const invoiceStatus = require('../services/invoice-status.js');
 const Invoice = db.Invoice;
 
 /** Today as an ISO date (YYYY-MM-DD), UTC. */
@@ -78,7 +79,12 @@ exports.getById = async (req, res) => {
 
     let invoice;
     try {
-        invoice = await Invoice.findByPk(req.params.id);
+        // Eager-load the allocated, unarchived payments (defaultScope
+        // hides cpayArch) so the response can carry a derived status +
+        // outstanding balance without extra round-trips.
+        invoice = await Invoice.findByPk(req.params.id, {
+            include: [{ model: db.CustomerPayment, as: 'payments', required: false }],
+        });
     } catch (error) {
         log.error({ err: error }, 'Invoice.findByPk failed');
         return res.status(500).json({ message: "Error!" });
@@ -101,7 +107,9 @@ exports.getById = async (req, res) => {
             return res.status(404).json({ message: "Not found." });
         }
     }
-    return res.status(200).json({ message: "Found.", invoice });
+    // Derived (not stored) payment position: status + outstanding balance.
+    const billing = invoiceStatus.summarize(invoice, invoice.payments, todayISO());
+    return res.status(200).json({ message: "Found.", invoice, billing });
 };
 
 exports.listByCustomer = async (req, res) => {
