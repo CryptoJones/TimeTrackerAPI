@@ -84,6 +84,16 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.BOOLEAN,
             defaultValue: true,
         },
+        teTags: {
+            field: 'teTags',
+            // Freeform labels on an entry (#406), a JSONB array of strings.
+            // Getter normalizes null → [] so the API always returns an array.
+            type: Sequelize.JSONB,
+            get() {
+                const v = this.getDataValue('teTags');
+                return Array.isArray(v) ? v : [];
+            },
+        },
         teArch: {
             field: 'teArch',
             type: Sequelize.BOOLEAN,

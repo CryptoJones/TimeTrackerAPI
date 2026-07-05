@@ -18,11 +18,11 @@ const GetCompanyId = auth.getCompanyId;
 
 const ALLOWED_FIELDS_CREATE = [
     'teCustId', 'teWorkerId', 'teJobId', 'teBillTypeId', 'teDescription',
-    'teStartedAt', 'teEndedAt', 'teBillable',
+    'teStartedAt', 'teEndedAt', 'teBillable', 'teTags',
 ];
 const ALLOWED_FIELDS_UPDATE = [
     'teWorkerId', 'teJobId', 'teBillTypeId', 'teDescription', 'teStartedAt',
-    'teEndedAt', 'teBillable',
+    'teEndedAt', 'teBillable', 'teTags',
 ];
 
 function computeMinutes(startedAt, endedAt) {
@@ -198,7 +198,7 @@ exports.create = async (req, res) => {
 };
 
 const START_FIELDS = [
-    'teCustId', 'teWorkerId', 'teJobId', 'teBillTypeId', 'teDescription', 'teBillable',
+    'teCustId', 'teWorkerId', 'teJobId', 'teBillTypeId', 'teDescription', 'teBillable', 'teTags',
 ];
 
 /**
@@ -432,6 +432,10 @@ exports.listByCompany = async (req, res) => {
     if (Number.isInteger(customerId) && customerId > 0) {
         where.teCustId = customerId;
     }
+    // Tag filter (#406): entries whose teTags JSONB array contains the tag.
+    if (db.Sequelize && db.Sequelize.Op && typeof req.query.tag === 'string' && req.query.tag) {
+        where.teTags = { [db.Sequelize.Op.contains]: [req.query.tag] };
+    }
     // Date range — use Sequelize.Op.gte/lte. Keep it permissive: bad
     // dates are silently dropped rather than 400'd, so a typo in the
     // query string doesn't break the call. parseDateOrNull guards
@@ -527,6 +531,10 @@ exports.listByWorker = async (req, res) => {
     const customerId = Number(req.query.customerId);
     if (Number.isInteger(customerId) && customerId > 0) {
         where.teCustId = customerId;
+    }
+    // Tag filter (#406): entries whose teTags JSONB array contains the tag.
+    if (db.Sequelize && db.Sequelize.Op && typeof req.query.tag === 'string' && req.query.tag) {
+        where.teTags = { [db.Sequelize.Op.contains]: [req.query.tag] };
     }
     const Op = db.Sequelize && db.Sequelize.Op;
     const fromDate = parseDateOrNull(req.query.from);
