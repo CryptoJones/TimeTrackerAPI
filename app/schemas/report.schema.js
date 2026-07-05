@@ -22,4 +22,18 @@ const unbilledQuery = z.object({
     message: 'Unexpected query parameter. Allowed: companyId, customerId, from, to.',
 });
 
-module.exports = { unbilledQuery };
+/**
+ * GET /v1/report/hours query. companyId required for master keys.
+ * Optional customerId / workerId filters and from/to date bounds.
+ */
+const hoursQuery = z.object({
+    companyId: z.coerce.number().int().positive().optional(),
+    customerId: z.coerce.number().int().positive().optional(),
+    workerId: z.coerce.number().int().positive().optional(),
+    from: isoDate.optional(),
+    to: isoDate.optional(),
+}).strict({
+    message: 'Unexpected query parameter. Allowed: companyId, customerId, workerId, from, to.',
+});
+
+module.exports = { unbilledQuery, hoursQuery };

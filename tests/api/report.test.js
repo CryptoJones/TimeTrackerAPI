@@ -37,4 +37,10 @@ describe('Report auth + schema contract', () => {
         const res = await request(app).get('/v1/report/unbilled?companyId=abc').set('authKey', 'k');
         expect(res.status).toBe(400);
     });
+    test('GET /v1/report/hours 403 without authKey', async () => {
+        expect((await request(app).get('/v1/report/hours')).status).toBe(403);
+    });
+    test('GET /v1/report/hours rejects an unknown query param (schema)', async () => {
+        expect((await request(app).get('/v1/report/hours?bogus=1').set('authKey', 'k')).status).toBe(400);
+    });
 });

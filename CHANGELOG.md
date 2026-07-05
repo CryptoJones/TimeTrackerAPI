@@ -38,13 +38,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
-- **Unbilled-time report** (#48) — `GET /v1/report/unbilled` (new
+- **Hours summary report** (#431) — `GET /v1/report/hours`. Groups all
+  closed time for a company by customer, job, and worker, each with a
+  billable / non-billable split (minutes + hours), plus company-wide
+  totals. Company-scoped; optional `customerId` / `workerId` / `from` /
+  `to` filters. New pure `app/services/report-hours.js`.
+- **Unbilled-time report** (#430) — `GET /v1/report/unbilled` (new
   `report` controller). Surfaces billable, not-yet-invoiced, job-linked
   time grouped customer → job, priced via the rate service and summed
   exactly, with hours + amount per job/customer and a grand total — the
   "money you haven't billed yet" view that drives the next roll-up.
   Company-scoped; optional `customerId` and `from`/`to` filters.
-- **Accounts-receivable aging report** (#40) — `GET /v1/invoice/aging`.
+- **Accounts-receivable aging report** (#422) — `GET /v1/invoice/aging`.
   Buckets a company's outstanding invoice balances by how overdue they
   are (`current` / `d1_30` / `d31_60` / `d61_90` / `d90plus`), each with
   a count + exact total, plus the outstanding invoices (most overdue

@@ -665,5 +665,10 @@ router.get(
     v.query(reportSchemas.unbilledQuery),
     report.unbilled,
 );
+router.get(
+    '/v1/report/hours',
+    v.query(reportSchemas.hoursQuery),
+    report.hours,
+);
 
 module.exports = router;
