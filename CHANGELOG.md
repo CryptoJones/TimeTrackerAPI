@@ -38,6 +38,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Revenue & earnings summary** (#429) — `GET /v1/report/revenue`.
+  Revenue (invoiced total) and collected (payments allocated) grouped by
+  customer and by month, with outstanding per group and company totals,
+  all exact-cent. Company-scoped; optional `customerId` and `from`/`to`
+  (invoice date) filters. New pure `app/services/report-revenue.js`.
 - **Hours summary report** (#431) — `GET /v1/report/hours`. Groups all
   closed time for a company by customer, job, and worker, each with a
   billable / non-billable split (minutes + hours), plus company-wide
