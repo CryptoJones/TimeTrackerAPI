@@ -670,5 +670,10 @@ router.get(
     v.query(reportSchemas.hoursQuery),
     report.hours,
 );
+router.get(
+    '/v1/report/revenue',
+    v.query(reportSchemas.revenueQuery),
+    report.revenue,
+);
 
 module.exports = router;

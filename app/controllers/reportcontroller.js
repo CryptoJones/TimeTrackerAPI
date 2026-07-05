@@ -11,8 +11,10 @@
 const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
+const money = require('../services/money.js');
 const { buildUnbilled } = require('../services/report-unbilled.js');
 const { buildHours } = require('../services/report-hours.js');
+const { buildRevenue } = require('../services/report-revenue.js');
 
 const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
@@ -197,6 +199,68 @@ exports.hours = async (req, res) => {
 
     const report = buildHours(items);
     return res.status(200).json({ message: "Hours summary.", companyId, ...report });
+};
+
+/**
+ * GET /v1/report/revenue — revenue (invoiced) and collected (paid)
+ * summary, grouped by customer and by month, with outstanding. Covers
+ * the company's invoices; optional customerId and from/to (invoice
+ * date) filters.
+ */
+exports.revenue = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+    req.authKey = authKey;
+
+    const scope = await resolveCompany(req);
+    if (scope.error) {
+        return res.status(scope.error.status).json({ message: scope.error.message });
+    }
+    const { companyId } = scope;
+
+    const Op = db.Sequelize && db.Sequelize.Op;
+    const invWhere = {};
+    const customerId = Number(req.query.customerId);
+    if (Number.isInteger(customerId) && customerId > 0) invWhere.invCustId = customerId;
+    const from = String(req.query.from || '');
+    const to = String(req.query.to || '');
+    if (Op && /^\d{4}-\d{2}-\d{2}$/.test(from)) invWhere.invDate = Object.assign(invWhere.invDate || {}, { [Op.gte]: from });
+    if (Op && /^\d{4}-\d{2}-\d{2}$/.test(to)) invWhere.invDate = Object.assign(invWhere.invDate || {}, { [Op.lte]: to });
+
+    let invoices;
+    try {
+        invoices = await db.Invoice.findAll({
+            where: invWhere,
+            include: [
+                {
+                    model: db.Customer, as: 'customer', required: true,
+                    where: { custCompId: companyId },
+                    attributes: ['custId', 'custCompanyName', 'custFName', 'custLName'],
+                },
+                { model: db.CustomerPayment, as: 'payments', required: false },
+            ],
+            order: [['invDate', 'ASC']],
+        });
+    } catch (error) {
+        log.error({ err: error }, 'revenue report: Invoice.findAll failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+
+    const items = invoices.map((inv) => {
+        const c = inv.customer;
+        return {
+            custId: inv.invCustId,
+            custName: c ? (c.custCompanyName || [c.custFName, c.custLName].filter(Boolean).join(' ') || null) : null,
+            invDate: inv.invDate,
+            total: inv.invTotal,
+            collected: money.sum((inv.payments || []).map((p) => p.cpayAmount)),
+        };
+    });
+
+    const report = buildRevenue(items);
+    return res.status(200).json({ message: "Revenue summary.", companyId, ...report });
 };
 
 exports._internals = { resolveCompany, parseDate };
