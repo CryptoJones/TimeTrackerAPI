@@ -79,6 +79,16 @@ module.exports = (sequelize, Sequelize) => {
             // numbering existed.
             type: Sequelize.TEXT,
         },
+        invTaxRate: {
+            field: 'invTaxRate',
+            // Effective tax rate (fraction) applied when this invoice was
+            // totalled (#420). Number getter; null until totalled.
+            type: Sequelize.DECIMAL(6, 4),
+            get() {
+                const v = this.getDataValue('invTaxRate');
+                return v == null ? null : Number(v);
+            },
+        },
     }, {
         tableName: 'Invoice',
         timestamps: true,

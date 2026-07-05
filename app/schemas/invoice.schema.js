@@ -82,8 +82,11 @@ const rollupInvoiceBody = z.object({
     invDueDate: isoDate.optional(),
     from: isoDate.optional(),
     to: isoDate.optional(),
+    // Optional tax-rate override (fraction 0..1); defaults to the
+    // company's compTaxRate.
+    taxRate: z.coerce.number().min(0).max(1).optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: invCustId, invDate, invDueDate, from, to.',
+    message: 'Unexpected field in body. Whitelist: invCustId, invDate, invDueDate, from, to, taxRate.',
 }).refine(refineDueDateAfterIssue, DUE_BEFORE_ISSUE);
 
 // GET /v1/invoice/aging query. companyId required for master keys

@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Invoice sales tax** (#420). A per-company default tax rate
+  (`compTaxRate`, a fraction like `0.0725`) plus a per-invoice effective
+  rate (`invTaxRate`), migration `20260527000000`. The time→invoice
+  roll-up now applies tax to the subtotal — `taxRate` in the roll-up body
+  overrides, else the company default, else 0 — setting `invTax` and
+  `invTotal = subtotal + tax` (exact-cent). `compTaxRate` is settable via
+  company create/PATCH. New pure `app/services/invoice-tax.js`.
 - **Revenue & earnings summary** (#429) — `GET /v1/report/revenue`.
   Revenue (invoiced total) and collected (payments allocated) grouped by
   customer and by month, with outstanding per group and company totals,

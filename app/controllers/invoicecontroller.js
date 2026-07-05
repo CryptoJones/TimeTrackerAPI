@@ -13,6 +13,7 @@ const invoiceStatus = require('../services/invoice-status.js');
 const invoiceNumber = require('../services/invoice-number.js');
 const { renderInvoicePdf } = require('../services/invoice-pdf.js');
 const { buildAging } = require('../services/invoice-aging.js');
+const invoiceTax = require('../services/invoice-tax.js');
 const Invoice = db.Invoice;
 
 /** Today as an ISO date (YYYY-MM-DD), UTC. */
@@ -351,7 +352,19 @@ exports.rollup = async (req, res) => {
 
     const invDate = req.body.invDate || todayISO();
     const invDueDate = req.body.invDueDate || addDaysISO(invDate, 30);
-    const tax = 0;
+    // Effective tax rate: explicit body override → company default → 0.
+    let companyDefaultRate = 0;
+    if (req.body.taxRate == null) {
+        try {
+            const company = await db.Company.findByPk(custCompanyId, { attributes: ['compTaxRate'] });
+            companyDefaultRate = company ? company.compTaxRate : 0;
+        } catch (error) {
+            log.error({ err: error }, 'rollup: company tax-rate lookup failed');
+            return res.status(500).json({ message: "Error!" });
+        }
+    }
+    const taxRate = invoiceTax.resolveRate({ override: req.body.taxRate, companyDefault: companyDefaultRate });
+    const tax = invoiceTax.computeTax(subtotal, taxRate);
     const total = money.add(subtotal, tax);
 
     let result;
@@ -368,6 +381,7 @@ exports.rollup = async (req, res) => {
                 invSubtotal: subtotal,
                 invTax: tax,
                 invTotal: total,
+                invTaxRate: taxRate,
             }, { transaction: t });
 
             const createdLines = [];
