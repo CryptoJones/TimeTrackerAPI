@@ -38,6 +38,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Exact-money service + stored invoice totals** (#388). New
+  `app/services/money.js` does all billing arithmetic in integer cents
+  (rounding half away from zero) so decimal amounts never drift
+  (`0.1 + 0.2` is exactly `0.3`); it's the single source of truth for
+  the roll-up, tax/discount, and payment-balance math to come. `Invoice`
+  gains `invSubtotal` / `invTax` / `invTotal` `NUMERIC(14,2)` columns
+  (migration `20260522000000`) with Number getters (pg returns NUMERIC
+  as a string). The columns are nullable — populated by the time→invoice
+  roll-up (#382); `NULL` means "not yet totalled". `setup/*.sql` (frozen
+  original schema) untouched.
 - **Time entries can be linked to a Worker and a Job** (#385, #386).
   `TimeEntry` gains nullable `teWorkerId` / `teJobId` columns (migration
   `20260521000000`) so tracked time is attributable to the person who

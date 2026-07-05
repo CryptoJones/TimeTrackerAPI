@@ -135,6 +135,17 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         expect(Array.isArray(withLinks)).toBe(true);
     });
 
+    test('Invoice has invSubtotal / invTax / invTotal money columns', async () => {
+        if (!connected) return;
+        // Selecting the new attributes proves the 20260522 migration
+        // added the NUMERIC(14,2) columns (a missing column throws here).
+        const rows = await db.Invoice.findAll({
+            attributes: ['invId', 'invSubtotal', 'invTax', 'invTotal'],
+            limit: 1,
+        });
+        expect(Array.isArray(rows)).toBe(true);
+    });
+
     test('/healthz reports a non-null migration name (dbo-qualified read)', async () => {
         // sequelize-cli writes the SequelizeMeta table into the `dbo`
         // schema (`migrationStorageTableSchema: 'dbo'` in
