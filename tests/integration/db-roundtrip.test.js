@@ -175,6 +175,27 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         expect(Array.isArray(invoices)).toBe(true);
     });
 
+    test('Expense table exists with company/customer/job includes (#416)', async () => {
+        if (!connected) return;
+        // Selecting the columns proves the 20260529 migration created the
+        // table; a missing column/table would throw here.
+        const rows = await db.Expense.findAll({
+            attributes: ['expId', 'expCompId', 'expCustId', 'expJobId', 'expAmount', 'expDate'],
+            limit: 1,
+        });
+        expect(Array.isArray(rows)).toBe(true);
+        // Eager-loading through the aliases proves the association wiring.
+        const withLinks = await db.Expense.findAll({
+            limit: 1,
+            include: [
+                { model: db.Customer, as: 'customer', required: false },
+                { model: db.Job, as: 'job', required: false },
+                { model: db.Company, as: 'company', required: false },
+            ],
+        });
+        expect(Array.isArray(withLinks)).toBe(true);
+    });
+
     test('/healthz reports a non-null migration name (dbo-qualified read)', async () => {
         // sequelize-cli writes the SequelizeMeta table into the `dbo`
         // schema (`migrationStorageTableSchema: 'dbo'` in

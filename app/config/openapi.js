@@ -1287,6 +1287,51 @@ const spec = {
             patch: { summary: 'Partial update of an invoice', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/Invoice' } } } }, responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
             delete: { summary: 'Soft-delete an invoice', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
         },
+        '/v1/expense': {
+            post: {
+                summary: 'Create an expense',
+                security: [{ authKey: [] }],
+                responses: {
+                    201: { description: 'Created' },
+                    400: { description: 'Validation error or bad customer/job link' },
+                    403: { description: 'Auth failure' },
+                },
+            },
+        },
+        '/v1/expense/bycompany/{id}': {
+            get: {
+                summary: "List a company's expenses",
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'customerId', in: 'query', schema: { type: 'integer' } },
+                    { name: 'jobId', in: 'query', schema: { type: 'integer' } },
+                    { name: 'from', in: 'query', schema: { type: 'string', format: 'date' } },
+                    { name: 'to', in: 'query', schema: { type: 'string', format: 'date' } },
+                ],
+                responses: { 200: { description: 'Found (paginated)' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/expense/{id}': {
+            get: {
+                summary: 'Fetch an expense',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found' }, 404: { description: 'Not found' } },
+            },
+            patch: {
+                summary: 'Update an expense',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Updated' }, 400: { description: 'Validation error' }, 404: { description: 'Not found' } },
+            },
+            delete: {
+                summary: 'Archive an expense',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
+            },
+        },
         '/v1/report/revenue': {
             get: {
                 summary: 'Revenue & earnings summary (by customer and month)',

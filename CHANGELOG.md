@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Expense entity + CRUD** (#416). A new `Expense` model (amount,
+  category, description, date) scoped to a company (`expCompId`) and
+  optionally linked to a customer (`expCustId`) and job (`expJobId`),
+  migration `20260529000000`. Full REST: `POST /v1/expense`,
+  `GET /v1/expense/bycompany/{id}` (customer/job/date filters +
+  pagination), `GET|PATCH|DELETE /v1/expense/{id}`, with the same
+  secure-404 cross-tenant scoping and soft-delete (`expArch`) as the
+  other entities. Amount is `NUMERIC(14,2)` with a Number getter.
 - **Invoice discounts & write-offs** (#421). `invDiscount` reduces the
   subtotal **before** tax at roll-up time (`discount` in the roll-up
   body, clamped to `[0, subtotal]`); `invWriteOff` records an

@@ -27,6 +27,7 @@ const purchaseOrderLine = require('../controllers/purchaseorderlinecontroller.js
 const inventoryTransaction = require('../controllers/inventorytransactioncontroller.js');
 const whoami = require('../controllers/whoamicontroller.js');
 const report = require('../controllers/reportcontroller.js');
+const expense = require('../controllers/expensecontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -45,6 +46,7 @@ const purchaseOrderVendorSchemas = require('../schemas/purchaseordervendor.schem
 const purchaseOrderHeaderSchemas = require('../schemas/purchaseorderheader.schema.js');
 const purchaseOrderLineSchemas = require('../schemas/purchaseorderline.schema.js');
 const reportSchemas = require('../schemas/report.schema.js');
+const expenseSchemas = require('../schemas/expense.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -657,6 +659,35 @@ router.delete(
     '/v1/inventorytransaction/:id',
     v.params(inventoryTransactionSchemas.intIdParam),
     inventoryTransaction.remove,
+);
+
+// v1 expense routes.
+router.post(
+    '/v1/expense',
+    v.body(expenseSchemas.createExpenseBody),
+    expense.create,
+);
+router.get(
+    '/v1/expense/bycompany/:id',
+    v.params(expenseSchemas.intIdParam),
+    v.query(expenseSchemas.listByCompanyQuery),
+    expense.listByCompany,
+);
+router.get(
+    '/v1/expense/:id',
+    v.params(expenseSchemas.intIdParam),
+    expense.getById,
+);
+router.patch(
+    '/v1/expense/:id',
+    v.params(expenseSchemas.intIdParam),
+    v.body(expenseSchemas.updateExpenseBody),
+    expense.update,
+);
+router.delete(
+    '/v1/expense/:id',
+    v.params(expenseSchemas.intIdParam),
+    expense.remove,
 );
 
 // v1 report routes (read-only analytics).
