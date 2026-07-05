@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Invoice currency** (#427). A per-company default currency
+  (`compCurrency`, ISO-4217, defaults `USD`) and a per-invoice
+  `invCurrency`; migration `20260605000000`. The roll-up stamps the
+  invoice's currency (`currency` body override → company default), and
+  the PDF formats every amount in it (symbol for common codes, else the
+  code as a prefix). Settable on company + invoice create/PATCH.
+  Records/displays currency — cross-currency FX conversion is out of
+  scope.
 - **Invoice summary vs detailed PDF** (#424) —
   `GET /v1/invoice/{id}/pdf?format=summary|detailed`. `detailed`
   (default) itemizes every line; `summary` collapses them into a single

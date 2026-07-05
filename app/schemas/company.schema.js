@@ -16,8 +16,9 @@ const invNumberingFields = {
     compInvNextSeq: z.coerce.number().int().positive().optional(),
     compTaxRate: z.coerce.number().min(0).max(1).optional(),
     compInvFooter: z.string().max(2000).optional(),
+    compCurrency: z.string().regex(/^[A-Z]{3}$/, { message: 'Must be a 3-letter uppercase ISO 4217 code.' }).optional(),
 };
-const NUMBERING_WHITELIST = ', compInvPrefix, compInvPad, compInvNextSeq, compTaxRate, compInvFooter';
+const NUMBERING_WHITELIST = ', compInvPrefix, compInvPad, compInvNextSeq, compTaxRate, compInvFooter, compCurrency';
 
 const createCompanyBody = z.object({
     compName: z.string().min(1).max(255),

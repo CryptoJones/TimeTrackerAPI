@@ -53,6 +53,13 @@ module.exports = (sequelize, Sequelize) => {
             // Default invoice footer / narrative printed on every PDF (#423).
             type: Sequelize.TEXT,
         },
+        compCurrency: {
+            field: 'compCurrency',
+            // Default invoice currency, ISO-4217 3-letter code (#427).
+            type: Sequelize.STRING(3),
+            allowNull: false,
+            defaultValue: 'USD',
+        },
         compArch: {
             field: 'compArch',
             type: Sequelize.BOOLEAN,

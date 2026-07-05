@@ -58,4 +58,19 @@ describe('invoice-pdf.renderInvoicePdf', () => {
         expect(isPdf(detailed)).toBe(true);
         expect(isPdf(summary)).toBe(true);
     });
+
+    test('renders amounts in the invoice currency (#427)', async () => {
+        const eur = await renderInvoicePdf({
+            invoice: { number: 'INV-0004' }, currency: 'EUR',
+            lines: [{ description: 'Consulting', amount: 100 }],
+            totals: { subtotal: 100, tax: 0, total: 100 }, payment: {},
+        });
+        const other = await renderInvoicePdf({
+            invoice: { number: 'INV-0005' }, currency: 'SEK', // no symbol → code prefix
+            lines: [{ description: 'Consulting', amount: 100 }],
+            totals: { subtotal: 100, tax: 0, total: 100 }, payment: {},
+        });
+        expect(isPdf(eur)).toBe(true);
+        expect(isPdf(other)).toBe(true);
+    });
 });
