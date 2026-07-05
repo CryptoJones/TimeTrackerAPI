@@ -126,3 +126,12 @@ describe('association graph: TimeEntry worker + job links', () => {
         assertAssoc('InvoiceJob', 'HasMany', 'teInvJobId', 'TimeEntry');
     });
 });
+
+describe('association graph: CustomerPayment → Invoice allocation', () => {
+    test('CustomerPayment belongsTo Invoice via cpayInvId', () => {
+        assertAssoc('CustomerPayment', 'BelongsTo', 'cpayInvId', 'Invoice');
+    });
+    test('Invoice hasMany CustomerPayment via cpayInvId', () => {
+        assertAssoc('Invoice', 'HasMany', 'cpayInvId', 'CustomerPayment');
+    });
+});

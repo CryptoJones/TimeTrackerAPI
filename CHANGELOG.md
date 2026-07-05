@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Payments can be allocated to a specific invoice** (#392). New
+  nullable `cpayInvId` on `CustomerPayment` (migration `20260525000000`)
+  links a payment to the invoice it pays — `NULL` leaves it "on account"
+  against the customer. Accepted on create/PATCH (validated so the
+  invoice belongs to the same customer as the payment; PATCH `null`
+  de-allocates). This is the input the upcoming invoice balance/status
+  derivation (#389) reads. `setup/*.sql` untouched.
 - **Time→invoice roll-up** (#382) — `POST /v1/invoice/rollup`. Generates
   an invoice from a customer's billable, uninvoiced, job-linked time:
   each entry is priced via the rate service, summed exactly through

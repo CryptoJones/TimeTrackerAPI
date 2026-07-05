@@ -20,6 +20,12 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.INTEGER,
             allowNull: false,
         },
+        cpayInvId: {
+            field: 'cpayInvId',
+            // Nullable: the Invoice this payment is allocated to. NULL =
+            // on-account (unallocated). Drives invoice balance/status.
+            type: Sequelize.INTEGER,
+        },
         cpayDescription: {
             field: 'cpayDescription',
             type: Sequelize.TEXT,

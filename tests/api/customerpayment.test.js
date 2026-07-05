@@ -36,6 +36,12 @@ describe('CustomerPayment auth contract', () => {
     test('GET /bycustomer/:id 403 without authKey', async () => { expect((await request(app).get('/v1/customerpayment/bycustomer/1')).status).toBe(403); });
     test('PATCH 403 without authKey', async () => { expect((await request(app).patch('/v1/customerpayment/1').send({ cpayAmount: 50 })).status).toBe(403); });
     test('DELETE 403 without authKey', async () => { expect((await request(app).delete('/v1/customerpayment/1')).status).toBe(403); });
+    test('POST rejects a non-integer cpayInvId at the schema', async () => {
+        const res = await request(app).post('/v1/customerpayment')
+            .set('authKey', 'k')
+            .send({ cpayCustId: 1, cpayDate: '2026-01-01', cpayAmount: 100, cpayInvId: 'abc' });
+        expect(res.status).toBe(400);
+    });
 });
 
 describe('CustomerPayment route mounting', () => {
