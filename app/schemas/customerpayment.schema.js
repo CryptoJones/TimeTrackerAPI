@@ -26,19 +26,22 @@ const cpayAmountField = z.coerce.number().finite({
 
 const createCustomerPaymentBody = z.object({
     cpayCustId: z.coerce.number().int().positive(),
+    cpayInvId: z.coerce.number().int().positive().optional(),
     cpayDescription: z.string().max(10000).optional(),
     cpayDate: isoDate,
     cpayAmount: cpayAmountField,
 }).strict({
-    message: 'Unexpected field in body. Whitelist: cpayCustId, cpayDescription, cpayDate, cpayAmount.',
+    message: 'Unexpected field in body. Whitelist: cpayCustId, cpayInvId, cpayDescription, cpayDate, cpayAmount.',
 });
 
 const updateCustomerPaymentBody = z.object({
+    // Nullable: pass null to de-allocate a payment (move it on-account).
+    cpayInvId: z.coerce.number().int().positive().nullable().optional(),
     cpayDescription: z.string().max(10000).optional(),
     cpayDate: isoDate.optional(),
     cpayAmount: cpayAmountField.optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: cpayDescription, cpayDate, cpayAmount.',
+    message: 'Unexpected field in body. Whitelist: cpayInvId, cpayDescription, cpayDate, cpayAmount.',
 });
 
 const listByCustomerQuery = z.object({

@@ -13,8 +13,30 @@ const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
 const GetCompanyIdByCustomerId = auth.getCompanyIdByCustomerId;
 
-const ALLOWED_FIELDS_CREATE = ['cpayCustId', 'cpayDescription', 'cpayDate', 'cpayAmount'];
-const ALLOWED_FIELDS_UPDATE = ['cpayDescription', 'cpayDate', 'cpayAmount'];
+const ALLOWED_FIELDS_CREATE = ['cpayCustId', 'cpayInvId', 'cpayDescription', 'cpayDate', 'cpayAmount'];
+const ALLOWED_FIELDS_UPDATE = ['cpayInvId', 'cpayDescription', 'cpayDate', 'cpayAmount'];
+
+/**
+ * When a payment is allocated (cpayInvId set, non-null), the invoice
+ * must belong to the same customer as the payment (cpayCustId) — a
+ * payment can't be booked against another customer's invoice. Archived
+ * invoices are hidden by defaultScope and therefore read as "not found"
+ * → 400. `null` (update-only, to de-allocate) is skipped. Returns null
+ * when legal, or a { status, message } object the caller sends as-is.
+ */
+async function checkInvoiceAllocation(cpayInvId, custId) {
+    if (cpayInvId === undefined || cpayInvId === null) return null;
+    const invoice = await db.Invoice.findByPk(Number(cpayInvId), {
+        attributes: ['invCustId'],
+    });
+    if (!invoice || invoice.invCustId !== Number(custId)) {
+        return {
+            status: 400,
+            message: 'cpayInvId must reference an invoice for the same customer (cpayCustId).',
+        };
+    }
+    return null;
+}
 
 exports.create = async (req, res) => {
     const authKey = req.get('authKey');
@@ -46,6 +68,17 @@ exports.create = async (req, res) => {
     }
 
     payload.cpayArch = false;
+
+    let allocError;
+    try {
+        allocError = await checkInvoiceAllocation(payload.cpayInvId, payload.cpayCustId);
+    } catch (error) {
+        log.error({ err: error }, 'CustomerPayment invoice-allocation validation failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (allocError) {
+        return res.status(allocError.status).json({ message: allocError.message });
+    }
 
     try {
         const created = await CustomerPayment.create(payload);
@@ -171,6 +204,17 @@ exports.update = async (req, res) => {
     }
     if (Object.keys(updates).length === 0) {
         return res.status(400).json({ message: "No updatable fields supplied." });
+    }
+
+    let allocError;
+    try {
+        allocError = await checkInvoiceAllocation(updates.cpayInvId, payment.cpayCustId);
+    } catch (error) {
+        log.error({ err: error }, 'CustomerPayment invoice-allocation validation failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (allocError) {
+        return res.status(allocError.status).json({ message: allocError.message });
     }
 
     try {

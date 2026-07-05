@@ -147,6 +147,20 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         expect(Array.isArray(rows)).toBe(true);
     });
 
+    test('CustomerPayment has the cpayInvId allocation column + invoice include', async () => {
+        if (!connected) return;
+        const rows = await db.CustomerPayment.findAll({
+            attributes: ['cpayId', 'cpayInvId'],
+            limit: 1,
+        });
+        expect(Array.isArray(rows)).toBe(true);
+        const withInvoice = await db.CustomerPayment.findAll({
+            limit: 1,
+            include: [{ model: db.Invoice, as: 'invoice', required: false }],
+        });
+        expect(Array.isArray(withInvoice)).toBe(true);
+    });
+
     test('/healthz reports a non-null migration name (dbo-qualified read)', async () => {
         // sequelize-cli writes the SequelizeMeta table into the `dbo`
         // schema (`migrationStorageTableSchema: 'dbo'` in

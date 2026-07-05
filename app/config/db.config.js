@@ -113,6 +113,11 @@ db.Job.belongsTo(db.Customer,             { foreignKey: 'jobCustId',  as: 'custo
 db.Invoice.belongsTo(db.Customer,         { foreignKey: 'invCustId',  as: 'customer' });
 db.CustomerPayment.belongsTo(db.Customer, { foreignKey: 'cpayCustId', as: 'customer' });
 
+// CustomerPayment → Invoice (cpayInvId): the invoice a payment is
+// allocated to; NULL = on-account. Drives invoice balance/status (#389).
+db.Invoice.hasMany(db.CustomerPayment,   { foreignKey: 'cpayInvId', as: 'payments' });
+db.CustomerPayment.belongsTo(db.Invoice, { foreignKey: 'cpayInvId', as: 'invoice' });
+
 // Worker → BillingType (default rate).
 db.BillingType.hasMany(db.Worker,    { foreignKey: 'workerDefaultBillType', as: 'workersWithDefault' });
 db.Worker.belongsTo(db.BillingType,  { foreignKey: 'workerDefaultBillType', as: 'defaultBillingType' });
