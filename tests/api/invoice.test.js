@@ -43,6 +43,9 @@ describe('Invoice auth contract', () => {
     test('POST /rollup 400 on missing invCustId (schema)', async () => {
         expect((await request(app).post('/v1/invoice/rollup').set('authKey', 'k').send({})).status).toBe(400);
     });
+    test('GET /:id/pdf 403 without authKey', async () => {
+        expect((await request(app).get('/v1/invoice/1/pdf')).status).toBe(403);
+    });
 });
 
 describe('Invoice route mounting', () => {

@@ -1287,6 +1287,21 @@ const spec = {
             patch: { summary: 'Partial update of an invoice', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/Invoice' } } } }, responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
             delete: { summary: 'Soft-delete an invoice', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
         },
+        '/v1/invoice/{id}/pdf': {
+            get: {
+                summary: 'Download an invoice as a branded PDF',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: {
+                    200: {
+                        description: 'PDF document (attachment)',
+                        content: { 'application/pdf': { schema: { type: 'string', format: 'binary' } } },
+                    },
+                    404: { description: 'Not found' },
+                    403: { description: 'Auth failure' },
+                },
+            },
+        },
         '/v1/invoice/bycustomer/{id}': {
             get: {
                 summary: 'List invoices for a customer (paginated)',
