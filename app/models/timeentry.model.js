@@ -52,6 +52,13 @@ module.exports = (sequelize, Sequelize) => {
             // of rate resolution; NULL means "use the worker default".
             type: Sequelize.INTEGER,
         },
+        teInvJobId: {
+            field: 'teInvJobId',
+            // The InvoiceJob line this entry was rolled into (#382), and
+            // the "invoiced" marker: NULL = not yet billed, so the
+            // roll-up never double-bills the same minutes.
+            type: Sequelize.INTEGER,
+        },
         teDescription: {
             field: 'teDescription',
             type: Sequelize.TEXT,

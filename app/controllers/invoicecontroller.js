@@ -7,7 +7,20 @@ const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
 const { makeBulkCreateIndirect } = require('./_bulk-helpers.js');
+const money = require('../services/money.js');
+const { buildRollup } = require('../services/invoice-rollup.js');
 const Invoice = db.Invoice;
+
+/** Today as an ISO date (YYYY-MM-DD), UTC. */
+function todayISO() {
+    return new Date().toISOString().slice(0, 10);
+}
+/** An ISO date `days` after `isoDate` (YYYY-MM-DD), UTC. */
+function addDaysISO(isoDate, days) {
+    const d = new Date(isoDate + 'T00:00:00.000Z');
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0, 10);
+}
 
 const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
@@ -217,6 +230,155 @@ exports.remove = async (req, res) => {
         log.error({ err: error }, 'Invoice archive failed');
         return res.status(500).json({ message: "Error!" });
     }
+};
+
+/**
+ * POST /v1/invoice/rollup
+ *
+ * Generate an invoice from a customer's billable, uninvoiced,
+ * job-linked time. Billable minutes are priced via the rate service
+ * (app/services/rate.js) and summed exactly (app/services/money.js),
+ * grouped into one InvoiceJob line per Job. The contributing entries
+ * are stamped with teInvJobId so they can never be billed twice, and
+ * the whole thing — invoice, lines, entry stamps, job flags — commits
+ * as one transaction (all or nothing).
+ */
+exports.rollup = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+
+    const custId = Number(req.body && req.body.invCustId);
+    if (!Number.isInteger(custId) || custId <= 0) {
+        return res.status(400).json({ message: "invCustId is required." });
+    }
+
+    let custCompanyId;
+    try {
+        custCompanyId = await GetCompanyIdByCustomerId(custId);
+    } catch (error) {
+        log.error({ err: error }, 'rollup: company resolve failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    const isMaster = await IsMaster(authKey);
+    if (isMaster) {
+        if (custCompanyId === -1) {
+            return res.status(404).json({ message: "Customer not found." });
+        }
+    } else {
+        const authCompanyId = await GetCompanyId(authKey);
+        if (authCompanyId === -1) {
+            return res.status(403).json({ message: "Invalid Authorization Key." });
+        }
+        if (custCompanyId === -1 || custCompanyId !== authCompanyId) {
+            return res.status(403).json({
+                message: "Cannot roll up time for a customer in a company you do not belong to.",
+            });
+        }
+    }
+
+    // Billable, job-linked, not-yet-invoiced time for the customer.
+    const Op = db.Sequelize && db.Sequelize.Op;
+    const where = {
+        teCustId: custId,
+        teBillable: true,
+        teInvJobId: null,
+        teJobId: { [Op.ne]: null },
+    };
+    const from = req.body.from ? new Date(req.body.from + 'T00:00:00.000Z') : null;
+    const to = req.body.to ? new Date(req.body.to + 'T23:59:59.999Z') : null;
+    if (Op && from) where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.gte]: from });
+    if (Op && to) where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.lte]: to });
+
+    let entries;
+    try {
+        entries = await db.TimeEntry.findAll({
+            where,
+            include: [
+                { model: db.BillingType, as: 'billingType', required: false },
+                {
+                    model: db.Worker, as: 'worker', required: false,
+                    include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }],
+                },
+            ],
+        });
+    } catch (error) {
+        log.error({ err: error }, 'rollup: TimeEntry.findAll failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+
+    const { lines, subtotal, skipped } = buildRollup(entries);
+    const skippedCounts = {
+        nonBillable: skipped.nonBillable.length,
+        noJob: skipped.noJob.length,
+        unresolvedRate: skipped.unresolvedRate.length,
+    };
+    if (lines.length === 0) {
+        return res.status(400).json({
+            message: "No billable, uninvoiced, job-linked time to roll up for this customer.",
+            skipped: skippedCounts,
+        });
+    }
+
+    const invDate = req.body.invDate || todayISO();
+    const invDueDate = req.body.invDueDate || addDaysISO(invDate, 30);
+    const tax = 0;
+    const total = money.add(subtotal, tax);
+
+    let result;
+    try {
+        result = await db.sequelize.transaction(async (t) => {
+            const invoice = await db.Invoice.create({
+                invCustId: custId,
+                invDate,
+                invDueDate,
+                invPaid: false,
+                invArch: false,
+                invSubtotal: subtotal,
+                invTax: tax,
+                invTotal: total,
+            }, { transaction: t });
+
+            const createdLines = [];
+            for (const line of lines) {
+                const ij = await db.InvoiceJob.create({
+                    injbInvId: invoice.invId,
+                    injbJobId: line.jobId,
+                    injbAmount: line.amount,
+                    injbArch: false,
+                }, { transaction: t });
+                await db.TimeEntry.update(
+                    { teInvJobId: ij.injbId },
+                    { where: { teId: line.entryIds }, transaction: t },
+                );
+                await db.Job.update(
+                    { jobInvoiced: true },
+                    { where: { jobId: line.jobId }, transaction: t },
+                );
+                createdLines.push({
+                    injbId: ij.injbId,
+                    jobId: line.jobId,
+                    amount: line.amount,
+                    entryCount: line.entryIds.length,
+                });
+            }
+            return { invoice, createdLines };
+        });
+    } catch (error) {
+        log.error({ err: error }, 'rollup: invoice generation transaction failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+
+    return res.status(201).json({
+        message: "Invoice generated from time.",
+        invoice: result.invoice,
+        lines: result.createdLines,
+        subtotal,
+        tax,
+        total,
+        skipped: skippedCounts,
+    });
 };
 
 exports.bulkCreate = makeBulkCreateIndirect({

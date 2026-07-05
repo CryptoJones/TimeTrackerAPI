@@ -70,10 +70,27 @@ const bulkInvoiceBody = z.object({
     message: 'Unexpected field in body. Whitelist: invoices (array).',
 });
 
+/**
+ * POST /v1/invoice/rollup — generate an invoice from a customer's
+ * billable, uninvoiced time (#382). invCustId is required; invDate /
+ * invDueDate default (today / +30d) when omitted; from / to optionally
+ * bound the time entries by their start date (inclusive, whole days).
+ */
+const rollupInvoiceBody = z.object({
+    invCustId: z.coerce.number().int().positive(),
+    invDate: isoDate.optional(),
+    invDueDate: isoDate.optional(),
+    from: isoDate.optional(),
+    to: isoDate.optional(),
+}).strict({
+    message: 'Unexpected field in body. Whitelist: invCustId, invDate, invDueDate, from, to.',
+}).refine(refineDueDateAfterIssue, DUE_BEFORE_ISSUE);
+
 module.exports = {
     intIdParam,
     createInvoiceBody,
     updateInvoiceBody,
     listByCustomerQuery,
     bulkInvoiceBody,
+    rollupInvoiceBody,
 };

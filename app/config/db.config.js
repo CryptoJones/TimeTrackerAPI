@@ -132,6 +132,12 @@ db.TimeEntry.belongsTo(db.Job,    { foreignKey: 'teJobId',    as: 'job' });
 db.BillingType.hasMany(db.TimeEntry,   { foreignKey: 'teBillTypeId', as: 'timeEntries' });
 db.TimeEntry.belongsTo(db.BillingType, { foreignKey: 'teBillTypeId', as: 'billingType' });
 
+// TimeEntry → InvoiceJob (teInvJobId): the invoice line an entry was
+// rolled into by the time→invoice roll-up; doubles as the "invoiced"
+// marker (NULL = unbilled). See app/services/invoice-rollup.js (#382).
+db.InvoiceJob.hasMany(db.TimeEntry,   { foreignKey: 'teInvJobId', as: 'timeEntries' });
+db.TimeEntry.belongsTo(db.InvoiceJob, { foreignKey: 'teInvJobId', as: 'invoiceLine' });
+
 // Job has lines (InvoiceJob) and product entries.
 db.Job.hasMany(db.InvoiceJob,      { foreignKey: 'injbJobId', as: 'invoiceLines' });
 db.Job.hasMany(db.ProductEntry,    { foreignKey: 'pentJobId', as: 'productEntries' });

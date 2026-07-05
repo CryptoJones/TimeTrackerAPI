@@ -1247,6 +1247,41 @@ const spec = {
                 },
             },
         },
+        '/v1/invoice/rollup': {
+            post: {
+                summary: "Generate an invoice from a customer's billable time",
+                description: 'Aggregates billable, job-linked, not-yet-invoiced time for a customer into one InvoiceJob line per job, sets the invoice totals via the exact-money service, and stamps each contributing entry so its minutes cannot be billed twice. Runs as one transaction.',
+                security: [{ authKey: [] }],
+                parameters: [idempotencyKeyHeader],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                required: ['invCustId'],
+                                properties: {
+                                    invCustId: { type: 'integer' },
+                                    invDate: { type: 'string', format: 'date', description: 'Invoice issue date; defaults to today.' },
+                                    invDueDate: { type: 'string', format: 'date', description: 'Defaults to invDate + 30 days.' },
+                                    from: { type: 'string', format: 'date', description: 'Only include time started on/after this date.' },
+                                    to: { type: 'string', format: 'date', description: 'Only include time started on/before this date.' },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    201: {
+                        description: 'Invoice generated — {message, invoice, lines, subtotal, tax, total, skipped} envelope',
+                        headers: idempotencyReplayResponseHeader,
+                    },
+                    400: { description: 'No billable time to roll up, or invalid body' },
+                    403: { description: 'Auth failure' },
+                    404: { description: 'Customer not found (master key)' },
+                },
+            },
+        },
         '/v1/invoice/{id}': {
             get: { summary: 'Get one invoice', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Found' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
             patch: { summary: 'Partial update of an invoice', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/Invoice' } } } }, responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
