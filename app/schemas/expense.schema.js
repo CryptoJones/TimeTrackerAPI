@@ -29,10 +29,12 @@ const createExpenseBody = z.object({
     expJobId: z.coerce.number().int().positive().optional(),
     expCategory: z.string().max(255).optional(),
     expDescription: z.string().max(10000).optional(),
+    expBillable: z.boolean().optional(),
+    expMarkupPct: z.coerce.number().min(0).optional(),
     expDate: isoDate,
     expAmount: expAmountField,
 }).strict({
-    message: 'Unexpected field in body. Whitelist: expCompId, expCustId, expJobId, expCategory, expDescription, expDate, expAmount.',
+    message: 'Unexpected field in body. Whitelist: expCompId, expCustId, expJobId, expCategory, expDescription, expBillable, expMarkupPct, expDate, expAmount.',
 });
 
 /**
@@ -44,10 +46,12 @@ const updateExpenseBody = z.object({
     expJobId: z.coerce.number().int().positive().nullable().optional(),
     expCategory: z.string().max(255).nullable().optional(),
     expDescription: z.string().max(10000).nullable().optional(),
+    expBillable: z.boolean().optional(),
+    expMarkupPct: z.coerce.number().min(0).nullable().optional(),
     expDate: isoDate.optional(),
     expAmount: expAmountField.optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: expCustId, expJobId, expCategory, expDescription, expDate, expAmount.',
+    message: 'Unexpected field in body. Whitelist: expCustId, expJobId, expCategory, expDescription, expBillable, expMarkupPct, expDate, expAmount.',
 });
 
 const listByCompanyQuery = z.object({

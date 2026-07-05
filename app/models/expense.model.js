@@ -55,6 +55,22 @@ module.exports = (sequelize, Sequelize) => {
                 return v == null ? null : Number(v);
             },
         },
+        expBillable: {
+            field: 'expBillable',
+            // Re-billable to the client? (#417)
+            type: Sequelize.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
+        },
+        expMarkupPct: {
+            field: 'expMarkupPct',
+            // Markup fraction on top of cost (0.15 = +15%); null = at cost.
+            type: Sequelize.DECIMAL(6, 4),
+            get() {
+                const v = this.getDataValue('expMarkupPct');
+                return v == null ? null : Number(v);
+            },
+        },
         expArch: {
             field: 'expArch',
             type: Sequelize.BOOLEAN,

@@ -6,6 +6,7 @@ const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
+const { billableAmount } = require('../services/expense-billing.js');
 const Expense = db.Expense;
 
 const IsMaster = auth.isMaster;
@@ -13,9 +14,11 @@ const GetCompanyId = auth.getCompanyId;
 
 const ALLOWED_FIELDS_CREATE = [
     'expCustId', 'expJobId', 'expCategory', 'expDescription', 'expDate', 'expAmount',
+    'expBillable', 'expMarkupPct',
 ];
 const ALLOWED_FIELDS_UPDATE = [
     'expCustId', 'expJobId', 'expCategory', 'expDescription', 'expDate', 'expAmount',
+    'expBillable', 'expMarkupPct',
 ];
 
 const isISODate = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
@@ -141,7 +144,13 @@ exports.getById = async (req, res) => {
             return res.status(404).json({ message: "Not found." });
         }
     }
-    return res.status(200).json({ message: "Found.", expense });
+    // Computed billing view: what the client would be charged for this
+    // expense (0 if not billable, else cost × (1 + markup)). Derived.
+    return res.status(200).json({
+        message: "Found.",
+        expense,
+        billing: { billableAmount: billableAmount(expense) },
+    });
 };
 
 /**
