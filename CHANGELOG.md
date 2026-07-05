@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Expenses roll into invoices** (#418). `POST /v1/invoice/rollup` now
+  takes `includeExpenses: true` — the customer's billable, un-invoiced
+  expenses are priced (cost + markup) and added to the invoice subtotal
+  alongside billed time, then stamped `expInvId` in the same transaction
+  so they're marked invoiced and won't re-roll (mirrors
+  `TimeEntry.teInvJobId`). An invoice can now be expenses-only. New pure
+  `app/services/expense-rollup.js`; migration `20260531000000` adds the
+  link column + index; `Invoice`↔`Expense` association.
 - **Billable expenses with markup** (#417). `expBillable` marks an
   expense re-billable to the client; `expMarkupPct` (a fraction, e.g.
   `0.15`) marks it up over cost. New pure `app/services/expense-billing.js`

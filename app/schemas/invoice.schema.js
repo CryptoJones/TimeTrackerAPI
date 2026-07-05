@@ -89,8 +89,11 @@ const rollupInvoiceBody = z.object({
     taxRate: z.coerce.number().min(0).max(1).optional(),
     // Optional discount applied to the subtotal before tax (>= 0).
     discount: z.coerce.number().min(0).optional(),
+    // Also roll the customer's billable, un-invoiced expenses into this
+    // invoice (#418).
+    includeExpenses: z.boolean().optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: invCustId, invDate, invDueDate, from, to, taxRate, discount.',
+    message: 'Unexpected field in body. Whitelist: invCustId, invDate, invDueDate, from, to, taxRate, discount, includeExpenses.',
 }).refine(refineDueDateAfterIssue, DUE_BEFORE_ISSUE);
 
 // GET /v1/invoice/aging query. companyId required for master keys

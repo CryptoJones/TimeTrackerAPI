@@ -14,6 +14,7 @@ const invoiceNumber = require('../services/invoice-number.js');
 const { renderInvoicePdf } = require('../services/invoice-pdf.js');
 const { buildAging } = require('../services/invoice-aging.js');
 const invoiceTax = require('../services/invoice-tax.js');
+const { buildExpenseRollup } = require('../services/expense-rollup.js');
 const Invoice = db.Invoice;
 
 /** Today as an ISO date (YYYY-MM-DD), UTC. */
@@ -337,15 +338,36 @@ exports.rollup = async (req, res) => {
         return res.status(500).json({ message: "Error!" });
     }
 
-    const { lines, subtotal, skipped } = buildRollup(entries);
+    const { lines, subtotal: timeSubtotal, skipped } = buildRollup(entries);
     const skippedCounts = {
         nonBillable: skipped.nonBillable.length,
         noJob: skipped.noJob.length,
         unresolvedRate: skipped.unresolvedRate.length,
     };
-    if (lines.length === 0) {
+
+    // Optionally roll the customer's billable, un-invoiced expenses in too
+    // (#418). Same date window as the time filter.
+    let expenseRollup = { lines: [], subtotal: 0, skipped: { nonBillable: [] } };
+    if (req.body.includeExpenses) {
+        const expWhere = { expCustId: custId, expBillable: true, expInvId: null };
+        if (Op && from) expWhere.expDate = Object.assign(expWhere.expDate || {}, { [Op.gte]: req.body.from });
+        if (Op && to) expWhere.expDate = Object.assign(expWhere.expDate || {}, { [Op.lte]: req.body.to });
+        let expenseRows;
+        try {
+            expenseRows = await db.Expense.findAll({ where: expWhere });
+        } catch (error) {
+            log.error({ err: error }, 'rollup: Expense.findAll failed');
+            return res.status(500).json({ message: "Error!" });
+        }
+        expenseRollup = buildExpenseRollup(expenseRows);
+    }
+
+    // Combined pre-discount subtotal: billable time + billable expenses.
+    const subtotal = money.add(timeSubtotal, expenseRollup.subtotal);
+
+    if (lines.length === 0 && expenseRollup.lines.length === 0) {
         return res.status(400).json({
-            message: "No billable, uninvoiced, job-linked time to roll up for this customer.",
+            message: "No billable, uninvoiced time or expenses to roll up for this customer.",
             skipped: skippedCounts,
         });
     }
@@ -414,6 +436,15 @@ exports.rollup = async (req, res) => {
                     entryCount: line.entryIds.length,
                 });
             }
+            // Attach rolled expenses to this invoice — stamping expInvId
+            // both links them and marks them invoiced (won't re-roll).
+            const expenseIds = expenseRollup.lines.map((l) => l.expId);
+            if (expenseIds.length) {
+                await db.Expense.update(
+                    { expInvId: invoice.invId },
+                    { where: { expId: expenseIds }, transaction: t },
+                );
+            }
             return { invoice, createdLines };
         });
     } catch (error) {
@@ -425,6 +456,11 @@ exports.rollup = async (req, res) => {
         message: "Invoice generated from time.",
         invoice: result.invoice,
         lines: result.createdLines,
+        expenses: {
+            count: expenseRollup.lines.length,
+            subtotal: expenseRollup.subtotal,
+            lines: expenseRollup.lines,
+        },
         subtotal,
         tax,
         total,

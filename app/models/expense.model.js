@@ -71,6 +71,11 @@ module.exports = (sequelize, Sequelize) => {
                 return v == null ? null : Number(v);
             },
         },
+        expInvId: {
+            field: 'expInvId',
+            // Invoice this expense was rolled into (#418); null = unbilled.
+            type: Sequelize.INTEGER,
+        },
         expArch: {
             field: 'expArch',
             type: Sequelize.BOOLEAN,
