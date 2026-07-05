@@ -26,6 +26,7 @@ const purchaseOrderHeader = require('../controllers/purchaseorderheadercontrolle
 const purchaseOrderLine = require('../controllers/purchaseorderlinecontroller.js');
 const inventoryTransaction = require('../controllers/inventorytransactioncontroller.js');
 const whoami = require('../controllers/whoamicontroller.js');
+const report = require('../controllers/reportcontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -43,6 +44,7 @@ const versionInfoSchemas = require('../schemas/versioninfo.schema.js');
 const purchaseOrderVendorSchemas = require('../schemas/purchaseordervendor.schema.js');
 const purchaseOrderHeaderSchemas = require('../schemas/purchaseorderheader.schema.js');
 const purchaseOrderLineSchemas = require('../schemas/purchaseorderline.schema.js');
+const reportSchemas = require('../schemas/report.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -655,6 +657,13 @@ router.delete(
     '/v1/inventorytransaction/:id',
     v.params(inventoryTransactionSchemas.intIdParam),
     inventoryTransaction.remove,
+);
+
+// v1 report routes (read-only analytics).
+router.get(
+    '/v1/report/unbilled',
+    v.query(reportSchemas.unbilledQuery),
+    report.unbilled,
 );
 
 module.exports = router;
