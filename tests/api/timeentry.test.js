@@ -53,6 +53,20 @@ describe('/v1/timeentry routing', () => {
         expect(res.body.message).toBeDefined();
     });
 
+    test('POST /v1/timeentry rejects a non-integer teWorkerId at the schema', async () => {
+        const res = await request(app).post('/v1/timeentry')
+            .set('authKey', 'k')
+            .send({ teCustId: 1, teStartedAt: '2026-05-16T09:00:00Z', teWorkerId: 'abc' });
+        expect(res.status).toBe(400);
+    });
+
+    test('POST /v1/timeentry rejects a non-positive teJobId at the schema', async () => {
+        const res = await request(app).post('/v1/timeentry')
+            .set('authKey', 'k')
+            .send({ teCustId: 1, teStartedAt: '2026-05-16T09:00:00Z', teJobId: -5 });
+        expect(res.status).toBe(400);
+    });
+
     test('PATCH /v1/timeentry/:id route is mounted', async () => {
         const res = await request(app).patch('/v1/timeentry/1').send({});
         expect(res.body).toBeTypeOf('object');

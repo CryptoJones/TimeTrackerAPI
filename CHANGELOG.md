@@ -38,6 +38,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Time entries can be linked to a Worker and a Job** (#385, #386).
+  `TimeEntry` gains nullable `teWorkerId` / `teJobId` columns (migration
+  `20260521000000`) so tracked time is attributable to the person who
+  logged it and the project it was worked against — the schema
+  foundation for rate resolution and the time→invoice roll-up. `POST`
+  and `PATCH /v1/timeentry` accept both fields (`PATCH` with `null`
+  unlinks), validated so the worker belongs to the caller's company and
+  the job belongs to the same company *and* the same customer as the
+  entry. Existing rows and quick ad-hoc time may leave either unset. Per
+  the increment-layer migration convention the columns carry no physical
+  FK constraint (enforced at the app layer); `setup/*.sql`, the frozen
+  original schema, is left untouched.
 - **OpenAPI: `Idempotency-Replay` response-header declaration on every
   single-create POST 201** (#245 sweep — landed across 16 PRs from
   #246 through #288). Every `/v1/*` POST that flows through the

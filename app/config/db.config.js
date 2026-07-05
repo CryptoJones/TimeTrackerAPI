@@ -117,6 +117,16 @@ db.CustomerPayment.belongsTo(db.Customer, { foreignKey: 'cpayCustId', as: 'custo
 db.BillingType.hasMany(db.Worker,    { foreignKey: 'workerDefaultBillType', as: 'workersWithDefault' });
 db.Worker.belongsTo(db.BillingType,  { foreignKey: 'workerDefaultBillType', as: 'defaultBillingType' });
 
+// TimeEntry → Worker (who logged it) and → Job (what it was worked
+// against). Both FKs are nullable. These links are the foundation of
+// the billing "money engine": rate resolution reads the worker's
+// default BillingType, and the time→invoice roll-up aggregates
+// billable minutes per Job.
+db.Worker.hasMany(db.TimeEntry,   { foreignKey: 'teWorkerId', as: 'timeEntries' });
+db.TimeEntry.belongsTo(db.Worker, { foreignKey: 'teWorkerId', as: 'worker' });
+db.Job.hasMany(db.TimeEntry,      { foreignKey: 'teJobId',    as: 'timeEntries' });
+db.TimeEntry.belongsTo(db.Job,    { foreignKey: 'teJobId',    as: 'job' });
+
 // Job has lines (InvoiceJob) and product entries.
 db.Job.hasMany(db.InvoiceJob,      { foreignKey: 'injbJobId', as: 'invoiceLines' });
 db.Job.hasMany(db.ProductEntry,    { foreignKey: 'pentJobId', as: 'productEntries' });
