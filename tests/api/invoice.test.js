@@ -37,6 +37,12 @@ describe('Invoice auth contract', () => {
     test('GET /bycustomer/:id 403 without authKey', async () => { expect((await request(app).get('/v1/invoice/bycustomer/1')).status).toBe(403); });
     test('PATCH 403 without authKey', async () => { expect((await request(app).patch('/v1/invoice/1').send({ invPaid: true })).status).toBe(403); });
     test('DELETE 403 without authKey', async () => { expect((await request(app).delete('/v1/invoice/1')).status).toBe(403); });
+    test('POST /rollup 403 without authKey', async () => {
+        expect((await request(app).post('/v1/invoice/rollup').send({ invCustId: 1 })).status).toBe(403);
+    });
+    test('POST /rollup 400 on missing invCustId (schema)', async () => {
+        expect((await request(app).post('/v1/invoice/rollup').set('authKey', 'k').send({})).status).toBe(400);
+    });
 });
 
 describe('Invoice route mounting', () => {

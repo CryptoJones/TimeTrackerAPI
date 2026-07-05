@@ -38,6 +38,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Time→invoice roll-up** (#382) — `POST /v1/invoice/rollup`. Generates
+  an invoice from a customer's billable, uninvoiced, job-linked time:
+  each entry is priced via the rate service, summed exactly through
+  `money.js`, and grouped into one `InvoiceJob` line per job; the invoice
+  gets its `invSubtotal`/`invTax`/`invTotal`, and every contributing
+  entry is stamped with the new `teInvJobId` (migration `20260524000000`)
+  so the same minutes can never be billed twice. Invoice, lines, entry
+  stamps, and job flags commit as one transaction. Time that couldn't be
+  billed (non-billable, no job, or no resolvable rate) is reported back
+  in a `skipped` summary rather than silently dropped. Optional
+  `from`/`to` bound the entries by start date; `invDate`/`invDueDate`
+  default to today / +30 days.
 - **Billing-rate resolution + computed billable amount** (#387). New
   `app/services/rate.js` resolves a time entry's effective hourly rate —
   the entry's own `BillingType` (new nullable `teBillTypeId` override,

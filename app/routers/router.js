@@ -352,6 +352,11 @@ router.post(
     v.body(invoiceSchemas.createInvoiceBody),
     invoice.create,
 );
+router.post(
+    '/v1/invoice/rollup',
+    v.body(invoiceSchemas.rollupInvoiceBody),
+    invoice.rollup,
+);
 router.get(
     '/v1/invoice/bycustomer/:id',
     v.params(invoiceSchemas.intIdParam),
