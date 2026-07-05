@@ -8,6 +8,15 @@ const intIdParam = z.object({
     id: z.coerce.number().int().positive(),
 });
 
+// Invoice-numbering config (#390): a bounded prefix, a zero-pad width,
+// and an operator-settable next counter (to start/reset the sequence).
+const invNumberingFields = {
+    compInvPrefix: z.string().max(16).optional(),
+    compInvPad: z.coerce.number().int().min(0).max(12).optional(),
+    compInvNextSeq: z.coerce.number().int().positive().optional(),
+};
+const NUMBERING_WHITELIST = ', compInvPrefix, compInvPad, compInvNextSeq';
+
 const createCompanyBody = z.object({
     compName: z.string().min(1).max(255),
     compAddress1: z.string().max(255).optional(),
@@ -17,8 +26,9 @@ const createCompanyBody = z.object({
     compZip: z.string().max(32).optional(),
     compPhone: z.string().max(32).optional(),
     compEmail: z.string().email().max(255).optional(),
+    ...invNumberingFields,
 }).strict({
-    message: 'Unexpected field in body. Whitelist: compName, compAddress1, compAddress2, compCity, compState, compZip, compPhone, compEmail.',
+    message: 'Unexpected field in body. Whitelist: compName, compAddress1, compAddress2, compCity, compState, compZip, compPhone, compEmail' + NUMBERING_WHITELIST + '.',
 });
 
 const updateCompanyBody = z.object({
@@ -30,8 +40,9 @@ const updateCompanyBody = z.object({
     compZip: z.string().max(32).optional(),
     compPhone: z.string().max(32).optional(),
     compEmail: z.string().email().max(255).optional(),
+    ...invNumberingFields,
 }).strict({
-    message: 'Unexpected field in body. Whitelist: compName, compAddress1, compAddress2, compCity, compState, compZip, compPhone, compEmail.',
+    message: 'Unexpected field in body. Whitelist: compName, compAddress1, compAddress2, compCity, compState, compZip, compPhone, compEmail' + NUMBERING_WHITELIST + '.',
 });
 
 const listQuery = z.object({
