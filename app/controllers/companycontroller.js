@@ -26,7 +26,7 @@ const GetCompanyId = auth.getCompanyId;
 const ALLOWED_FIELDS_CREATE = [
     'compName', 'compAddress1', 'compAddress2', 'compCity',
     'compState', 'compZip', 'compPhone', 'compEmail',
-    'compInvPrefix', 'compInvPad', 'compInvNextSeq', 'compTaxRate', 'compInvFooter',
+    'compInvPrefix', 'compInvPad', 'compInvNextSeq', 'compTaxRate', 'compInvFooter', 'compCurrency',
 ];
 const ALLOWED_FIELDS_UPDATE = ALLOWED_FIELDS_CREATE;
 

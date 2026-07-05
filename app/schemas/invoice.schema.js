@@ -46,8 +46,9 @@ const createInvoiceBody = z.object({
     // consume via `validate.body()` (see app/middleware/validate.js).
     invPaid: z.boolean().default(false),
     invNotes: z.string().max(5000).optional(),
+    invCurrency: z.string().regex(/^[A-Z]{3}$/, { message: 'Must be a 3-letter uppercase ISO 4217 code.' }).optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: invCustId, invDate, invDueDate, invPaid, invNotes.',
+    message: 'Unexpected field in body. Whitelist: invCustId, invDate, invDueDate, invPaid, invNotes, invCurrency.',
 }).refine(refineDueDateAfterIssue, DUE_BEFORE_ISSUE);
 
 const updateInvoiceBody = z.object({
@@ -96,8 +97,10 @@ const rollupInvoiceBody = z.object({
     includeExpenses: z.boolean().optional(),
     // Optional narrative note recorded on the generated invoice (#423).
     notes: z.string().max(5000).optional(),
+    // Currency override; defaults to the company's compCurrency (#427).
+    currency: z.string().regex(/^[A-Z]{3}$/, { message: 'Must be a 3-letter uppercase ISO 4217 code.' }).optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: invCustId, invDate, invDueDate, from, to, taxRate, discount, includeExpenses, notes.',
+    message: 'Unexpected field in body. Whitelist: invCustId, invDate, invDueDate, from, to, taxRate, discount, includeExpenses, notes, currency.',
 }).refine(refineDueDateAfterIssue, DUE_BEFORE_ISSUE);
 
 // GET /v1/invoice/aging query. companyId required for master keys

@@ -17,7 +17,16 @@
 
 const money = require('./money.js');
 
-const usd = (n) => (n == null ? '—' : '$' + money.toFixedString(n));
+// Currency-aware money formatting (#427): a symbol for common codes,
+// else the 3-letter code as a prefix. Defaults to USD when unset.
+const SYMBOLS = { USD: '$', CAD: '$', AUD: '$', NZD: '$', EUR: '€', GBP: '£', JPY: '¥', INR: '₹' };
+function fmtMoney(n, currency) {
+    if (n == null) return '—';
+    const code = typeof currency === 'string' && /^[A-Za-z]{3}$/.test(currency)
+        ? currency.toUpperCase() : 'USD';
+    const sym = SYMBOLS[code];
+    return sym ? sym + money.toFixedString(n) : code + ' ' + money.toFixedString(n);
+}
 
 function drawInvoice(doc, data) {
     const company = data.company || {};
@@ -26,6 +35,8 @@ function drawInvoice(doc, data) {
     const lines = Array.isArray(data.lines) ? data.lines : [];
     const totals = data.totals || {};
     const payment = data.payment || {};
+    // Format all amounts in the invoice's currency (#427).
+    const usd = (n) => fmtMoney(n, data.currency);
 
     // ---- Header: company (left), INVOICE meta (right) ----
     doc.fontSize(20).font('Helvetica-Bold').text(company.name || 'Company', 50, 50);

@@ -32,7 +32,7 @@ const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
 const GetCompanyIdByCustomerId = auth.getCompanyIdByCustomerId;
 
-const ALLOWED_FIELDS_CREATE = ['invCustId', 'invDate', 'invDueDate', 'invPaid', 'invNotes'];
+const ALLOWED_FIELDS_CREATE = ['invCustId', 'invDate', 'invDueDate', 'invPaid', 'invNotes', 'invCurrency'];
 const ALLOWED_FIELDS_UPDATE = ['invDate', 'invDueDate', 'invPaid', 'invWriteOff', 'invNotes'];
 
 exports.create = async (req, res) => {
@@ -388,6 +388,17 @@ exports.rollup = async (req, res) => {
         }
     }
     const taxRate = invoiceTax.resolveRate({ override: req.body.taxRate, companyDefault: companyDefaultRate });
+    // Invoice currency: explicit override → company default → 'USD' (#427).
+    let invoiceCurrency = req.body.currency;
+    if (!invoiceCurrency) {
+        try {
+            const comp = await db.Company.findByPk(custCompanyId, { attributes: ['compCurrency'] });
+            invoiceCurrency = comp && comp.compCurrency ? comp.compCurrency : 'USD';
+        } catch (error) {
+            log.error({ err: error }, 'rollup: company currency lookup failed');
+            return res.status(500).json({ message: "Error!" });
+        }
+    }
     // Discount applies to the subtotal before tax; clamp to [0, subtotal].
     let discount = Number(req.body.discount);
     if (!Number.isFinite(discount) || discount < 0) discount = 0;
@@ -414,6 +425,7 @@ exports.rollup = async (req, res) => {
                 invTotal: total,
                 invTaxRate: taxRate,
                 invNotes: req.body.notes,
+                invCurrency: invoiceCurrency,
             }, { transaction: t });
 
             const createdLines = [];
@@ -617,6 +629,7 @@ exports.pdf = async (req, res) => {
         totals: { subtotal: invoice.invSubtotal, tax: invoice.invTax, total: invoice.invTotal },
         payment: billing,
         format: req.query.format, // 'summary' | 'detailed' (default) — #424
+        currency: invoice.invCurrency, // #427
     };
 
     let pdf;

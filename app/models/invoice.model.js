@@ -114,6 +114,11 @@ module.exports = (sequelize, Sequelize) => {
             // Per-invoice narrative / notes rendered on the PDF (#423).
             type: Sequelize.TEXT,
         },
+        invCurrency: {
+            field: 'invCurrency',
+            // ISO-4217 currency this invoice was raised in (#427).
+            type: Sequelize.STRING(3),
+        },
     }, {
         tableName: 'Invoice',
         timestamps: true,
