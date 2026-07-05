@@ -12,16 +12,20 @@ const createJobBody = z.object({
     jobCustId: z.coerce.number().int().positive(),
     jobDesc: z.string().min(1).max(10000),
     jobFlatRate: z.coerce.number().positive().optional(),
+    jobBudgetMinutes: z.coerce.number().int().positive().optional(),
+    jobBudgetAmount: z.coerce.number().positive().optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: jobCustId, jobDesc, jobFlatRate.',
+    message: 'Unexpected field in body. Whitelist: jobCustId, jobDesc, jobFlatRate, jobBudgetMinutes, jobBudgetAmount.',
 });
 
 const updateJobBody = z.object({
     jobDesc: z.string().min(1).max(10000).optional(),
     jobInvoiced: z.boolean().optional(),
     jobFlatRate: z.coerce.number().positive().nullable().optional(),
+    jobBudgetMinutes: z.coerce.number().int().positive().nullable().optional(),
+    jobBudgetAmount: z.coerce.number().positive().nullable().optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: jobDesc, jobInvoiced, jobFlatRate.',
+    message: 'Unexpected field in body. Whitelist: jobDesc, jobInvoiced, jobFlatRate, jobBudgetMinutes, jobBudgetAmount.',
 });
 
 const listByCustomerQuery = z.object({

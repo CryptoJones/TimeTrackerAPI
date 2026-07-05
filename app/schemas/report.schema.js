@@ -78,4 +78,14 @@ const timesheetQuery = z.object({
     message: 'Unexpected query parameter. Allowed: companyId, customerId, workerId, from, to, period.',
 });
 
-module.exports = { unbilledQuery, hoursQuery, revenueQuery, billableSummaryQuery, timesheetQuery };
+/**
+ * GET /v1/report/budget query. companyId required for master keys.
+ * Budgets are lifetime per job, so no date/customer filters.
+ */
+const budgetQuery = z.object({
+    companyId: z.coerce.number().int().positive().optional(),
+}).strict({
+    message: 'Unexpected query parameter. Allowed: companyId.',
+});
+
+module.exports = { unbilledQuery, hoursQuery, revenueQuery, billableSummaryQuery, timesheetQuery, budgetQuery };

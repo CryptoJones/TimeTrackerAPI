@@ -116,7 +116,7 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
     test('Job has the jobFlatRate column (#410)', async () => {
         if (!connected) return;
         const rows = await db.Job.findAll({
-            attributes: ['jobId', 'jobFlatRate'],
+            attributes: ['jobId', 'jobFlatRate', 'jobBudgetMinutes', 'jobBudgetAmount'],
             limit: 1,
         });
         expect(Array.isArray(rows)).toBe(true);

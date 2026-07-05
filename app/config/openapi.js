@@ -1374,6 +1374,20 @@ const spec = {
                 responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
             },
         },
+        '/v1/report/budget': {
+            get: {
+                summary: 'Project budget vs actuals (hours + amount, with alerts)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys.' },
+                ],
+                responses: {
+                    200: { description: 'Budget — {jobs[] (budget/actual/ratio/status per hours & amount), count, overCount}' },
+                    400: { description: 'Master keys must specify companyId' },
+                    403: { description: 'Auth failure' },
+                },
+            },
+        },
         '/v1/report/timesheet': {
             get: {
                 summary: 'Timesheet grid — hours per worker per day or week',

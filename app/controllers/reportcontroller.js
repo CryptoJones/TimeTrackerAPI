@@ -17,6 +17,8 @@ const { buildHours } = require('../services/report-hours.js');
 const { buildRevenue } = require('../services/report-revenue.js');
 const { buildBillableSummary } = require('../services/report-billable-summary.js');
 const { buildTimesheet } = require('../services/report-timesheet.js');
+const { buildBudget } = require('../services/report-budget.js');
+const rate = require('../services/rate.js');
 
 const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
@@ -368,6 +370,90 @@ exports.timesheet = async (req, res) => {
 
     const report = buildTimesheet(items, req.query.period);
     return res.status(200).json({ message: "Timesheet.", companyId, ...report });
+};
+
+/**
+ * GET /v1/report/budget — project budget vs actuals (#434). For each
+ * company job carrying a budget (hours and/or amount), sums logged
+ * minutes + billable amount and flags each dimension under/near/over.
+ */
+exports.budget = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+    req.authKey = authKey;
+
+    const scope = await resolveCompany(req);
+    if (scope.error) {
+        return res.status(scope.error.status).json({ message: scope.error.message });
+    }
+    const { companyId } = scope;
+
+    const Op = db.Sequelize && db.Sequelize.Op;
+    let jobs;
+    try {
+        jobs = await db.Job.findAll({
+            where: { [Op.or]: [{ jobBudgetMinutes: { [Op.ne]: null } }, { jobBudgetAmount: { [Op.ne]: null } }] },
+            include: [{ model: db.Customer, as: 'customer', required: true, where: { custCompId: companyId }, attributes: ['custId'] }],
+            attributes: ['jobId', 'jobDesc', 'jobBudgetMinutes', 'jobBudgetAmount'],
+        });
+    } catch (error) {
+        log.error({ err: error }, 'budget: Job.findAll failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (jobs.length === 0) {
+        return res.status(200).json({ message: "Budget vs actuals.", companyId, jobs: [], count: 0, overCount: 0 });
+    }
+
+    const jobIds = jobs.map((j) => j.jobId);
+    let entries;
+    try {
+        entries = await db.TimeEntry.findAll({
+            where: { teCompId: companyId, teJobId: { [Op.in]: jobIds } },
+            include: [
+                { model: db.BillingType, as: 'billingType', required: false },
+                { model: db.Job, as: 'job', required: false, attributes: ['jobId', 'jobFlatRate'] },
+                {
+                    model: db.Worker, as: 'worker', required: false,
+                    include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }],
+                },
+            ],
+        });
+    } catch (error) {
+        log.error({ err: error }, 'budget: TimeEntry.findAll failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+
+    // Actuals per job: all logged minutes + summed billable amount.
+    const actualMin = new Map();
+    const actualAmt = new Map();
+    for (const e of entries) {
+        if (e.teJobId == null) continue;
+        if (e.teMinutes != null) {
+            actualMin.set(e.teJobId, (actualMin.get(e.teJobId) || 0) + (Number(e.teMinutes) || 0));
+        }
+        if (e.teBillable) {
+            const amt = rate.billableAmount(e);
+            if (amt != null) {
+                const arr = actualAmt.get(e.teJobId) || [];
+                arr.push(amt);
+                actualAmt.set(e.teJobId, arr);
+            }
+        }
+    }
+
+    const jobRows = jobs.map((j) => ({
+        jobId: j.jobId,
+        jobDesc: j.jobDesc,
+        budgetMinutes: j.jobBudgetMinutes,
+        budgetAmount: j.jobBudgetAmount,
+        actualMinutes: actualMin.get(j.jobId) || 0,
+        actualAmount: money.sum(actualAmt.get(j.jobId) || []),
+    }));
+
+    const report = buildBudget(jobRows);
+    return res.status(200).json({ message: "Budget vs actuals.", companyId, ...report });
 };
 
 exports._internals = { resolveCompany, parseDate };

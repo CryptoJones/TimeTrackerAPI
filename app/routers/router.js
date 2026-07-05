@@ -735,5 +735,10 @@ router.get(
     v.query(reportSchemas.timesheetQuery),
     report.timesheet,
 );
+router.get(
+    '/v1/report/budget',
+    v.query(reportSchemas.budgetQuery),
+    report.budget,
+);
 
 module.exports = router;

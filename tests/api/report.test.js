@@ -61,4 +61,10 @@ describe('Report auth + schema contract', () => {
     test('GET /v1/report/timesheet rejects an invalid period (schema)', async () => {
         expect((await request(app).get('/v1/report/timesheet?period=month').set('authKey', 'k')).status).toBe(400);
     });
+    test('GET /v1/report/budget 403 without authKey', async () => {
+        expect((await request(app).get('/v1/report/budget')).status).toBe(403);
+    });
+    test('GET /v1/report/budget rejects an unknown query param (schema)', async () => {
+        expect((await request(app).get('/v1/report/budget?bogus=1').set('authKey', 'k')).status).toBe(400);
+    });
 });
