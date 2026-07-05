@@ -16,6 +16,7 @@ const { buildUnbilled } = require('../services/report-unbilled.js');
 const { buildHours } = require('../services/report-hours.js');
 const { buildRevenue } = require('../services/report-revenue.js');
 const { buildBillableSummary } = require('../services/report-billable-summary.js');
+const { buildTimesheet } = require('../services/report-timesheet.js');
 
 const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
@@ -313,6 +314,60 @@ exports.billableSummary = async (req, res) => {
 
     const report = buildBillableSummary(entries);
     return res.status(200).json({ message: "Billable vs non-billable summary.", companyId, ...report });
+};
+
+/**
+ * GET /v1/report/timesheet — a timesheet grid: hours per worker per day
+ * (period=day, default) or per week (period=week) over the range.
+ * Company-scoped; optional customerId / workerId / from / to.
+ */
+exports.timesheet = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+    req.authKey = authKey;
+
+    const scope = await resolveCompany(req);
+    if (scope.error) {
+        return res.status(scope.error.status).json({ message: scope.error.message });
+    }
+    const { companyId } = scope;
+
+    const Op = db.Sequelize && db.Sequelize.Op;
+    const where = { teCompId: companyId };
+    const customerId = Number(req.query.customerId);
+    if (Number.isInteger(customerId) && customerId > 0) where.teCustId = customerId;
+    const workerId = Number(req.query.workerId);
+    if (Number.isInteger(workerId) && workerId > 0) where.teWorkerId = workerId;
+    const from = parseDate(req.query.from, false);
+    const to = parseDate(req.query.to, true);
+    if (Op && from) where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.gte]: from });
+    if (Op && to) where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.lte]: to });
+
+    let entries;
+    try {
+        entries = await db.TimeEntry.findAll({
+            where,
+            include: [{ model: db.Worker, as: 'worker', required: false, attributes: ['workerId', 'workerFName', 'workerLName'] }],
+        });
+    } catch (error) {
+        log.error({ err: error }, 'timesheet: TimeEntry.findAll failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+
+    const items = entries.map((e) => {
+        const w = e.worker;
+        return {
+            teMinutes: e.teMinutes,
+            teStartedAt: e.teStartedAt,
+            teWorkerId: e.teWorkerId,
+            workerName: w ? ([w.workerFName, w.workerLName].filter(Boolean).join(' ') || null) : null,
+        };
+    });
+
+    const report = buildTimesheet(items, req.query.period);
+    return res.status(200).json({ message: "Timesheet.", companyId, ...report });
 };
 
 exports._internals = { resolveCompany, parseDate };
