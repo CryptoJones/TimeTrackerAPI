@@ -33,6 +33,35 @@ module.exports = (sequelize, Sequelize) => {
             allowNull: false,
             defaultValue: false,
         },
+        // Stored money (NUMERIC(14,2), added in migration 20260522).
+        // pg returns NUMERIC as a string; the getters hand the API a
+        // Number — or null when the invoice hasn't been totalled yet.
+        // Populated by the time→invoice roll-up (#382) via
+        // app/services/money.js so the arithmetic never drifts.
+        invSubtotal: {
+            field: 'invSubtotal',
+            type: Sequelize.DECIMAL(14, 2),
+            get() {
+                const v = this.getDataValue('invSubtotal');
+                return v == null ? null : Number(v);
+            },
+        },
+        invTax: {
+            field: 'invTax',
+            type: Sequelize.DECIMAL(14, 2),
+            get() {
+                const v = this.getDataValue('invTax');
+                return v == null ? null : Number(v);
+            },
+        },
+        invTotal: {
+            field: 'invTotal',
+            type: Sequelize.DECIMAL(14, 2),
+            get() {
+                const v = this.getDataValue('invTotal');
+                return v == null ? null : Number(v);
+            },
+        },
         invArch: {
             field: 'invArch',
             type: Sequelize.BOOLEAN,
