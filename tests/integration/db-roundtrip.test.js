@@ -113,6 +113,15 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         expect(true).toBe(true);
     });
 
+    test('Job has the jobFlatRate column (#410)', async () => {
+        if (!connected) return;
+        const rows = await db.Job.findAll({
+            attributes: ['jobId', 'jobFlatRate'],
+            limit: 1,
+        });
+        expect(Array.isArray(rows)).toBe(true);
+    });
+
     test('TimeEntry has worker/job/billtype columns and their includes resolve', async () => {
         if (!connected) return;
         // Selecting the new attributes proves the 20260521 + 20260523

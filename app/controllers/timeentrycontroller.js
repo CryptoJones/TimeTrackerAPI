@@ -357,6 +357,9 @@ exports.getById = async (req, res) => {
         entry = await TimeEntry.findByPk(req.params.id, {
             include: [
                 { model: db.BillingType, as: 'billingType', required: false },
+                // Job carries the per-project flat rate (#410) — the middle
+                // tier of rate resolution.
+                { model: db.Job, as: 'job', required: false, attributes: ['jobId', 'jobFlatRate'] },
                 {
                     model: db.Worker,
                     as: 'worker',

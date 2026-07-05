@@ -327,6 +327,8 @@ exports.rollup = async (req, res) => {
             where,
             include: [
                 { model: db.BillingType, as: 'billingType', required: false },
+                // Job flat rate (#410) — resolveHourlyRate reads entry.job.
+                { model: db.Job, as: 'job', required: false, attributes: ['jobId', 'jobFlatRate'] },
                 {
                     model: db.Worker, as: 'worker', required: false,
                     include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }],
