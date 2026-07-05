@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Billable expenses with markup** (#417). `expBillable` marks an
+  expense re-billable to the client; `expMarkupPct` (a fraction, e.g.
+  `0.15`) marks it up over cost. New pure `app/services/expense-billing.js`
+  computes the client-facing amount (0 if non-billable, else
+  `cost × (1 + markup)`, exact-cent), surfaced as `billing.billableAmount`
+  on `GET /v1/expense/{id}`. Both settable via create/PATCH; migration
+  `20260530000000`. Sets up the expense→invoice roll-up (#418).
 - **Expense entity + CRUD** (#416). A new `Expense` model (amount,
   category, description, date) scoped to a company (`expCompId`) and
   optionally linked to a customer (`expCustId`) and job (`expJobId`),
