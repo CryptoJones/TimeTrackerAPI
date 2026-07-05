@@ -88,9 +88,17 @@ function drawInvoice(doc, data) {
     }
     totalRow('Balance Due', usd(payment.balance != null ? payment.balance : totals.total), true);
 
-    // ---- Footer ----
+    // ---- Notes / narrative (per-invoice, #423) ----
+    if (invoice.notes) {
+        y += 24;
+        doc.fillColor('#000').fontSize(9).font('Helvetica-Bold').text('NOTES', 50, y);
+        y += 14;
+        doc.fontSize(9).font('Helvetica').text(String(invoice.notes), 50, y, { width: 495 });
+    }
+
+    // ---- Footer: company narrative/branding, else a default (#423) ----
     doc.fontSize(8).font('Helvetica').fillColor('#666')
-        .text('Thank you for your business.', 50, 780, { align: 'center', width: 495 });
+        .text(company.footer || 'Thank you for your business.', 50, 780, { align: 'center', width: 495 });
 }
 
 /**

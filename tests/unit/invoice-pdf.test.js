@@ -32,4 +32,17 @@ describe('invoice-pdf.renderInvoicePdf', () => {
         expect(isPdf(await renderInvoicePdf({}))).toBe(true);
         expect(isPdf(await renderInvoicePdf({ lines: [], totals: {}, payment: {} }))).toBe(true);
     });
+
+    test('renders per-invoice notes and a company footer (#423)', async () => {
+        const buf = await renderInvoicePdf({
+            company: { name: 'Acme LLC', footer: 'Payment due within 30 days. Wire to acct #1234.' },
+            customer: { name: 'Wile E. Coyote' },
+            invoice: { number: 'INV-0002', date: '2026-07-01', dueDate: '2026-07-31', notes: 'Retainer applied against this invoice.' },
+            lines: [{ description: 'Consulting', amount: 100 }],
+            totals: { subtotal: 100, tax: 0, total: 100 },
+            payment: { status: 'sent', balance: 100 },
+        });
+        expect(isPdf(buf)).toBe(true);
+        expect(buf.length).toBeGreaterThan(500);
+    });
 });

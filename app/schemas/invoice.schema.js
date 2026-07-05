@@ -45,8 +45,9 @@ const createInvoiceBody = z.object({
     // fills the value at the validator boundary, which both paths
     // consume via `validate.body()` (see app/middleware/validate.js).
     invPaid: z.boolean().default(false),
+    invNotes: z.string().max(5000).optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: invCustId, invDate, invDueDate, invPaid.',
+    message: 'Unexpected field in body. Whitelist: invCustId, invDate, invDueDate, invPaid, invNotes.',
 }).refine(refineDueDateAfterIssue, DUE_BEFORE_ISSUE);
 
 const updateInvoiceBody = z.object({
@@ -55,8 +56,9 @@ const updateInvoiceBody = z.object({
     invPaid: z.boolean().optional(),
     // Amount written off as uncollectible (>= 0); null clears it.
     invWriteOff: z.coerce.number().min(0).nullable().optional(),
+    invNotes: z.string().max(5000).nullable().optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: invDate, invDueDate, invPaid, invWriteOff.',
+    message: 'Unexpected field in body. Whitelist: invDate, invDueDate, invPaid, invWriteOff, invNotes.',
 }).refine(refineDueDateAfterIssue, DUE_BEFORE_ISSUE);
 
 const listByCustomerQuery = z.object({
@@ -92,8 +94,10 @@ const rollupInvoiceBody = z.object({
     // Also roll the customer's billable, un-invoiced expenses into this
     // invoice (#418).
     includeExpenses: z.boolean().optional(),
+    // Optional narrative note recorded on the generated invoice (#423).
+    notes: z.string().max(5000).optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: invCustId, invDate, invDueDate, from, to, taxRate, discount, includeExpenses.',
+    message: 'Unexpected field in body. Whitelist: invCustId, invDate, invDueDate, from, to, taxRate, discount, includeExpenses, notes.',
 }).refine(refineDueDateAfterIssue, DUE_BEFORE_ISSUE);
 
 // GET /v1/invoice/aging query. companyId required for master keys

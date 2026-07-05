@@ -48,6 +48,11 @@ module.exports = (sequelize, Sequelize) => {
                 return v == null ? 0 : Number(v);
             },
         },
+        compInvFooter: {
+            field: 'compInvFooter',
+            // Default invoice footer / narrative printed on every PDF (#423).
+            type: Sequelize.TEXT,
+        },
         compArch: {
             field: 'compArch',
             type: Sequelize.BOOLEAN,

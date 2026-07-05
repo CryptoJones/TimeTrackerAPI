@@ -109,6 +109,11 @@ module.exports = (sequelize, Sequelize) => {
                 return v == null ? null : Number(v);
             },
         },
+        invNotes: {
+            field: 'invNotes',
+            // Per-invoice narrative / notes rendered on the PDF (#423).
+            type: Sequelize.TEXT,
+        },
     }, {
         tableName: 'Invoice',
         timestamps: true,

@@ -173,12 +173,12 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
     test('invoice-numbering columns exist (Company config + Invoice.invNumber)', async () => {
         if (!connected) return;
         const companies = await db.Company.findAll({
-            attributes: ['compId', 'compInvPrefix', 'compInvPad', 'compInvNextSeq', 'compTaxRate'],
+            attributes: ['compId', 'compInvPrefix', 'compInvPad', 'compInvNextSeq', 'compTaxRate', 'compInvFooter'],
             limit: 1,
         });
         expect(Array.isArray(companies)).toBe(true);
         const invoices = await db.Invoice.findAll({
-            attributes: ['invId', 'invNumber', 'invTaxRate', 'invDiscount', 'invWriteOff'],
+            attributes: ['invId', 'invNumber', 'invTaxRate', 'invDiscount', 'invWriteOff', 'invNotes'],
             limit: 1,
         });
         expect(Array.isArray(invoices)).toBe(true);
