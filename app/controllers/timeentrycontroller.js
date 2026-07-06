@@ -405,6 +405,82 @@ exports.approval = async (req, res) => {
 };
 
 /**
+ * POST /v1/timeentry/:id/copy — duplicate an entry's "what" into a fresh
+ * entry (#399): same customer / worker / job / billtype / description /
+ * billable / tags, but a new time. The optional body sets teStartedAt /
+ * teEndedAt (defaults: start now, in-flight). The copy is always open /
+ * un-invoiced. Secure-404 scoped; 409 if the copy lands in a locked
+ * period.
+ */
+exports.copy = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+
+    let src;
+    try {
+        src = await TimeEntry.findByPk(req.params.id);
+    } catch (error) {
+        log.error({ err: error }, 'copy: TimeEntry.findByPk failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (!src || src.teArch) {
+        return res.status(404).json({ message: "Not found." });
+    }
+
+    const isMaster = await IsMaster(authKey);
+    if (!isMaster) {
+        const companyId = await GetCompanyId(authKey);
+        if (companyId === -1 || src.teCompId !== companyId) {
+            return res.status(404).json({ message: "Not found." });
+        }
+    }
+
+    const body = req.body || {};
+    const startedAt = body.teStartedAt || new Date();
+    const endedAt = body.teEndedAt !== undefined ? body.teEndedAt : null;
+    if (isInvertedRange(startedAt, endedAt)) {
+        return res.status(400).json({ message: 'teEndedAt must be at or after teStartedAt.' });
+    }
+
+    let lock;
+    try {
+        const lockDate = await companyLockDate(src.teCompId);
+        lock = lockReason({ approvalStatus: 'open', startedAt, lockDate });
+    } catch (error) {
+        log.error({ err: error }, 'copy: lock check failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (lock) {
+        return res.status(409).json({ message: lock });
+    }
+
+    const payload = {
+        teCustId: src.teCustId,
+        teCompId: src.teCompId,
+        teWorkerId: src.teWorkerId,
+        teJobId: src.teJobId,
+        teBillTypeId: src.teBillTypeId,
+        teDescription: src.teDescription,
+        teBillable: src.teBillable,
+        teTags: src.teTags,
+        teStartedAt: startedAt,
+        teEndedAt: endedAt,
+        teMinutes: computeMinutes(startedAt, endedAt),
+        teArch: false,
+        // teApprovalStatus defaults 'open'; teInvJobId stays null (unbilled).
+    };
+    try {
+        const created = await TimeEntry.create(payload);
+        return res.status(201).json({ message: "Time entry copied.", timeEntry: created });
+    } catch (error) {
+        log.error({ err: error }, 'copy: TimeEntry.create failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+};
+
+/**
  * GET /v1/timeentry/:id — fetch a single time entry by id.
  *
  * Scoped: non-master keys may only read entries in their own company.

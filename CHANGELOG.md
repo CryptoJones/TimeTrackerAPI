@@ -38,6 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Copy-previous time entry** (#399). `POST /v1/timeentry/{id}/copy`
+  clones an entry's "what" — customer, worker, job, billing type,
+  description, billable flag, tags — into a **fresh** entry (always
+  `open` / un-invoiced). The optional body sets `teStartedAt` /
+  `teEndedAt` (default: start now, in-flight). Secure-404 scoped; **409**
+  if the copy would land in a locked period (#441). No migration.
 - **Tasks / activities under jobs** (#407). A new `Task` model
   (`taskName`, `taskDesc`) under a Job, migration `20260611000000`. Full
   REST: `POST /v1/task`, `GET /v1/task/byjob/{id}` (paginated),
