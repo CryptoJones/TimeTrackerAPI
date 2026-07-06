@@ -38,6 +38,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Rate effective-dating** (#414). A new company-scoped `RateSchedule`
+  entity (`rschRate` over `rschEffectiveFrom`..`rschEffectiveTo`, the
+  latter open-ended when null), migration `20260620000000`. Full REST on
+  `/v1/rateschedule` (create, `bycompany` list, get/patch/delete) plus
+  `GET /v1/rateschedule/resolve?date=` which returns the rate in effect on
+  that date via a pure `rate-schedule.js` resolver (latest applicable
+  `effectiveFrom` wins). Lands the model + a queryable resolver; wiring
+  date-aware selection into `rate.js`'s live billing resolution is a
+  follow-up (keeps the well-tested resolver untouched).
 - **Milestone billing** (#428). `POST /v1/invoice/from-phase` generates
   an invoice for a project phase's fixed budget (`phaseBudgetAmount`) as a
   single line on the phase's job — reusing the roll-up's numbering, tax,
