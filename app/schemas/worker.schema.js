@@ -25,8 +25,9 @@ const createWorkerBody = z.object({
     workerTargetMinsPerWeek: z.coerce.number().int().positive().optional(),
     workerCostRate: z.coerce.number().positive().max(999999999.99).optional(),
     workerRoleId: z.coerce.number().int().positive().optional(),
+    workerUserId: z.coerce.number().int().positive().optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: workerFName, workerLName, workerTitle, workerDefaultBillType, workerCompId, workerTargetMinsPerWeek, workerCostRate, workerRoleId.',
+    message: 'Unexpected field in body. Whitelist: workerFName, workerLName, workerTitle, workerDefaultBillType, workerCompId, workerTargetMinsPerWeek, workerCostRate, workerRoleId, workerUserId.',
 });
 
 /**
@@ -43,8 +44,9 @@ const updateWorkerBody = z.object({
     workerTargetMinsPerWeek: z.coerce.number().int().positive().nullable().optional(),
     workerCostRate: z.coerce.number().positive().max(999999999.99).nullable().optional(),
     workerRoleId: z.coerce.number().int().positive().nullable().optional(),
+    workerUserId: z.coerce.number().int().positive().nullable().optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: workerFName, workerLName, workerTitle, workerDefaultBillType, workerTargetMinsPerWeek, workerCostRate, workerRoleId.',
+    message: 'Unexpected field in body. Whitelist: workerFName, workerLName, workerTitle, workerDefaultBillType, workerTargetMinsPerWeek, workerCostRate, workerRoleId, workerUserId.',
 });
 
 const listByCompanyQuery = z.object({

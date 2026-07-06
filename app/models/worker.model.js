@@ -73,6 +73,13 @@ module.exports = (sequelize, Sequelize) => {
             // between the client rate and the worker's own default.
             type: Sequelize.INTEGER,
         },
+        workerUserId: {
+            field: 'workerUserId',
+            // Nullable link to a User (sign-in account, #448). Used to block
+            // a signed-in user from approving their OWN logged time
+            // (separation of duties). Must belong to the same company.
+            type: Sequelize.INTEGER,
+        },
     }, {
         tableName: 'Worker',
         timestamps: true,

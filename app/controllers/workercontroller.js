@@ -19,10 +19,10 @@ const CompanyIdFromReq = auth.companyIdFromReq;
 
 const ALLOWED_FIELDS_CREATE = [
     'workerFName', 'workerLName', 'workerTitle',
-    'workerDefaultBillType', 'workerCompId', 'workerTargetMinsPerWeek', 'workerCostRate', 'workerRoleId',
+    'workerDefaultBillType', 'workerCompId', 'workerTargetMinsPerWeek', 'workerCostRate', 'workerRoleId', 'workerUserId',
 ];
 const ALLOWED_FIELDS_UPDATE = [
-    'workerFName', 'workerLName', 'workerTitle', 'workerDefaultBillType', 'workerTargetMinsPerWeek', 'workerCostRate', 'workerRoleId',
+    'workerFName', 'workerLName', 'workerTitle', 'workerDefaultBillType', 'workerTargetMinsPerWeek', 'workerCostRate', 'workerRoleId', 'workerUserId',
 ];
 
 /**
@@ -78,6 +78,9 @@ exports.create = async (req, res) => {
         }
         if (!(await auth.roleFkBelongsTo(payload.workerRoleId, authKeyCompanyId))) {
             return res.status(400).json({ message: "Invalid role." });
+        }
+        if (!(await auth.userFkBelongsTo(payload.workerUserId, authKeyCompanyId))) {
+            return res.status(400).json({ message: "Invalid user." });
         }
     } else {
         if (payload.workerCompId === undefined || Number(payload.workerCompId) <= 0) {
@@ -244,6 +247,10 @@ exports.update = async (req, res) => {
             && !(await auth.roleFkBelongsTo(updates.workerRoleId, companyId))) {
             return res.status(400).json({ message: "Invalid role." });
         }
+        if (updates.workerUserId !== undefined
+            && !(await auth.userFkBelongsTo(updates.workerUserId, companyId))) {
+            return res.status(400).json({ message: "Invalid user." });
+        }
     }
 
     try {
@@ -306,6 +313,7 @@ exports.bulkCreate = makeBulkCreate({
     secondaryFk: [
         { field: 'workerDefaultBillType', belongsTo: auth.billingTypeFkBelongsTo, label: 'billing type' },
         { field: 'workerRoleId', belongsTo: auth.roleFkBelongsTo, label: 'role' },
+        { field: 'workerUserId', belongsTo: auth.userFkBelongsTo, label: 'user' },
     ],
 });
 

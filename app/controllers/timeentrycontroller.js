@@ -486,14 +486,26 @@ exports.approval = async (req, res) => {
 
     if (req.user) {
         // A signed-in user acts within its own company (secure-404) and needs
-        // the `time:approve` permission (manager+). NOTE: self-approval (the
-        // actor being the worker who logged the time) is NOT yet blocked —
-        // that needs a User↔Worker link the model doesn't have (see item 8).
+        // the `time:approve` permission (manager+).
         if (entry.teCompId !== req.user.userCompId) {
             return res.status(404).json({ message: "Not found." });
         }
         if (!rbac.hasPermission(req.user.userRole, 'time:approve')) {
             return res.status(403).json({ message: "Insufficient role to approve time entries." });
+        }
+        // Separation of duties: a user may not approve their OWN logged time
+        // (the worker the entry belongs to is linked to this user, #448).
+        if (entry.teWorkerId != null) {
+            let worker;
+            try {
+                worker = await db.Worker.findByPk(entry.teWorkerId, { attributes: ['workerUserId'] });
+            } catch (error) {
+                log.error({ err: error }, 'approval: Worker lookup failed');
+                return res.status(500).json({ message: "Error!" });
+            }
+            if (worker && worker.workerUserId === req.user.userId) {
+                return res.status(403).json({ message: "You cannot approve your own time entry." });
+            }
         }
     } else {
         const authKey = req.get('authKey');

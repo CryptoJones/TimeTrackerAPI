@@ -431,6 +431,32 @@ async function roleFkBelongsTo(roleIdValue, companyId) {
 }
 
 /**
+ * Resolve a User id to its owning company (userCompId). Used to tenant-check
+ * the `workerUserId` FK on a Worker (the User ↔ Worker link, #448) — a worker
+ * can only be linked to a user in the same company. Returns -1 for
+ * missing/archived.
+ */
+async function getCompanyIdByUserId(userId) {
+    const idStr = userId == null ? '' : String(userId);
+    if (idStr.length === 0 || idStr === '0') return -1;
+    try {
+        const row = await getDb().User.findByPk(userId, { attributes: ['userCompId'] });
+        if (!row) return -1;
+        const cid = row.userCompId;
+        return typeof cid === 'number' && cid > 0 ? cid : -1;
+    } catch (error) {
+        log.error({ err: error }, 'auth.getCompanyIdByUserId query failed');
+        return -1;
+    }
+}
+
+/** True if the (optional) User FK is absent/null or belongs to `companyId`. */
+async function userFkBelongsTo(userIdValue, companyId) {
+    if (userIdValue == null) return true;
+    return (await getCompanyIdByUserId(userIdValue)) === companyId;
+}
+
+/**
  * Express middleware: ensures the authKey header is present and
  * stashes it on req.authKey. Does NOT validate the key against the
  * database — leaves that to controllers that may have different
@@ -564,6 +590,8 @@ module.exports = {
     getCompanyIdByRoleId,
     billingTypeFkBelongsTo,
     roleFkBelongsTo,
+    getCompanyIdByUserId,
+    userFkBelongsTo,
     requireAuthKey,
     attachAuth,
     attachUser,
