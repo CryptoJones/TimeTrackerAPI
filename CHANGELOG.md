@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Client-specific rate cards** (#413). `Customer.custDefaultRate`
+  (migration `20260610000000`, settable on customer create/PATCH) is the
+  **client tier** of rate resolution in `rate.js`: per-entry override →
+  project flat rate → **client rate** → worker default. It flows through
+  the time-entry billing view, the invoice roll-up, and the reporting
+  (unbilled, billable-summary, budget) — all now eager-load the customer
+  rate.
 - **Locked periods** (#441). Two freezes on time entries: an
   **approved** entry (from #440) can no longer be edited or deleted, and
   a per-company `compTimeLockDate` (migration `20260609000000`, settable

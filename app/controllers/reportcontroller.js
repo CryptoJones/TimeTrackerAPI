@@ -100,7 +100,7 @@ exports.unbilled = async (req, res) => {
                 { model: db.Job, as: 'job', required: false, attributes: ['jobId', 'jobDesc', 'jobFlatRate'] },
                 {
                     model: db.Customer, as: 'customer', required: false,
-                    attributes: ['custId', 'custCompanyName', 'custFName', 'custLName'],
+                    attributes: ['custId', 'custCompanyName', 'custFName', 'custLName', 'custDefaultRate'],
                 },
             ],
         });
@@ -119,8 +119,9 @@ exports.unbilled = async (req, res) => {
             teBillable: e.teBillable,
             billingType: e.billingType,
             worker: e.worker,
-            // Pass the job so rate.js can read the per-project flat rate (#410).
+            // Pass job + customer so rate.js reads the project/client rate (#410, #413).
             job: e.job,
+            customer: e.customer,
             custName: c ? (c.custCompanyName || [c.custFName, c.custLName].filter(Boolean).join(' ') || null) : null,
             jobDesc: e.job ? e.job.jobDesc : null,
         };
@@ -176,7 +177,7 @@ exports.hours = async (req, res) => {
                 { model: db.Job, as: 'job', required: false, attributes: ['jobId', 'jobDesc', 'jobFlatRate'] },
                 {
                     model: db.Customer, as: 'customer', required: false,
-                    attributes: ['custId', 'custCompanyName', 'custFName', 'custLName'],
+                    attributes: ['custId', 'custCompanyName', 'custFName', 'custLName', 'custDefaultRate'],
                 },
                 {
                     model: db.Worker, as: 'worker', required: false,
@@ -244,7 +245,7 @@ exports.revenue = async (req, res) => {
                 {
                     model: db.Customer, as: 'customer', required: true,
                     where: { custCompId: companyId },
-                    attributes: ['custId', 'custCompanyName', 'custFName', 'custLName'],
+                    attributes: ['custId', 'custCompanyName', 'custFName', 'custLName', 'custDefaultRate'],
                 },
                 { model: db.CustomerPayment, as: 'payments', required: false },
             ],
@@ -308,6 +309,8 @@ exports.billableSummary = async (req, res) => {
                     model: db.Worker, as: 'worker', required: false,
                     include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }],
                 },
+                // Client rate card (#413) — resolveHourlyRate reads entry.customer.
+                { model: db.Customer, as: 'customer', required: false, attributes: ['custId', 'custDefaultRate'] },
             ],
         });
     } catch (error) {
@@ -419,6 +422,8 @@ exports.budget = async (req, res) => {
                     model: db.Worker, as: 'worker', required: false,
                     include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }],
                 },
+                // Client rate card (#413) — resolveHourlyRate reads entry.customer.
+                { model: db.Customer, as: 'customer', required: false, attributes: ['custId', 'custDefaultRate'] },
             ],
         });
     } catch (error) {
