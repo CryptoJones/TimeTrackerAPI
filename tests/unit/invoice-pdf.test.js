@@ -7,7 +7,7 @@
 
 import { describe, test, expect } from 'vitest';
 
-const { renderInvoicePdf } = require('../../app/services/invoice-pdf.js');
+const { renderInvoicePdf, clip, MAX_DESC_CHARS, MAX_PDF_LINES } = require('../../app/services/invoice-pdf.js');
 
 const isPdf = (buf) => Buffer.isBuffer(buf) && buf.slice(0, 5).toString('latin1') === '%PDF-';
 
@@ -72,5 +72,30 @@ describe('invoice-pdf.renderInvoicePdf', () => {
         });
         expect(isPdf(eur)).toBe(true);
         expect(isPdf(other)).toBe(true);
+    });
+
+    test('clip bounds text length (guards the pdfkit event-loop stall)', () => {
+        expect(clip('short', 300)).toBe('short');
+        expect(clip(null, 300)).toBe('');
+        expect(clip(undefined, 300)).toBe('');
+        const out = clip('x'.repeat(10000), MAX_DESC_CHARS);
+        expect(out.length).toBe(MAX_DESC_CHARS);
+        expect(out.endsWith('…')).toBe(true);
+    });
+
+    test('a hostile invoice (many long unbroken descriptions) renders bounded, not frozen', async () => {
+        // Pre-fix this froze the single-threaded event loop for ~6s (100
+        // lines × 10k-char unbroken jobDesc → pdfkit superlinear word-fit),
+        // stalling the whole server. The clip + line cap keep it fast.
+        // Generous ceiling to avoid CI flake (fixed ≈130ms; unbounded ≈5850ms).
+        const bigDesc = 'x'.repeat(10000);
+        const lines = Array.from({ length: MAX_PDF_LINES + 200 }, () => ({ description: bigDesc, amount: 100 }));
+        const t = Date.now();
+        const buf = await renderInvoicePdf({
+            invoice: { number: 'INV-DOS', notes: 'y'.repeat(50000) },
+            lines, totals: { subtotal: 0, tax: 0, total: 0 }, payment: {},
+        });
+        expect(isPdf(buf)).toBe(true);
+        expect(Date.now() - t).toBeLessThan(2000);
     });
 });
