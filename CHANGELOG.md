@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Expense markup is bounded (400, not 500).** `expMarkupPct` (a fraction,
+  `0.15` = +15%) had no upper bound, so a value ≥ 100 overflowed its
+  `DECIMAL(6,4)` column → a **500** at write (and a fraction-vs-percent typo
+  like `15` silently billed 1500%). It now caps at `99.9999` → a clean 400
+  (`>100%` markup stays allowed). Found by the expenses/receipts review,
+  which verified the markup math exact via `money.js`, the roll-up
+  billable-only + un-invoiced + transaction-marked (no double-bill), receipt
+  bytes stored in Postgres `bytea` (no disk → no path traversal), uploads
+  triple-bounded (100kb → 10M-char → 5MB), and content-type enum-constrained
+  and served inert (SVG/HTML rejected).
 - **Rate / amount fields reject out-of-range values with a 400.** The rate
   and money fields (`btHourlyRate`, `jobFlatRate`, `jobBudgetAmount`,
   `taskRate`, `custDefaultRate`, `roleRate`, `rschRate`, `workerCostRate`)

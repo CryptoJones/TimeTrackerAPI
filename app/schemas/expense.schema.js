@@ -30,7 +30,10 @@ const createExpenseBody = z.object({
     expCategory: z.string().max(255).optional(),
     expDescription: z.string().max(10000).optional(),
     expBillable: z.boolean().optional(),
-    expMarkupPct: z.coerce.number().min(0).optional(),
+    // A fraction (0.15 = +15%). Cap at the DECIMAL(6,4) column max so an
+    // out-of-range markup returns a clean 400 instead of overflowing to a
+    // 500 at write; >100% (>1.0) is intentionally allowed.
+    expMarkupPct: z.coerce.number().min(0).max(99.9999).optional(),
     expDate: isoDate,
     expAmount: expAmountField,
 }).strict({
@@ -47,7 +50,7 @@ const updateExpenseBody = z.object({
     expCategory: z.string().max(255).nullable().optional(),
     expDescription: z.string().max(10000).nullable().optional(),
     expBillable: z.boolean().optional(),
-    expMarkupPct: z.coerce.number().min(0).nullable().optional(),
+    expMarkupPct: z.coerce.number().min(0).max(99.9999).nullable().optional(),
     expDate: isoDate.optional(),
     expAmount: expAmountField.optional(),
 }).strict({
