@@ -60,6 +60,14 @@ module.exports = (sequelize, Sequelize) => {
             allowNull: false,
             defaultValue: 'USD',
         },
+        compRequireApproval: {
+            field: 'compRequireApproval',
+            // Opt-in billing gate (#7): when true, only approved time rolls
+            // up into invoices. Default false = approval is a workflow only.
+            type: Sequelize.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
+        },
         compTimeLockDate: {
             field: 'compTimeLockDate',
             // Locked-period cutoff (#441); time on/before this is frozen.

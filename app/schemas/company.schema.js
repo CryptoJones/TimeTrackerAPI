@@ -18,8 +18,11 @@ const invNumberingFields = {
     compInvFooter: z.string().max(2000).optional(),
     compCurrency: z.string().regex(/^[A-Z]{3}$/, { message: 'Must be a 3-letter uppercase ISO 4217 code.' }).optional(),
     compTimeLockDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Must be an ISO 8601 date (YYYY-MM-DD).' }).nullable().optional(),
+    // Opt-in billing gate (#7): when true, only approved time rolls up into
+    // invoices. Strict boolean — no "true"/"false" string coercion.
+    compRequireApproval: z.boolean().optional(),
 };
-const NUMBERING_WHITELIST = ', compInvPrefix, compInvPad, compInvNextSeq, compTaxRate, compInvFooter, compCurrency, compTimeLockDate';
+const NUMBERING_WHITELIST = ', compInvPrefix, compInvPad, compInvNextSeq, compTaxRate, compInvFooter, compCurrency, compTimeLockDate, compRequireApproval';
 
 const createCompanyBody = z.object({
     compName: z.string().min(1).max(255),
