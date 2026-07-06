@@ -11,6 +11,7 @@ const rate = require('../services/rate.js');
 const { applyAction } = require('../services/approval.js');
 const { lockReason } = require('../services/time-lock.js');
 const rbac = require('../services/rbac.js');
+const { nextStep, canApproveAt } = require('../services/approval-chain.js');
 const { buildApprovalDigest } = require('../services/approval-reminders.js');
 const { sendMail } = require('../services/mailer.js');
 const { createTimeEntryBody } = require('../schemas/timeentry.schema.js');
@@ -524,8 +525,45 @@ exports.approval = async (req, res) => {
         return res.status(409).json({ message: result.error });
     }
 
+    const updates = { teApprovalStatus: result.status };
+
+    if (action === 'approve') {
+        // Multi-level approval-chain enforcement (#443/#6). A signed-in user
+        // must clear each configured level IN ORDER — one `approve` advances
+        // the entry by a single level, and it only becomes 'approved' once the
+        // final level is cleared. An API key keeps full authority (one approve
+        // → approved, marking the chain fully cleared).
+        let chain = null;
+        try {
+            chain = await db.ApprovalChain.findOne({
+                where: { apchCompId: entry.teCompId, apchActive: true },
+                order: [['apchId', 'ASC']],
+            });
+        } catch (error) {
+            log.error({ err: error }, 'approval: ApprovalChain lookup failed');
+            return res.status(500).json({ message: "Error!" });
+        }
+        if (chain && req.user) {
+            if (!canApproveAt(chain.apchLevels, entry.teApprovalLevel, req.user.userRole)) {
+                return res.status(403).json({
+                    message: "Your role cannot approve the next required level of this timesheet.",
+                });
+            }
+            const newLevel = entry.teApprovalLevel + 1;
+            updates.teApprovalLevel = newLevel;
+            // Stay 'submitted' until every level is cleared.
+            updates.teApprovalStatus = nextStep(chain.apchLevels, newLevel).done ? 'approved' : 'submitted';
+        } else if (chain) {
+            // API key / master: full authority — record the chain as fully cleared.
+            updates.teApprovalLevel = chain.apchLevels.length;
+        }
+    } else if (action === 'submit' || action === 'reject') {
+        // Restart the chain: the next review begins at level 0.
+        updates.teApprovalLevel = 0;
+    }
+
     try {
-        await entry.update({ teApprovalStatus: result.status });
+        await entry.update(updates);
         return res.status(200).json({ message: "Approval updated.", timeEntry: entry });
     } catch (error) {
         log.error({ err: error }, 'approval: TimeEntry.update failed');

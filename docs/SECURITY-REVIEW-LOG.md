@@ -161,12 +161,16 @@ deliberately **not** implemented autonomously.
 5. **Master actions in the tenant audit trail** (informational). A master
    key's mutations set `alogCompId = null`, so they don't appear in the
    affected company's audit view — a completeness gap, not a leak.
-6. **Multi-level approval chain is not enforced.** `ApprovalChain` is a
-   standalone advisory calculator; the time-entry approval action calls
-   only `applyAction` (a single `teApprovalStatus` enum) and marks an entry
-   fully approved on the **first** `approve`, skipping every configured
-   level. Enforcing a chain needs per-level approval tracking on the entry
-   (a new counter/table), not just the enum.
+6. **Multi-level approval chain — ENFORCED (#591).** A new
+   `TimeEntry.teApprovalLevel` counter tracks how many of the company's
+   active chain's levels an entry has cleared. For a signed-in (JWT) actor,
+   each `approve` now runs `approval-chain.canApproveAt` (their role must
+   satisfy the next required level) and advances one level via `nextStep`;
+   the entry stays `submitted` until the final level clears, only then
+   `approved`. submit/reject reset the counter to 0. An API key keeps full
+   authority (one approve → approved, chain marked cleared); a company with
+   no active chain is unchanged. The company's active chain (lowest `apchId`
+   if several) governs.
 7. **Should approval gate billing?** After the rejected-exclusion fix,
    `open` / `submitted` time still rolls into invoices — correct for
    companies that don't use the approval feature, but a company that

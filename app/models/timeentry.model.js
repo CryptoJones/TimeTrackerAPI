@@ -107,6 +107,16 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.TEXT,
             defaultValue: 'open',
         },
+        teApprovalLevel: {
+            field: 'teApprovalLevel',
+            // How many approval-chain levels have been cleared (#443/#6). 0
+            // until the first level is approved; when it reaches the chain's
+            // level count the entry becomes 'approved'. Reset to 0 on
+            // submit/reject. Irrelevant when the company has no active chain.
+            type: Sequelize.INTEGER,
+            allowNull: false,
+            defaultValue: 0,
+        },
         teArch: {
             field: 'teArch',
             type: Sequelize.BOOLEAN,

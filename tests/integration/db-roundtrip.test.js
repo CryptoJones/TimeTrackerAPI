@@ -320,6 +320,19 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         }
     });
 
+    test('TimeEntry.teApprovalLevel column exists with default 0 (approval-chain enforcement)', async () => {
+        if (!connected) return;
+        const rows = await db.sequelize.query(
+            `SELECT data_type, column_default
+               FROM information_schema.columns
+              WHERE table_schema = 'dbo' AND table_name = 'TimeEntry' AND column_name = 'teApprovalLevel'`,
+            { type: db.Sequelize.QueryTypes.SELECT },
+        );
+        expect(rows.length).toBe(1);
+        expect(rows[0].data_type).toBe('integer');
+        expect(String(rows[0].column_default)).toContain('0');
+    });
+
     test('RevokedShareLink round-trips + enforces a unique jti (share revocation)', async () => {
         if (!connected) return;
         const jti = `${SENTINEL}-jti`;
