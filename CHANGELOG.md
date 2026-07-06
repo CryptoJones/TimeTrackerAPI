@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Security
+- **Per-link share-link revocation (#590).** Shareable invoice links are
+  stateless JWTs, so an individual link couldn't be killed before its `exp`
+  (≤90 days) without rotating `SHARE_SECRET` (which kills every link). Each
+  minted link now carries a random `jti`; a new tenant-scoped
+  `POST /v1/share/revoke` deny-lists a token's `jti` (in the new
+  `RevokedShareLink` table) after verifying the caller owns the invoice, and
+  the public view rejects a revoked link with a 401 (same message as an
+  invalid token — no revocation-status leak). Idempotent. Resolves review-log
+  item 4.
 - **GDPR export streams instead of buffering (#589).** `GET
   /v1/gdpr/customer/:id/export` previously ran seven un-`limit`ed parallel
   `findAll`s and held the entire result set in memory — an OOM/DoS vector for

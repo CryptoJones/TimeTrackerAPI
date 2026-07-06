@@ -1867,8 +1867,22 @@ const spec = {
                 parameters: [{ name: 'token', in: 'query', required: true, schema: { type: 'string' } }],
                 responses: {
                     200: { description: 'Read-only invoice projection (totals, balance, customer name)' },
-                    401: { description: 'Invalid or expired link' },
+                    401: { description: 'Invalid, expired, or revoked link' },
                     404: { description: 'Invoice not found' },
+                    503: { description: 'SHARE_SECRET not configured' },
+                },
+            },
+        },
+        '/v1/share/revoke': {
+            post: {
+                summary: 'Revoke a previously-minted share link before its exp (#4)',
+                security: [{ authKey: [] }],
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { token: { type: 'string', description: 'The share token to revoke.' } }, required: ['token'] } } } },
+                responses: {
+                    200: { description: 'Link revoked (idempotent)' },
+                    400: { description: 'Invalid, expired, or non-revocable (legacy, no jti) token' },
+                    403: { description: 'Auth failure' },
+                    404: { description: 'Not found / cross-tenant' },
                     503: { description: 'SHARE_SECRET not configured' },
                 },
             },

@@ -989,6 +989,13 @@ router.get(
     v.query(shareSchemas.shareViewQuery),
     share.viewInvoice,
 );
+// Revoke a minted link before its exp (#4). Distinct path (not
+// /invoice/:id) so it never collides with the mint route's :id param.
+router.post(
+    '/v1/share/revoke',
+    v.body(shareSchemas.shareRevokeBody),
+    share.revokeInvoiceShare,
+);
 
 // v1 approval-chain routes (multi-level approval routing, #443).
 // GET /:id/next resolves the next required level/role.
