@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Shareable client-facing invoice links** (#438). `POST /v1/share/invoice/{id}`
+  mints a **signed, expiring** link (HS256 JWT via `jwt.js`, keyed by the
+  `SHARE_SECRET` env var; default 7-day, max 90-day lifetime) for one of
+  the tenant's invoices. `GET /v1/share/invoice?token=…` is **public — no
+  API key** — and returns a read-only, client-safe projection (totals,
+  collected, balance, customer name; internal fields withheld) authorized
+  by the signed token alone. Both 503 when `SHARE_SECRET` is unset. Pure
+  `share-link.js` (TTL policy + projection); no new tables.
 - **Payroll export** (#456). `GET /v1/payroll/export` produces a
   payroll-ready **CSV** of completed worker hours over a pay period
   (`from`/`to`) — per worker: total / billable / non-billable hours and a
