@@ -1426,6 +1426,55 @@ const spec = {
                 responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
             },
         },
+        '/v1/apikey': {
+            post: {
+                summary: 'Provision a new API key for a company (master only)',
+                security: [{ authKey: [] }],
+                responses: {
+                    201: { description: 'Created — returns the raw key ONCE (only its hash is stored)' },
+                    400: { description: 'Validation error' },
+                    403: { description: 'Not a master key' },
+                },
+            },
+        },
+        '/v1/apikey/bycompany/{id}': {
+            get: {
+                summary: "List a company's API keys — metadata only (master only)",
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer' } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer' } },
+                ],
+                responses: { 200: { description: 'Found (paginated; never returns the key hash)' }, 403: { description: 'Not a master key' } },
+            },
+        },
+        '/v1/apikey/{id}/rotate': {
+            post: {
+                summary: 'Rotate a key in place — old key invalidated (master only)',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: {
+                    200: { description: 'Rotated — returns the new raw key ONCE' },
+                    403: { description: 'Not a master key' },
+                    404: { description: 'Not found' },
+                },
+            },
+        },
+        '/v1/apikey/{id}': {
+            get: {
+                summary: 'Fetch API key metadata (master only; never the hash)',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found' }, 403: { description: 'Not a master key' }, 404: { description: 'Not found' } },
+            },
+            delete: {
+                summary: 'Revoke an API key (master only)',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Revoked' }, 403: { description: 'Not a master key' }, 404: { description: 'Not found' } },
+            },
+        },
         '/v1/recurringinvoice': {
             post: {
                 summary: 'Create a recurring invoice schedule',
