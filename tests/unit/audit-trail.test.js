@@ -14,6 +14,16 @@ describe('audit-trail (#462)', () => {
         expect(entityIdOf('')).toBeNull();
     });
 
+    test('entityIdOf captures the subject id of a nested action (GDPR erase/export)', () => {
+        // The right-to-erasure/export path carries the customer id two
+        // segments deep; it must be recorded so the DCAA trail names the
+        // data subject (previously logged as null).
+        expect(entityIdOf('/v1/gdpr/customer/123/erase')).toBe(123);
+        expect(entityIdOf('/v1/gdpr/customer/7/export')).toBe(7);
+        // A `by*` list qualifier is still NOT treated as a record id.
+        expect(entityIdOf('/v1/customer/bycompany/5')).toBeNull();
+    });
+
     test('diffFields reports changed / added / removed fields', () => {
         expect(diffFields({ a: 1, b: 2 }, { a: 1, b: 3 })).toEqual({ b: { from: 2, to: 3 } });
         expect(diffFields({ a: 1 }, { a: 1, b: 5 })).toEqual({ b: { from: null, to: 5 } });
