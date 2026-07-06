@@ -1378,6 +1378,54 @@ const spec = {
                 },
             },
         },
+        '/v1/retainer': {
+            post: {
+                summary: 'Open a retainer for a customer',
+                security: [{ authKey: [] }],
+                responses: { 201: { description: 'Created' }, 400: { description: 'Validation error or bad retCustId' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/retainer/bycustomer/{id}': {
+            get: {
+                summary: "List a customer's retainers",
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer' } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer' } },
+                ],
+                responses: { 200: { description: 'Found (paginated)' }, 404: { description: 'Customer not found / cross-tenant' } },
+            },
+        },
+        '/v1/retainer/{id}/drawdown': {
+            post: {
+                summary: 'Draw an amount down from a retainer',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { amount: { type: 'number' } }, required: ['amount'] } } } },
+                responses: { 200: { description: 'Drawn down' }, 400: { description: 'Bad amount' }, 404: { description: 'Not found' }, 409: { description: 'Exceeds balance' } },
+            },
+        },
+        '/v1/retainer/{id}': {
+            get: {
+                summary: 'Fetch a retainer',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found' }, 404: { description: 'Not found' } },
+            },
+            patch: {
+                summary: 'Update a retainer note',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Updated' }, 400: { description: 'Nothing to update' }, 404: { description: 'Not found' } },
+            },
+            delete: {
+                summary: 'Archive a retainer',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
+            },
+        },
         '/v1/task': {
             post: {
                 summary: 'Create a task / activity under a job',

@@ -69,6 +69,7 @@ db.InventoryTransaction = require('../models/inventorytransaction.model.js')(seq
 db.Expense = require('../models/expense.model.js')(sequelize, Sequelize);
 db.AuditLog = require('../models/auditlog.model.js')(sequelize, Sequelize);
 db.Task = require('../models/task.model.js')(sequelize, Sequelize);
+db.Retainer = require('../models/retainer.model.js')(sequelize, Sequelize);
 
 // ----------------------------------------------------------------------
 // Associations — centralized so the relationship graph is visible
@@ -191,5 +192,9 @@ db.AuditLog.belongsTo(db.Company, { foreignKey: 'alogCompId', as: 'company' });
 // Task → Job (taskJobId): a unit of work / activity under a project (#407).
 db.Job.hasMany(db.Task,   { foreignKey: 'taskJobId', as: 'tasks' });
 db.Task.belongsTo(db.Job, { foreignKey: 'taskJobId', as: 'job' });
+
+// Retainer → Customer (retCustId): a client prepayment (#426).
+db.Customer.hasMany(db.Retainer,   { foreignKey: 'retCustId', as: 'retainers' });
+db.Retainer.belongsTo(db.Customer, { foreignKey: 'retCustId', as: 'customer' });
 
 module.exports = db;

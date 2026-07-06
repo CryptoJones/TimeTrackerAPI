@@ -31,6 +31,7 @@ const report = require('../controllers/reportcontroller.js');
 const expense = require('../controllers/expensecontroller.js');
 const auditlog = require('../controllers/auditlogcontroller.js');
 const task = require('../controllers/taskcontroller.js');
+const retainer = require('../controllers/retainercontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -52,6 +53,7 @@ const reportSchemas = require('../schemas/report.schema.js');
 const expenseSchemas = require('../schemas/expense.schema.js');
 const auditlogSchemas = require('../schemas/auditlog.schema.js');
 const taskSchemas = require('../schemas/task.schema.js');
+const retainerSchemas = require('../schemas/retainer.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -703,6 +705,41 @@ router.delete(
     '/v1/inventorytransaction/:id',
     v.params(inventoryTransactionSchemas.intIdParam),
     inventoryTransaction.remove,
+);
+
+// v1 retainer routes (client prepayments, #426).
+router.post(
+    '/v1/retainer',
+    v.body(retainerSchemas.createRetainerBody),
+    retainer.create,
+);
+router.get(
+    '/v1/retainer/bycustomer/:id',
+    v.params(retainerSchemas.intIdParam),
+    v.query(retainerSchemas.listByCustomerQuery),
+    retainer.listByCustomer,
+);
+router.post(
+    '/v1/retainer/:id/drawdown',
+    v.params(retainerSchemas.intIdParam),
+    v.body(retainerSchemas.drawdownBody),
+    retainer.drawdown,
+);
+router.get(
+    '/v1/retainer/:id',
+    v.params(retainerSchemas.intIdParam),
+    retainer.getById,
+);
+router.patch(
+    '/v1/retainer/:id',
+    v.params(retainerSchemas.intIdParam),
+    v.body(retainerSchemas.updateRetainerBody),
+    retainer.update,
+);
+router.delete(
+    '/v1/retainer/:id',
+    v.params(retainerSchemas.intIdParam),
+    retainer.remove,
 );
 
 // v1 task routes (activities under jobs, #407).

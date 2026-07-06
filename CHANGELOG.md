@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Retainer management** (#426). A new customer-scoped `Retainer`
+  entity (`retAmount` deposit + `retBalance` remaining), migration
+  `20260612000000`. Full REST: `POST /v1/retainer`,
+  `GET /v1/retainer/bycustomer/{id}`, `GET|PATCH|DELETE /v1/retainer/{id}`,
+  plus `POST /v1/retainer/{id}/drawdown` which reduces the balance
+  exact-cent and **409s on overdraw**. Secure-404 scoped through the
+  customer's company; soft-delete via `retArch`.
 - **Copy-previous time entry** (#399). `POST /v1/timeentry/{id}/copy`
   clones an entry's "what" — customer, worker, job, billing type,
   description, billable flag, tags — into a **fresh** entry (always
