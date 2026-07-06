@@ -298,6 +298,16 @@ report a vulnerability, see [`SECURITY.md`](SECURITY.md).
 
 ---
 
+## Design & internals
+
+For how the pieces fit together — the request lifecycle, the multi-tenant
+auth model, the increment-layer schema convention, the controller/service
+split, and the testing strategy — see
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+[`CONTRIBUTING.md`](CONTRIBUTING.md) covers the contribution workflow.
+
+---
+
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE).

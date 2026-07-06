@@ -93,6 +93,10 @@ forks.
 
 ## Where to start
 
+- Read [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the system
+  design: the request lifecycle, the multi-tenant auth model, the
+  increment-layer schema convention, the controller/service split, and the
+  testing strategy — the patterns every change is expected to follow.
 - Look at issues labelled `good first issue` on either forge.
 - Run the test suite locally and read the test file headers — they
   document the conventions used across the codebase (vi.mock
