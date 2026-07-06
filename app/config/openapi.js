@@ -1689,6 +1689,34 @@ const spec = {
                 },
             },
         },
+        '/v1/payroll/summary': {
+            get: {
+                summary: 'Per-worker payroll totals for a pay period, as JSON (#456)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'from', in: 'query', required: true, schema: { type: 'string', format: 'date' } },
+                    { name: 'to', in: 'query', required: true, schema: { type: 'string', format: 'date' } },
+                    { name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys.' },
+                ],
+                responses: { 200: { description: 'Payroll summary — rows (hours + labor cost per worker) + totals' }, 400: { description: 'Missing from/to; master keys must specify companyId' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/payroll/export': {
+            get: {
+                summary: 'Per-worker payroll totals for a pay period, as a payroll-ready CSV (#456)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'from', in: 'query', required: true, schema: { type: 'string', format: 'date' } },
+                    { name: 'to', in: 'query', required: true, schema: { type: 'string', format: 'date' } },
+                    { name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys.' },
+                ],
+                responses: {
+                    200: { description: 'CSV (Content-Disposition attachment); OWASP formula-injection safe', content: { 'text/csv': { schema: { type: 'string' } } } },
+                    400: { description: 'Missing from/to; master keys must specify companyId' },
+                    403: { description: 'Auth failure' },
+                },
+            },
+        },
         '/v1/rateschedule': {
             post: {
                 summary: 'Create an effective-dated rate (#414)',

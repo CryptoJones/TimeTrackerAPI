@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Payroll export** (#456). `GET /v1/payroll/export` produces a
+  payroll-ready **CSV** of completed worker hours over a pay period
+  (`from`/`to`) — per worker: total / billable / non-billable hours and a
+  labor-cost total (hours × `workerCostRate`, exact money) — reusing the
+  OWASP formula-injection-safe cell escaper. `GET /v1/payroll/summary`
+  returns the same aggregation as JSON. Pure `payroll.js` aggregator;
+  company-scoped; no new tables.
 - **GDPR data export & erasure** (#461). `GET /v1/gdpr/customer/{id}/export`
   returns a portable JSON bundle of everything held about a customer
   (record + invoices, jobs, expenses, time entries, payments, retainers,
