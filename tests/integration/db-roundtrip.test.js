@@ -293,7 +293,8 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         const { streamRelationArray } = require('../../app/services/gdpr.js');
         const company = await db.Company.create({ compName: `${SENTINEL}-gdpr`, compArch: false });
         const customer = await db.Customer.create({
-            custCompanyName: `${SENTINEL}-cust`, custCompId: company.compId, custArch: false,
+            custCompanyName: `${SENTINEL}-cust`, custFName: 'Ex', custLName: 'Port',
+            custCompId: company.compId, custArch: false,
         });
         const made = [];
         for (let i = 0; i < 5; i++) {
