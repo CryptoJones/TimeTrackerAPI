@@ -215,6 +215,20 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         expect(Array.isArray(rows)).toBe(true);
     });
 
+    test('Retainer table exists with a customer include (#426)', async () => {
+        if (!connected) return;
+        const rows = await db.Retainer.findAll({
+            attributes: ['retId', 'retCustId', 'retAmount', 'retBalance'],
+            limit: 1,
+        });
+        expect(Array.isArray(rows)).toBe(true);
+        const withCustomer = await db.Retainer.findAll({
+            limit: 1,
+            include: [{ model: db.Customer, as: 'customer', required: false }],
+        });
+        expect(Array.isArray(withCustomer)).toBe(true);
+    });
+
     test('Task table exists with a job include (#407)', async () => {
         if (!connected) return;
         const rows = await db.Task.findAll({
