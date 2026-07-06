@@ -109,6 +109,21 @@ const approvalBody = z.object({
     message: 'Body must be { action: submit|approve|reject }.',
 });
 
+/**
+ * POST /v1/timeentry/:id/copy body — optional new time for the copy
+ * (#399). Omit both to start a fresh in-flight entry now.
+ */
+const copyTimeEntryBody = z.object({
+    teStartedAt: isoDatetime.optional(),
+    teEndedAt: isoDatetime.optional(),
+}).strict({
+    message: 'Unexpected field in body. Whitelist: teStartedAt, teEndedAt.',
+}).refine(
+    (data) => !(data.teStartedAt && data.teEndedAt) ||
+        new Date(data.teEndedAt) >= new Date(data.teStartedAt),
+    { message: 'teEndedAt must be at or after teStartedAt.', path: ['teEndedAt'] },
+);
+
 const listByCompanyQuery = z.object({
     customerId: z.coerce.number().int().positive().optional(),
     tag: z.string().min(1).max(64).optional(),
@@ -146,6 +161,7 @@ module.exports = {
     updateTimeEntryBody,
     startTimerBody,
     approvalBody,
+    copyTimeEntryBody,
     listByCompanyQuery,
     exportCsvQuery,
 };

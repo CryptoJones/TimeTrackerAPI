@@ -836,6 +836,22 @@ const spec = {
                 },
             },
         },
+        '/v1/timeentry/{id}/copy': {
+            post: {
+                summary: 'Copy a time entry into a fresh entry',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                requestBody: {
+                    content: { 'application/json': { schema: { type: 'object', properties: { teStartedAt: { type: 'string', format: 'date-time' }, teEndedAt: { type: 'string', format: 'date-time' } } } } },
+                },
+                responses: {
+                    201: { description: 'Copied' },
+                    400: { description: 'Inverted range' },
+                    404: { description: 'Not found' },
+                    409: { description: 'Copy lands in a locked period' },
+                },
+            },
+        },
         '/v1/timeentry/{id}/approval': {
             post: {
                 summary: 'Advance a time entry through the approval workflow',

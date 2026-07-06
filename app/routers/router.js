@@ -175,6 +175,13 @@ router.post(
     v.body(timeEntrySchemas.approvalBody),
     timeEntry.approval,
 );
+// Copy-previous (#399): clone an entry's metadata into a fresh entry.
+router.post(
+    '/v1/timeentry/:id/copy',
+    v.params(timeEntrySchemas.intIdParam),
+    v.body(timeEntrySchemas.copyTimeEntryBody),
+    timeEntry.copy,
+);
 // Literal paths declared BEFORE /:id so express doesn't try to
 // parse "export.csv" / "bycompany" as a customer id.
 router.get(
