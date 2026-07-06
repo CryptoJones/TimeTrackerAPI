@@ -68,6 +68,7 @@ db.PurchaseOrderLine = require('../models/purchaseorderline.model.js')(sequelize
 db.InventoryTransaction = require('../models/inventorytransaction.model.js')(sequelize, Sequelize);
 db.Expense = require('../models/expense.model.js')(sequelize, Sequelize);
 db.AuditLog = require('../models/auditlog.model.js')(sequelize, Sequelize);
+db.Task = require('../models/task.model.js')(sequelize, Sequelize);
 
 // ----------------------------------------------------------------------
 // Associations — centralized so the relationship graph is visible
@@ -186,5 +187,9 @@ db.Expense.belongsTo(db.Invoice,  { foreignKey: 'expInvId',  as: 'invoice' });
 // AuditLog → Company (alogCompId): the actor's company (#460).
 db.Company.hasMany(db.AuditLog,   { foreignKey: 'alogCompId', as: 'auditLogs' });
 db.AuditLog.belongsTo(db.Company, { foreignKey: 'alogCompId', as: 'company' });
+
+// Task → Job (taskJobId): a unit of work / activity under a project (#407).
+db.Job.hasMany(db.Task,   { foreignKey: 'taskJobId', as: 'tasks' });
+db.Task.belongsTo(db.Job, { foreignKey: 'taskJobId', as: 'job' });
 
 module.exports = db;

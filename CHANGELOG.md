@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Tasks / activities under jobs** (#407). A new `Task` model
+  (`taskName`, `taskDesc`) under a Job, migration `20260611000000`. Full
+  REST: `POST /v1/task`, `GET /v1/task/byjob/{id}` (paginated),
+  `GET|PATCH|DELETE /v1/task/{id}`, all scoped through the job's company
+  (`getCompanyIdByJobId`) with the same secure-404 + soft-delete
+  (`taskArch`) as the other entities. Foundation for per-task rates and
+  task-level reporting.
 - **Client-specific rate cards** (#413). `Customer.custDefaultRate`
   (migration `20260610000000`, settable on customer create/PATCH) is the
   **client tier** of rate resolution in `rate.js`: per-entry override →
