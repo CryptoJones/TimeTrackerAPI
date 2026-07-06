@@ -38,6 +38,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Outbound webhooks** (#69). A new company-scoped `Webhook` registry
+  (URL, event, optional signing secret, active flag), migration
+  `20260618000000`. Full REST on `/v1/webhook` (create, `bycompany` list,
+  get/patch/delete) plus `POST /{id}/ping` which delivers a test event and
+  reports the outcome. Deliveries are signed HMAC-SHA256
+  (`X-Webhook-Signature`) via a pure `webhook-signer.js`, sent best-effort
+  through a timeout-bounded `webhook-delivery.js` (global `fetch`). The
+  **secret is write-only** — no endpoint returns it. Auto-firing on
+  domain events (invoice.created, payment.recorded, timeentry.approved) is
+  a bounded follow-up.
 - **Report export beyond CSV — revenue PDF** (#433). `GET
   /v1/report/revenue.pdf` streams the revenue summary as a branded,
   printable PDF (company header, totals, by-customer and by-month tables)

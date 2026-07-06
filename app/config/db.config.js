@@ -73,6 +73,7 @@ db.Retainer = require('../models/retainer.model.js')(sequelize, Sequelize);
 db.Phase = require('../models/phase.model.js')(sequelize, Sequelize);
 db.Role = require('../models/role.model.js')(sequelize, Sequelize);
 db.RecurringInvoice = require('../models/recurringinvoice.model.js')(sequelize, Sequelize);
+db.Webhook = require('../models/webhook.model.js')(sequelize, Sequelize);
 
 // ----------------------------------------------------------------------
 // Associations — centralized so the relationship graph is visible
@@ -218,5 +219,9 @@ db.Worker.belongsTo(db.Role, { foreignKey: 'workerRoleId', as: 'role' });
 // RecurringInvoice → Customer (recinvCustId): a recurring billing schedule (#425).
 db.Customer.hasMany(db.RecurringInvoice,   { foreignKey: 'recinvCustId', as: 'recurringInvoices' });
 db.RecurringInvoice.belongsTo(db.Customer, { foreignKey: 'recinvCustId', as: 'customer' });
+
+// Webhook → Company (whkCompId): an outbound event subscription (#69).
+db.Company.hasMany(db.Webhook,  { foreignKey: 'whkCompId', as: 'webhooks' });
+db.Webhook.belongsTo(db.Company, { foreignKey: 'whkCompId', as: 'company' });
 
 module.exports = db;

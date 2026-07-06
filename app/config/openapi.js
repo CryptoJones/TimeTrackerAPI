@@ -1426,6 +1426,57 @@ const spec = {
                 responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
             },
         },
+        '/v1/webhook': {
+            post: {
+                summary: 'Register an outbound webhook',
+                security: [{ authKey: [] }],
+                responses: {
+                    201: { description: 'Registered (secret is never returned)' },
+                    400: { description: 'Validation error; master keys must specify whkCompId' },
+                    403: { description: 'Auth failure' },
+                },
+            },
+        },
+        '/v1/webhook/bycompany/{id}': {
+            get: {
+                summary: "List a company's webhooks (metadata only)",
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer' } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer' } },
+                ],
+                responses: { 200: { description: 'Found (paginated; never returns the secret)' }, 403: { description: 'Cross-tenant' } },
+            },
+        },
+        '/v1/webhook/{id}/ping': {
+            post: {
+                summary: 'Deliver a test "ping" event to the endpoint',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Delivery attempted (returns {delivered, status, error})' }, 404: { description: 'Not found' } },
+            },
+        },
+        '/v1/webhook/{id}': {
+            get: {
+                summary: 'Fetch a webhook (metadata only)',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found' }, 404: { description: 'Not found' } },
+            },
+            patch: {
+                summary: 'Update a webhook (url / event / secret / active)',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Updated' }, 400: { description: 'Validation error' }, 404: { description: 'Not found' } },
+            },
+            delete: {
+                summary: 'Archive a webhook',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
+            },
+        },
         '/v1/apikey': {
             post: {
                 summary: 'Provision a new API key for a company (master only)',

@@ -215,6 +215,20 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         expect(Array.isArray(rows)).toBe(true);
     });
 
+    test('Webhook table exists with a company include (#69)', async () => {
+        if (!connected) return;
+        const rows = await db.Webhook.findAll({
+            attributes: ['whkId', 'whkCompId', 'whkUrl', 'whkEvent', 'whkActive'],
+            limit: 1,
+        });
+        expect(Array.isArray(rows)).toBe(true);
+        const withCompany = await db.Webhook.findAll({
+            limit: 1,
+            include: [{ model: db.Company, as: 'company', required: false }],
+        });
+        expect(Array.isArray(withCompany)).toBe(true);
+    });
+
     test('RecurringInvoice table exists with a customer include (#425)', async () => {
         if (!connected) return;
         const rows = await db.RecurringInvoice.findAll({
