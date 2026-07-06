@@ -28,6 +28,23 @@ function fmtMoney(n, currency) {
     return sym ? sym + money.toFixedString(n) : code + ' ' + money.toFixedString(n);
 }
 
+// Bound the text handed to pdfkit. A very long — especially unbroken —
+// string makes pdfkit's word-fit measurement SUPERLINEAR, freezing the
+// single-threaded event loop for seconds per PDF. `jobDesc` is
+// caller-controlled (up to 10k chars) and the line count is uncapped, so
+// one GET /v1/invoice/:id/pdf could otherwise stall the whole server
+// (100 long-description lines measured at ~6s of frozen loop). A printed
+// invoice line needs only a short label; excess is truncated with an
+// ellipsis and, past MAX_PDF_LINES, summarised.
+const MAX_DESC_CHARS = 300;
+const MAX_NOTES_CHARS = 4000;
+const MAX_PDF_LINES = 1000;
+
+function clip(val, max) {
+    const s = val == null ? '' : String(val);
+    return s.length > max ? s.slice(0, max - 1) + '…' : s;
+}
+
 function drawInvoice(doc, data) {
     const company = data.company || {};
     const customer = data.customer || {};
@@ -83,9 +100,14 @@ function drawInvoice(doc, data) {
         doc.text(usd(sum), 380, y, { align: 'right', width: 165 });
         y += 18;
     } else {
-        for (const line of lines) {
-            doc.text(String(line.description || ''), 50, y, { width: 320 });
+        for (const line of lines.slice(0, MAX_PDF_LINES)) {
+            doc.text(clip(line.description, MAX_DESC_CHARS), 50, y, { width: 320 });
             doc.text(usd(line.amount), 380, y, { align: 'right', width: 165 });
+            y += 18;
+        }
+        if (lines.length > MAX_PDF_LINES) {
+            doc.text(`… and ${lines.length - MAX_PDF_LINES} more line item(s) not shown — see the detailed export.`,
+                50, y, { width: 495 });
             y += 18;
         }
     }
@@ -113,7 +135,7 @@ function drawInvoice(doc, data) {
         y += 24;
         doc.fillColor('#000').fontSize(9).font('Helvetica-Bold').text('NOTES', 50, y);
         y += 14;
-        doc.fontSize(9).font('Helvetica').text(String(invoice.notes), 50, y, { width: 495 });
+        doc.fontSize(9).font('Helvetica').text(clip(invoice.notes, MAX_NOTES_CHARS), 50, y, { width: 495 });
     }
 
     // ---- Footer: company narrative/branding, else a default (#423) ----
@@ -143,4 +165,4 @@ function renderInvoicePdf(data) {
     });
 }
 
-module.exports = { renderInvoicePdf };
+module.exports = { renderInvoicePdf, clip, MAX_DESC_CHARS, MAX_NOTES_CHARS, MAX_PDF_LINES };

@@ -153,6 +153,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sentinel), and `attachAuth` maps them to **503 Service Unavailable**.
 
 ### Security
+- **Bound invoice-PDF rendering — stop a synchronous event-loop-stall
+  DoS.** `drawInvoice` rendered every line item synchronously with no cap,
+  and a long unbroken `jobDesc` (up to 10 000 chars) triggers pdfkit's
+  **superlinear** word-fit measurement — 100 such lines froze the
+  single-threaded event loop for ~6 s per `GET /v1/invoice/:id/pdf`,
+  stalling the **whole server** (including `/healthz`) from one
+  authenticated request; the rate limiter doesn't help because one request
+  blocks. Each rendered description / notes field is now clipped
+  (`MAX_DESC_CHARS` / `MAX_NOTES_CHARS`) and the line count capped
+  (`MAX_PDF_LINES`, the remainder summarised), bounding render time to well
+  under a second (measured 5.85 s → 0.13 s). Found by an adversarial
+  invoice-PDF review.
 - **Mailer rejects CR/LF in `subject` / `from` (email header-injection
   guard)** (#68). `sendMail`'s validator checked the `to` address shape but
   not `subject` or `from` for line breaks, so a user-controlled value — a
