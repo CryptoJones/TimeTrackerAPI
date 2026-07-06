@@ -1896,6 +1896,18 @@ const spec = {
                 },
             },
         },
+        '/v1/notification/dispatch': {
+            post: {
+                summary: 'Dispatch a Slack/Teams notification (#454)',
+                security: [{ authKey: [] }],
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { channel: { type: 'string', enum: ['slack', 'teams'] }, text: { type: 'string' } }, required: ['channel', 'text'] } } } },
+                responses: {
+                    200: { description: 'Dispatched (or captured) — returns the active transport name' },
+                    400: { description: 'Invalid channel / text' },
+                    403: { description: 'Auth failure' },
+                },
+            },
+        },
         '/v1/webhook': {
             post: {
                 summary: 'Register an outbound webhook',

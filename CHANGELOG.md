@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Slack / Teams notifications** (#454). `POST /v1/notification/dispatch`
+  `{ channel, text }` sends a notification to Slack or Teams via a pure
+  `notifier.js` that mirrors the mailer's transport abstraction — the
+  default is a no-network **capture** transport (dev/CI/unconfigured-prod
+  safe); a real incoming-webhook transport (`SLACK_WEBHOOK_URL` /
+  `TEAMS_WEBHOOK_URL`) drops in behind the same `send()` interface. Gives
+  the reminder features a delivery channel beyond email (#68). Requires a
+  valid API key; no new tables.
 - **Capacity & resource planning** (#459). `GET /v1/capacity/summary`
   reports, per worker over a `from`/`to` period, **target hours** (each
   worker's `workerTargetMinsPerWeek` × weeks in the period) vs. **logged
