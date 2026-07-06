@@ -1333,6 +1333,18 @@ const spec = {
                 },
             },
         },
+        '/v1/invoice/payment-reminders': {
+            post: {
+                summary: 'Email a dunning digest of overdue invoices (#10)',
+                security: [{ authKey: [] }],
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { to: { type: 'string', format: 'email' }, olderThanDays: { type: 'integer' }, companyId: { type: 'integer' } }, required: ['to'] } } } },
+                responses: {
+                    200: { description: 'Digest sent (or none overdue) — {overdue, totalOutstanding, reminded, to}' },
+                    400: { description: 'Master keys must specify companyId / invalid body' },
+                    403: { description: 'Auth failure' },
+                },
+            },
+        },
         '/v1/invoice/rollup': {
             post: {
                 summary: "Generate an invoice from a customer's billable time",

@@ -121,8 +121,18 @@ const pdfQuery = z.object({
     message: 'Unexpected query parameter. Allowed: format.',
 });
 
+/** POST /v1/invoice/payment-reminders body (#10). */
+const paymentRemindersBody = z.object({
+    to: z.string().email(),
+    olderThanDays: z.coerce.number().int().nonnegative().max(3650).optional(),
+    companyId: z.coerce.number().int().positive().optional(),
+}).strict({
+    message: 'Unexpected field in body. Whitelist: to, olderThanDays, companyId.',
+});
+
 module.exports = {
     intIdParam,
+    paymentRemindersBody,
     createInvoiceBody,
     updateInvoiceBody,
     listByCustomerQuery,
