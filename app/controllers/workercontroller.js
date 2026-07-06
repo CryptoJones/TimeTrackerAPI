@@ -69,6 +69,16 @@ exports.create = async (req, res) => {
             });
         }
         payload.workerCompId = authKeyCompanyId;
+        // The worker's rate-source FKs must belong to the caller's company —
+        // they were previously unchecked, so a scoped caller could point a
+        // worker at another tenant's BillingType/Role and bill at that
+        // foreign rate (rate.js reads worker.defaultBillingType/role).
+        if (!(await auth.billingTypeFkBelongsTo(payload.workerDefaultBillType, authKeyCompanyId))) {
+            return res.status(400).json({ message: "Invalid billing type." });
+        }
+        if (!(await auth.roleFkBelongsTo(payload.workerRoleId, authKeyCompanyId))) {
+            return res.status(400).json({ message: "Invalid role." });
+        }
     } else {
         if (payload.workerCompId === undefined || Number(payload.workerCompId) <= 0) {
             return res.status(400).json({
@@ -223,6 +233,18 @@ exports.update = async (req, res) => {
     if (Object.keys(updates).length === 0) {
         return res.status(400).json({ message: "No updatable fields supplied." });
     }
+    // A changed rate-source FK must belong to the caller's company.
+    if (!isMaster) {
+        const companyId = await CompanyIdFromReq(req, authKey);
+        if (updates.workerDefaultBillType !== undefined
+            && !(await auth.billingTypeFkBelongsTo(updates.workerDefaultBillType, companyId))) {
+            return res.status(400).json({ message: "Invalid billing type." });
+        }
+        if (updates.workerRoleId !== undefined
+            && !(await auth.roleFkBelongsTo(updates.workerRoleId, companyId))) {
+            return res.status(400).json({ message: "Invalid role." });
+        }
+    }
 
     try {
         await worker.update(updates);
@@ -281,6 +303,10 @@ exports.bulkCreate = makeBulkCreate({
     archField: 'workerArch',
     bodyKey: 'workers',
     createdKey: 'workers',
+    secondaryFk: [
+        { field: 'workerDefaultBillType', belongsTo: auth.billingTypeFkBelongsTo, label: 'billing type' },
+        { field: 'workerRoleId', belongsTo: auth.roleFkBelongsTo, label: 'role' },
+    ],
 });
 
 exports._internals = { IsMaster, GetCompanyId };

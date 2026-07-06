@@ -257,7 +257,7 @@ exports.bulkCreate = makeBulkCreateIndirect({
     archField: 'injbArch',
     bodyKey: 'invoiceJobs',
     createdKey: 'invoiceJobs',
-    secondaryFk: { field: 'injbInvId', belongsTo: auth.invoiceFkBelongsTo },
+    secondaryFk: { field: 'injbInvId', belongsTo: auth.invoiceFkBelongsTo, label: 'invoice' },
 });
 
 exports._internals = { IsMaster, GetCompanyId, GetCompanyIdByJobId };

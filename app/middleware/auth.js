@@ -383,6 +383,53 @@ async function invoiceFkBelongsTo(invIdValue, companyId) {
 }
 
 /**
+ * Resolve a BillingType id to its owning company (btCompId), and a Role id
+ * to its owning company (roleCompId). Used to tenant-check the SECONDARY FKs
+ * a Worker carries — `workerDefaultBillType` (→ BillingType) and
+ * `workerRoleId` (→ Role) — which were unchecked, so a scoped caller could
+ * point a worker at another tenant's rate card (and `rate.js` would then bill
+ * at that foreign rate). Return -1 for missing/archived.
+ */
+async function getCompanyIdByBtId(btId) {
+    const idStr = btId == null ? '' : String(btId);
+    if (idStr.length === 0 || idStr === '0') return -1;
+    try {
+        const row = await getDb().BillingType.findByPk(btId, { attributes: ['btCompId'] });
+        if (!row) return -1;
+        const cid = row.btCompId;
+        return typeof cid === 'number' && cid > 0 ? cid : -1;
+    } catch (error) {
+        log.error({ err: error }, 'auth.getCompanyIdByBtId query failed');
+        return -1;
+    }
+}
+
+async function getCompanyIdByRoleId(roleId) {
+    const idStr = roleId == null ? '' : String(roleId);
+    if (idStr.length === 0 || idStr === '0') return -1;
+    try {
+        const row = await getDb().Role.findByPk(roleId, { attributes: ['roleCompId'] });
+        if (!row) return -1;
+        const cid = row.roleCompId;
+        return typeof cid === 'number' && cid > 0 ? cid : -1;
+    } catch (error) {
+        log.error({ err: error }, 'auth.getCompanyIdByRoleId query failed');
+        return -1;
+    }
+}
+
+/** True if the (optional) FK is absent/null or belongs to `companyId`. */
+async function billingTypeFkBelongsTo(btIdValue, companyId) {
+    if (btIdValue == null) return true;
+    return (await getCompanyIdByBtId(btIdValue)) === companyId;
+}
+
+async function roleFkBelongsTo(roleIdValue, companyId) {
+    if (roleIdValue == null) return true;
+    return (await getCompanyIdByRoleId(roleIdValue)) === companyId;
+}
+
+/**
  * Express middleware: ensures the authKey header is present and
  * stashes it on req.authKey. Does NOT validate the key against the
  * database — leaves that to controllers that may have different
@@ -480,6 +527,10 @@ module.exports = {
     inventoryFkBelongsTo,
     getCompanyIdByInvId,
     invoiceFkBelongsTo,
+    getCompanyIdByBtId,
+    getCompanyIdByRoleId,
+    billingTypeFkBelongsTo,
+    roleFkBelongsTo,
     requireAuthKey,
     attachAuth,
     requireAuth,

@@ -254,7 +254,7 @@ exports.bulkCreate = makeBulkCreate({
     archField: 'invtArch',
     bodyKey: 'inventoryTransactions',
     createdKey: 'inventoryTransactions',
-    secondaryFk: { field: 'invtInitId', belongsTo: auth.inventoryFkBelongsTo },
+    secondaryFk: { field: 'invtInitId', belongsTo: auth.inventoryFkBelongsTo, label: 'inventory item' },
 });
 
 exports._internals = { IsMaster, GetCompanyId };

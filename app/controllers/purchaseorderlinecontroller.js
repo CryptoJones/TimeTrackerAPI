@@ -244,7 +244,7 @@ exports.bulkCreate = makeBulkCreateIndirect({
     archField: 'polArch',
     bodyKey: 'purchaseOrderLines',
     createdKey: 'purchaseOrderLines',
-    secondaryFk: { field: 'polInvtId', belongsTo: auth.inventoryFkBelongsTo },
+    secondaryFk: { field: 'polInvtId', belongsTo: auth.inventoryFkBelongsTo, label: 'inventory item' },
 });
 
 exports._internals = { IsMaster, GetCompanyId, GetCompanyIdByPohId };

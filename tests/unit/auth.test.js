@@ -32,6 +32,8 @@ beforeEach(async () => {
         Job: { findByPk: vi.fn() },
         InventoryItem: { findByPk: vi.fn() },
         Invoice: { findByPk: vi.fn() },
+        BillingType: { findByPk: vi.fn() },
+        Role: { findByPk: vi.fn() },
     };
     auth._setDbForTesting(stub);
 });
@@ -255,6 +257,35 @@ describe('auth.invoiceFkBelongsTo (InvoiceJob injbInvId guard)', () => {
         expect(await auth.invoiceFkBelongsTo(5, 8)).toBe(false);
         stub.Invoice.findByPk.mockResolvedValueOnce(null);
         expect(await auth.invoiceFkBelongsTo(999, 8)).toBe(false);
+    });
+});
+
+describe('auth.getCompanyIdByBtId / billingTypeFkBelongsTo (Worker rate-source guard)', () => {
+    test('resolves a billing type to its company', async () => {
+        stub.BillingType.findByPk.mockResolvedValueOnce({ btCompId: 3 });
+        expect(await auth.getCompanyIdByBtId(1)).toBe(3);
+    });
+    test('missing → -1; non-positive id → -1 without a query', async () => {
+        stub.BillingType.findByPk.mockResolvedValueOnce(null);
+        expect(await auth.getCompanyIdByBtId(1)).toBe(-1);
+        expect(await auth.getCompanyIdByBtId(0)).toBe(-1);
+    });
+    test('belongsTo: same-company true, cross-tenant false, absent true', async () => {
+        stub.BillingType.findByPk.mockResolvedValueOnce({ btCompId: 3 });
+        expect(await auth.billingTypeFkBelongsTo(1, 3)).toBe(true);
+        stub.BillingType.findByPk.mockResolvedValueOnce({ btCompId: 4 });
+        expect(await auth.billingTypeFkBelongsTo(1, 3)).toBe(false);
+        expect(await auth.billingTypeFkBelongsTo(null, 3)).toBe(true);
+    });
+});
+
+describe('auth.getCompanyIdByRoleId / roleFkBelongsTo (Worker rate-source guard)', () => {
+    test('resolves a role to its company; belongsTo enforces it', async () => {
+        stub.Role.findByPk.mockResolvedValueOnce({ roleCompId: 7 });
+        expect(await auth.getCompanyIdByRoleId(1)).toBe(7);
+        stub.Role.findByPk.mockResolvedValueOnce({ roleCompId: 8 });
+        expect(await auth.roleFkBelongsTo(1, 7)).toBe(false);
+        expect(await auth.roleFkBelongsTo(null, 7)).toBe(true);
     });
 });
 

@@ -241,7 +241,7 @@ exports.bulkCreate = makeBulkCreateIndirect({
     archField: 'penArch',
     bodyKey: 'productEntries',
     createdKey: 'productEntries',
-    secondaryFk: { field: 'pentInvtId', belongsTo: auth.inventoryFkBelongsTo },
+    secondaryFk: { field: 'pentInvtId', belongsTo: auth.inventoryFkBelongsTo, label: 'inventory item' },
 });
 
 exports._internals = { IsMaster, GetCompanyId, GetCompanyIdByJobId };

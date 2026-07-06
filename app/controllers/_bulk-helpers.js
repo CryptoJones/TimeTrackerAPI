@@ -33,6 +33,15 @@ const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
 
+// Normalize the optional `secondaryFk` config — a single
+// { field, belongsTo(value, compId), label } object, an array of them, or
+// undefined — to an array. A controller may need to tenant-check more than
+// one secondary FK per entry (e.g. Worker's billing-type + role).
+function normalizeSecondaryFks(secondaryFk) {
+    if (!secondaryFk) return [];
+    return Array.isArray(secondaryFk) ? secondaryFk : [secondaryFk];
+}
+
 function makeBulkCreate({
     Model,
     modelKey,
@@ -41,8 +50,8 @@ function makeBulkCreate({
     archField,
     bodyKey,
     createdKey,
-    // Optional: an inventory-item FK carried on each entry that must
-    // belong to the caller's company. { field, belongsTo(value, compId) }.
+    // Optional secondary FK(s) each entry carries that must belong to the
+    // caller's company: { field, belongsTo(value, compId), label } or an array.
     secondaryFk,
 }) {
     return async function bulkCreate(req, res) {
@@ -101,11 +110,13 @@ function makeBulkCreate({
                     });
                 }
                 p[compIdField] = authKeyCompanyId;
-                if (secondaryFk && p[secondaryFk.field] != null
-                    && !(await secondaryFk.belongsTo(p[secondaryFk.field], authKeyCompanyId))) {
-                    return res.status(400).json({
-                        message: `${bodyKey}[${i}]: invalid inventory item.`,
-                    });
+                for (const sfk of normalizeSecondaryFks(secondaryFk)) {
+                    if (p[sfk.field] != null
+                        && !(await sfk.belongsTo(p[sfk.field], authKeyCompanyId))) {
+                        return res.status(400).json({
+                            message: `${bodyKey}[${i}]: invalid ${sfk.label || 'reference'}.`,
+                        });
+                    }
                 }
             }
             // archField intentionally defaulted to false here so
@@ -254,11 +265,15 @@ function makeBulkCreateIndirect({
                 });
             }
 
-            if (!isAuthKeyMasterKey && secondaryFk && p[secondaryFk.field] != null
-                && !(await secondaryFk.belongsTo(p[secondaryFk.field], authKeyCompanyId))) {
-                return res.status(400).json({
-                    message: `${bodyKey}[${i}]: invalid inventory item.`,
-                });
+            if (!isAuthKeyMasterKey) {
+                for (const sfk of normalizeSecondaryFks(secondaryFk)) {
+                    if (p[sfk.field] != null
+                        && !(await sfk.belongsTo(p[sfk.field], authKeyCompanyId))) {
+                        return res.status(400).json({
+                            message: `${bodyKey}[${i}]: invalid ${sfk.label || 'reference'}.`,
+                        });
+                    }
+                }
             }
 
             p[archField] = false;
