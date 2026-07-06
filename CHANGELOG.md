@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Project profitability & margin** (#436). A new `Worker.workerCostRate`
+  (internal cost/hour, migration `20260614000000`) plus
+  `GET /v1/report/profitability`: per job, **revenue** (billable time
+  priced through `rate.js`) net of **cost** (all logged time × the
+  worker's cost rate) → **margin** and **margin %**, with company totals.
+  The response flags entries with no resolvable rate or no cost basis so
+  the numbers stay honest. Pure `report-profitability.js` service.
 - **Per-task rate** (#411). `Task.taskRate` + a `TimeEntry.teTaskId`
   link (migration `20260613000000`) make the task the **most-specific**
   tier of rate resolution in `rate.js`: per-entry override → **task** →
