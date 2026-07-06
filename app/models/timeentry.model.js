@@ -94,6 +94,13 @@ module.exports = (sequelize, Sequelize) => {
                 return Array.isArray(v) ? v : [];
             },
         },
+        teApprovalStatus: {
+            field: 'teApprovalStatus',
+            // Approval workflow state (#440): open → submitted →
+            // approved / rejected. Defaults 'open'.
+            type: Sequelize.TEXT,
+            defaultValue: 'open',
+        },
         teArch: {
             field: 'teArch',
             type: Sequelize.BOOLEAN,

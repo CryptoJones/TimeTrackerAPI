@@ -8,6 +8,7 @@ const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
 const { escapeCsvCell } = require('./_csv-escape.js');
 const rate = require('../services/rate.js');
+const { applyAction } = require('../services/approval.js');
 const TimeEntry = db.TimeEntry;
 
 // Auth helpers used to live inline here — they now share a single
@@ -337,6 +338,51 @@ exports.stop = async (req, res) => {
 };
 
 /**
+ * POST /v1/timeentry/:id/approval — advance an entry through the
+ * approval workflow (#440). Body { action: submit|approve|reject }.
+ * Secure-404 scoped; 409 on an illegal transition from the current state.
+ */
+exports.approval = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+
+    let entry;
+    try {
+        entry = await TimeEntry.findByPk(req.params.id);
+    } catch (error) {
+        log.error({ err: error }, 'approval: TimeEntry.findByPk failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (!entry || entry.teArch) {
+        return res.status(404).json({ message: "Not found." });
+    }
+
+    const isMaster = await IsMaster(authKey);
+    if (!isMaster) {
+        const companyId = await GetCompanyId(authKey);
+        if (companyId === -1 || entry.teCompId !== companyId) {
+            return res.status(404).json({ message: "Not found." });
+        }
+    }
+
+    const action = req.body && req.body.action;
+    const result = applyAction(entry.teApprovalStatus, action);
+    if (result.error) {
+        return res.status(409).json({ message: result.error });
+    }
+
+    try {
+        await entry.update({ teApprovalStatus: result.status });
+        return res.status(200).json({ message: "Approval updated.", timeEntry: entry });
+    } catch (error) {
+        log.error({ err: error }, 'approval: TimeEntry.update failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+};
+
+/**
  * GET /v1/timeentry/:id — fetch a single time entry by id.
  *
  * Scoped: non-master keys may only read entries in their own company.
@@ -435,6 +481,10 @@ exports.listByCompany = async (req, res) => {
     // Tag filter (#406): entries whose teTags JSONB array contains the tag.
     if (db.Sequelize && db.Sequelize.Op && typeof req.query.tag === 'string' && req.query.tag) {
         where.teTags = { [db.Sequelize.Op.contains]: [req.query.tag] };
+    }
+    // Approval-status filter (#440).
+    if (typeof req.query.approvalStatus === 'string' && req.query.approvalStatus) {
+        where.teApprovalStatus = req.query.approvalStatus;
     }
     // Date range — use Sequelize.Op.gte/lte. Keep it permissive: bad
     // dates are silently dropped rather than 400'd, so a typo in the
@@ -535,6 +585,10 @@ exports.listByWorker = async (req, res) => {
     // Tag filter (#406): entries whose teTags JSONB array contains the tag.
     if (db.Sequelize && db.Sequelize.Op && typeof req.query.tag === 'string' && req.query.tag) {
         where.teTags = { [db.Sequelize.Op.contains]: [req.query.tag] };
+    }
+    // Approval-status filter (#440).
+    if (typeof req.query.approvalStatus === 'string' && req.query.approvalStatus) {
+        where.teApprovalStatus = req.query.approvalStatus;
     }
     const Op = db.Sequelize && db.Sequelize.Op;
     const fromDate = parseDateOrNull(req.query.from);
