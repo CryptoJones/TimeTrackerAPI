@@ -215,6 +215,20 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         expect(Array.isArray(rows)).toBe(true);
     });
 
+    test('BillableRule table exists with a company include (#415)', async () => {
+        if (!connected) return;
+        const rows = await db.BillableRule.findAll({
+            attributes: ['bruId', 'bruCompId', 'bruName', 'bruPriority', 'bruMatchCategory', 'bruBillable'],
+            limit: 1,
+        });
+        expect(Array.isArray(rows)).toBe(true);
+        const withCompany = await db.BillableRule.findAll({
+            limit: 1,
+            include: [{ model: db.Company, as: 'company', required: false }],
+        });
+        expect(Array.isArray(withCompany)).toBe(true);
+    });
+
     test('CustomFieldDef table exists with a company include (#409)', async () => {
         if (!connected) return;
         const rows = await db.CustomFieldDef.findAll({

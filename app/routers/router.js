@@ -50,6 +50,7 @@ const approvalChain = require('../controllers/approvalchaincontroller.js');
 const invitation = require('../controllers/invitationcontroller.js');
 const capacity = require('../controllers/capacitycontroller.js');
 const customField = require('../controllers/customfielddefcontroller.js');
+const billableRule = require('../controllers/billablerulecontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -90,6 +91,7 @@ const approvalChainSchemas = require('../schemas/approvalchain.schema.js');
 const invitationSchemas = require('../schemas/invitation.schema.js');
 const capacitySchemas = require('../schemas/capacity.schema.js');
 const customFieldSchemas = require('../schemas/customfielddef.schema.js');
+const billableRuleSchemas = require('../schemas/billablerule.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -1070,6 +1072,40 @@ router.delete(
     '/v1/customfield/:id',
     v.params(customFieldSchemas.intIdParam),
     customField.remove,
+);
+
+// v1 billable-rule routes (#415): classification rules + an evaluator.
+router.post(
+    '/v1/billablerule',
+    v.body(billableRuleSchemas.createBillableRuleBody),
+    billableRule.create,
+);
+router.post(
+    '/v1/billablerule/evaluate',
+    v.body(billableRuleSchemas.evaluateBody),
+    billableRule.evaluate,
+);
+router.get(
+    '/v1/billablerule/bycompany/:id',
+    v.params(billableRuleSchemas.intIdParam),
+    v.query(billableRuleSchemas.listByCompanyQuery),
+    billableRule.listByCompany,
+);
+router.get(
+    '/v1/billablerule/:id',
+    v.params(billableRuleSchemas.intIdParam),
+    billableRule.getById,
+);
+router.patch(
+    '/v1/billablerule/:id',
+    v.params(billableRuleSchemas.intIdParam),
+    v.body(billableRuleSchemas.updateBillableRuleBody),
+    billableRule.update,
+);
+router.delete(
+    '/v1/billablerule/:id',
+    v.params(billableRuleSchemas.intIdParam),
+    billableRule.remove,
 );
 
 // v1 rate-schedule routes (effective-dated rates, #414).
