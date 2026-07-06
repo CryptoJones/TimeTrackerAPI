@@ -1486,6 +1486,26 @@ const spec = {
                 },
             },
         },
+        '/v1/password-reset/request': {
+            post: {
+                summary: 'Request a password-reset token by email (#446)',
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { userEmail: { type: 'string', format: 'email' }, companyId: { type: 'integer' } }, required: ['userEmail', 'companyId'] } } } },
+                responses: {
+                    200: { description: 'Always 200 (anti-enumeration) — a token is emailed if the account exists' },
+                    400: { description: 'Validation error' },
+                },
+            },
+        },
+        '/v1/password-reset/confirm': {
+            post: {
+                summary: 'Set a new password using a reset token (#446)',
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { token: { type: 'string' }, newPassword: { type: 'string' } }, required: ['token', 'newPassword'] } } } },
+                responses: {
+                    200: { description: 'Password updated' },
+                    400: { description: 'Invalid or expired token / validation error' },
+                },
+            },
+        },
         '/v1/user': {
             post: {
                 summary: 'Create a user account (#444)',

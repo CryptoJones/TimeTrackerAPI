@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Password reset** (#446). `POST /v1/password-reset/request` mints a
+  one-time token, stores only its SHA-256 + a 1-hour expiry on the user
+  (migration `20260622000000`), and emails the token via the mailer (#68);
+  it **always returns 200** whether or not the account exists
+  (anti-enumeration). `POST /v1/password-reset/confirm` verifies the token
+  hash + expiry and sets the new (scrypt-hashed) password, consuming the
+  token. Pure `password-reset.js` (token gen + validity); completes the
+  auth trio (#444/#445/#446).
 - **User login (JWT)** (#445). `POST /v1/login` verifies a user's email +
   password within a company and issues a short-lived (12h) **HS256 JWT**;
   `GET /v1/me` returns the signed-in user for a `Bearer` token. Tokens are

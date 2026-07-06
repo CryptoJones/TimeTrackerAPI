@@ -36,6 +36,16 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.TEXT,
             allowNull: false,
         },
+        userResetTokenHash: {
+            field: 'userResetTokenHash',
+            // SHA-256 of a one-time password-reset token (#446); null when
+            // no reset is pending. Write-only, never returned.
+            type: Sequelize.TEXT,
+        },
+        userResetExpires: {
+            field: 'userResetExpires',
+            type: Sequelize.DATE,
+        },
         userArch: {
             field: 'userArch',
             type: Sequelize.BOOLEAN,
