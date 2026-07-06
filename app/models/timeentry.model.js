@@ -117,6 +117,19 @@ module.exports = (sequelize, Sequelize) => {
             allowNull: false,
             defaultValue: 0,
         },
+        teRateSnapshot: {
+            field: 'teRateSnapshot',
+            // The hourly rate frozen when the entry was created (#10). When
+            // set, resolveHourlyRate uses it instead of walking the live rate
+            // sources, so a later rate edit can't re-price the entry. NULL =
+            // no rate was resolvable at creation → fall through to live.
+            type: Sequelize.DECIMAL(14, 2),
+            allowNull: true,
+            get() {
+                const v = this.getDataValue('teRateSnapshot');
+                return v == null ? null : Number(v);
+            },
+        },
         teArch: {
             field: 'teArch',
             type: Sequelize.BOOLEAN,

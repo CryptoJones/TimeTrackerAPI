@@ -7,6 +7,7 @@ const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
 const { makeBulkCreateIndirect } = require('./_bulk-helpers.js');
+const { rateSourceInclude } = require('../services/rate-source-include.js');
 const money = require('../services/money.js');
 const { buildRollup } = require('../services/invoice-rollup.js');
 const invoiceStatus = require('../services/invoice-status.js');
@@ -340,19 +341,10 @@ exports.rollup = async (req, res) => {
     try {
         entries = await db.TimeEntry.findAll({
             where,
-            include: [
-                { model: db.BillingType, as: 'billingType', required: false },
-                // Job flat rate (#410) — resolveHourlyRate reads entry.job.
-                { model: db.Job, as: 'job', required: false, attributes: ['jobId', 'jobFlatRate'] },
-                {
-                    model: db.Worker, as: 'worker', required: false,
-                    include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }, { model: db.Role, as: 'role', required: false }],
-                },
-                // Client rate card (#413) — resolveHourlyRate reads entry.customer.
-                { model: db.Customer, as: 'customer', required: false, attributes: ['custId', 'custDefaultRate'] },
-                // Task rate (#411) — the most-specific rate tier.
-                { model: db.Task, as: 'task', required: false, attributes: ['taskId', 'taskRate'] },
-            ],
+            // The rate sources resolveHourlyRate reads (shared with the
+            // create-time snapshot, #10). teRateSnapshot loads by default, so
+            // a snapshotted entry re-prices from the frozen rate, not live.
+            include: rateSourceInclude(db),
         });
     } catch (error) {
         log.error({ err: error }, 'rollup: TimeEntry.findAll failed');

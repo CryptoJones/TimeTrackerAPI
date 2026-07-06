@@ -194,15 +194,17 @@ deliberately **not** implemented autonomously.
    call site catches), so this is defense-in-depth — but whether an escaped
    rejection should crash-and-restart or log-and-continue is a deliberate
    operational policy choice, so no global handler was added autonomously.
-10. **No rate snapshot; effective-dating is unwired from billing** (rate
-    review, MED-HIGH). `resolveHourlyRate` reads the *current* rate sources
-    at invoice/report time — nothing is captured on the `TimeEntry` at entry
-    time, and `rate.js` never calls `rate-schedule.js`, so the shipped
-    effective-dating feature influences **no** invoice line and editing a
-    rate retroactively re-prices a not-yet-invoiced backlog. Fixing it is a
-    product+schema decision: snapshot the resolved rate onto the entry at
-    creation, and/or drive resolution through `rateOnDate(entryDate)`. The
-    arithmetic and precedence themselves were verified sound.
+10. **Rate snapshot — RESOLVED (#593).** `resolveHourlyRate` read the
+    *current* rate sources at invoice/report time, so editing a rate
+    retroactively re-priced a not-yet-invoiced backlog. A new nullable
+    `TimeEntry.teRateSnapshot` freezes the rate resolved when the entry is
+    created (via `snapshotEntryRate` on create / timer-start / copy, using the
+    shared `rateSourceInclude`), and `resolveHourlyRate` now prefers the
+    snapshot over live resolution — so a later rate-source edit can no longer
+    re-price the entry. A null snapshot (no rate resolvable at creation) still
+    falls through to live. **Follow-up still open**: full effective-dating
+    driven through `rate-schedule.js#rateOnDate(entryDate)` — the snapshot
+    covers the retroactive-re-pricing risk without the schedule wiring.
 11. **Archiving a rate source silently re-rates entries to a lower tier**
     (rate review, MED). Soft-deleting a referenced rate source (e.g. a
     per-entry `BillingType` override) makes the `required:false` +

@@ -11,6 +11,17 @@ const rate = require('../../app/services/rate.js');
 const bt = (r) => ({ btHourlyRate: r });
 
 describe('rate.resolveHourlyRate — precedence', () => {
+    test('a frozen teRateSnapshot wins over every live source (#10)', () => {
+        // Live sources would resolve to 99, but the snapshot (150) freezes it.
+        const entry = { teRateSnapshot: 150, billingType: bt(99), worker: { defaultBillingType: bt(50) } };
+        expect(rate.resolveHourlyRate(entry)).toBe(150);
+    });
+
+    test('a null teRateSnapshot falls through to live resolution', () => {
+        const entry = { teRateSnapshot: null, billingType: bt(99) };
+        expect(rate.resolveHourlyRate(entry)).toBe(99);
+    });
+
     test("entry's own BillingType wins over the worker default", () => {
         const entry = { billingType: bt(150), worker: { defaultBillingType: bt(100) } };
         expect(rate.resolveHourlyRate(entry)).toBe(150);

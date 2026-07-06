@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Time entries snapshot their billing rate at creation (#593).** A new
+  nullable `TimeEntry.teRateSnapshot` freezes the hourly rate resolved when an
+  entry is created (also on timer-start and copy); `rate.js#resolveHourlyRate`
+  now prefers the snapshot over walking the live rate sources. Editing a rate
+  (billing type, job flat rate, client rate card, role rate, task rate) no
+  longer retroactively re-prices a not-yet-invoiced backlog. An entry with no
+  resolvable rate at creation stores `null` and falls through to live
+  resolution. Resolves review-log item 10.
+
 ## [1.1.0] - 2026-07-06
 
 The first feature release on top of the 1.0.0 backend baseline: a complete
