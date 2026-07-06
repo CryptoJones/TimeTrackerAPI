@@ -94,6 +94,38 @@ function hashKey(rawKey) {
  * an archive column, so the soft-delete filter is implicit.
  */
 
+// Classifying "the database is UNREACHABLE" (an outage → 503) vs anything
+// else (a logical miss, or a config error like wrong credentials, which
+// keep the existing sentinel behaviour). The base `SequelizeConnectionError`
+// name is intentionally NOT trusted on its own — Sequelize also wraps a
+// bad-password failure (pg SQLSTATE 28P01) in it, which is a
+// misconfiguration, not a transient outage. So we match the SPECIFIC
+// connectivity subclasses by name, plus socket / pg-connection codes. The
+// auth lookups re-throw these so attachAuth answers 503 instead of letting
+// an outage masquerade as a bad key (403) — see attachAuth / #377.
+const DB_UNAVAILABLE_NAMES = new Set([
+    'SequelizeConnectionRefusedError',
+    'SequelizeHostNotFoundError',
+    'SequelizeHostNotReachableError',
+    'SequelizeInvalidConnectionError',
+    'SequelizeConnectionTimedOutError',
+    'SequelizeConnectionAcquireTimeoutError',
+]);
+const DB_UNAVAILABLE_CODES = new Set([
+    // socket-level
+    'ECONNREFUSED', 'ETIMEDOUT', 'ENOTFOUND', 'EHOSTUNREACH', 'ECONNRESET', 'EPIPE',
+    // pg connection-class SQLSTATEs (08xxx) + admin shutdown / overload
+    '08000', '08001', '08003', '08004', '08006', '57P01', '57P03', '53300',
+]);
+
+/** True when `err` indicates the database is unreachable (not a logical/config error). */
+function isDbUnavailable(err) {
+    if (!err) return false;
+    if (typeof err.name === 'string' && DB_UNAVAILABLE_NAMES.has(err.name)) return true;
+    const code = (err.original && err.original.code) || (err.parent && err.parent.code) || err.code;
+    return typeof code === 'string' && DB_UNAVAILABLE_CODES.has(code);
+}
+
 async function isMaster(authKey) {
     if (!authKey || authKey.length === 0) return false;
     try {
@@ -103,6 +135,9 @@ async function isMaster(authKey) {
         });
         return !!(row && typeof row.amId === 'number' && row.amId > 0);
     } catch (error) {
+        // A DB outage is not "not a master" — re-throw so attachAuth can
+        // surface 503 (#377). Logical failures still collapse to false.
+        if (isDbUnavailable(error)) throw error;
         log.error({ err: error }, 'auth.isMaster query failed');
         return false;
     }
@@ -119,6 +154,9 @@ async function getCompanyId(authKey) {
         const cid = row.akCompanyId;
         return typeof cid === 'number' && cid > 0 ? cid : -1;
     } catch (error) {
+        // A DB outage is not "no scoped key" — re-throw so attachAuth can
+        // surface 503 (#377). Logical failures still collapse to -1.
+        if (isDbUnavailable(error)) throw error;
         log.error({ err: error }, 'auth.getCompanyId query failed');
         return -1;
     }
@@ -277,28 +315,24 @@ async function attachAuth(req, res, next) {
     req.isMaster = false;
     req.companyId = -1;
     if (!authKey) return next();
-    // No try/catch here even though these are DB-touching calls:
-    // both `isMaster` and `getCompanyId` already wrap their query
-    // in try/catch internally and swallow infrastructure errors
-    // into a `false` / `-1` sentinel (with a `log.error`). So a
-    // DB outage surfaces as "auth failed" (403 downstream via
-    // requireAuth or per-controller checks), not "server error"
-    // — and the outer wrappers we had here were unreachable
-    // dead code that misled readers into thinking attachAuth
-    // distinguished the two. If the silent-swallow turns out to
-    // be the wrong behaviour for operators (DB-down looking like
-    // auth-fail), the right fix is to surface the throw from
-    // isMaster / getCompanyId themselves, not to layer a catch
-    // here that the inner function prevents from firing.
-    req.isMaster = await isMaster(authKey);
-    if (req.isMaster) {
-        // Master keys aren't scoped to a single company. Leave
-        // companyId at -1; handlers needing a target scope read
-        // it from req.params / req.body / req.query.
+    // isMaster / getCompanyId swallow LOGICAL failures into a false / -1
+    // sentinel (a genuinely unknown key), but re-throw when the DATABASE
+    // is unreachable (#377). We catch that here and answer 503 — so a DB
+    // outage is reported as an outage, not mistaken for a bad key (403).
+    try {
+        req.isMaster = await isMaster(authKey);
+        if (req.isMaster) {
+            // Master keys aren't scoped to a single company. Leave
+            // companyId at -1; handlers needing a target scope read
+            // it from req.params / req.body / req.query.
+            return next();
+        }
+        req.companyId = await getCompanyId(authKey);
         return next();
+    } catch (error) {
+        log.error({ err: error }, 'attachAuth: database unavailable');
+        return res.status(503).json({ message: 'Service temporarily unavailable.' });
     }
-    req.companyId = await getCompanyId(authKey);
-    return next();
 }
 
 /**
@@ -344,6 +378,7 @@ module.exports = {
     requireAuth,
     resolveAuth,
     hashKey,
+    isDbUnavailable,
     // Test-only seam: call with a stub db to drive auth functions
     // through caller-controlled fixtures; call with no args (or null)
     // to restore the production lookup. Production code MUST NOT call
