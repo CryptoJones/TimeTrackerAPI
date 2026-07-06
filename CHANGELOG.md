@@ -200,6 +200,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sentinel), and `attachAuth` maps them to **503 Service Unavailable**.
 
 ### Security
+- **RBAC on the full user-management surface (#448).** Extends the initial
+  role-write enforcement to the remaining user endpoints for a signed-in
+  (JWT) actor: `GET /v1/user/:id` + `bycompany` require `user:read` and are
+  scoped to the actor's own company (secure-404 / 403); `PATCH /v1/user/:id`
+  allows a user to edit **its own** profile but requires `user:write` to edit
+  another; `DELETE /v1/user/:id` requires `user:write`. The API-key path is
+  unchanged (full authority).
 - **RBAC enforcement for signed-in users (#448).** `rbac.canAssignRole` was
   defined but had no call sites. A new `attachUser` middleware resolves the
   Bearer-JWT sign-in path into `req.user = { userId, userCompId, userRole }`

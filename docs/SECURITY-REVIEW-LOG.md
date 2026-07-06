@@ -125,9 +125,10 @@ deliberately **not** implemented autonomously.
    out-ranks you), scoped to the actor's own company (secure-404). The
    **API-key path is unchanged** — a company/master key remains the tenant's
    full-authority credential (that's the deliberate model; a signed-in user
-   is the constrained actor). Follow-up (optional): extend JWT-actor auth to
-   the user read/update/remove endpoints for full self-service, and gate the
-   approval action the same way (open item 8).
+   is the constrained actor). The full user surface is now JWT-actor aware
+   (#584): read (`user:read`), update (self-edit or `user:write`), remove
+   (`user:write`), and `listByCompany` (own company). Remaining follow-up:
+   gate the approval action the same way (open item 8).
 2. **Idempotency concurrent double-execution.** The cache row is written
    *after* the handler, so two simultaneous same-key requests both execute
    the side effect (a double-charge risk); sequential retries are correctly
