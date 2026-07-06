@@ -16,6 +16,13 @@ const router = require('./app/routers/router.js');
 const { errorHandler, notFound } = require('./app/middleware/error-handler.js');
 const { metricsMiddleware } = require('./app/middleware/metrics.js');
 const { redactUrl } = require('./app/middleware/redact-url.js');
+const { installProcessSafetyNet } = require('./app/config/process-safety.js');
+
+// Defense-in-depth net for escaped async errors (#9): log an unhandled
+// rejection (continue) and log-then-exit(1) on an uncaught exception so a
+// supervisor restarts a clean process. Installed first so it also covers
+// errors thrown during the rest of startup.
+installProcessSafetyNet();
 
 const app = express();
 
