@@ -276,6 +276,10 @@ no model references in migration code, etc.).
   to the minimum required privileges — `SUPERUSER` is convenient for
   local development but should not be the production grant.
 
+For the full inventory of implemented controls and a **SOC 2 readiness
+roadmap**, see [`docs/SECURITY-POSTURE.md`](docs/SECURITY-POSTURE.md). To
+report a vulnerability, see [`SECURITY.md`](SECURITY.md).
+
 ---
 
 ## License
