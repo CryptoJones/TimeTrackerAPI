@@ -50,7 +50,12 @@ function _setDbForTesting(db) {
     _dbOverride = db || null;
 }
 
-const TTL_MS = 24 * 60 * 60 * 1000;  // 24 hours
+const TTL_MS = 24 * 60 * 60 * 1000;  // 24 hours — a COMPLETED response is cached this long
+// A PENDING claim not completed within this window is treated as dead (its
+// holder crashed / the connection dropped) and may be re-claimed by a retry.
+// Bounds how long a stuck claim blocks retries; short enough that a client
+// recovers quickly, long enough to cover any realistic handler duration.
+const PENDING_TTL_MS = 5 * 60 * 1000;  // 5 minutes
 // Keys are client-picked; reject anything that looks like garbage.
 // Stripe accepts up to 255 chars; we mirror that and require
 // printable ASCII to avoid `\0` injection into the SQL replacement
@@ -136,12 +141,19 @@ async function pruneExpired(sequelize) {
  * retries. If the request lacks an `Idempotency-Key` header the
  * middleware is a no-op (passes through to the handler).
  *
- * Behavior on header present:
- *   - First time we've seen this (scope, key): proceed to handler,
- *     then write the response to the cache before returning.
- *   - Same (scope, key), same body hash: replay the cached response.
- *   - Same (scope, key), DIFFERENT body hash: 409 Conflict with a
- *     stable `{message, code: "idempotency_key_reused"}` body.
+ * Behavior on header present — a pre-handler CLAIM protocol so two
+ * concurrent requests with the same key can never both execute the
+ * side effect (the double-charge window, audit item #2):
+ *   - We first try to atomically INSERT a PENDING claim row (or
+ *     re-claim one left past PENDING_TTL by a crashed holder). The
+ *     RETURNING clause tells us whether WE won the claim.
+ *   - Won the claim → run the handler; on a 2xx/4xx response COMPLETE
+ *     the row (cache status+body for TTL_MS), on a 5xx / no-JSON exit
+ *     RELEASE it (delete the pending row) so a retry re-runs.
+ *   - Lost the claim (a live row already exists):
+ *       · same key, DIFFERENT body → 409 idempotency_key_reused.
+ *       · same key+body, still PENDING → 409 idempotency_in_progress.
+ *       · same key+body, COMPLETED → replay the cached response.
  *   - Storage failure: log + proceed (the dedup is best-effort; we
  *     never want it to break a write that would otherwise succeed).
  */
@@ -166,9 +178,9 @@ async function idempotency(req, res, next) {
     } catch (error) {
         if (error instanceof CanonicalJsonDepthError) {
             // Don't propagate as 500 via the global error path; emit a
-            // crisp 400 the client can act on. Skips both the cache
-            // lookup AND the handler — pre-bound, this branch would
-            // have stack-overflowed at depth ~5000, surfacing as 500.
+            // crisp 400 the client can act on. Skips both the claim AND
+            // the handler — pre-bound, this branch would have stack-
+            // overflowed at depth ~5000, surfacing as 500.
             //
             // Message is hardcoded (rather than `error.message`) so we
             // match the controller-error-shape policy — middleware
@@ -188,79 +200,140 @@ async function idempotency(req, res, next) {
     // because the index on ikExpiresAt covers it.
     pruneExpired(getDb().sequelize).catch(() => {});
 
-    let existing;
+    // Atomically CLAIM the (scope, key) slot: INSERT a pending row, or
+    // re-claim one whose previous holder left it past PENDING_TTL. A live
+    // row (pending or completed) is left untouched by the WHERE guard, so
+    // RETURNING yields a row ONLY when we actually (re)claimed. This is the
+    // serialization point — Postgres resolves concurrent INSERT…ON CONFLICT
+    // one at a time, so exactly one request wins.
+    let claimed;
     try {
-        const rows = await getDb().sequelize.query(
-            `SELECT "ikRequestHash" AS "requestHash",
-                    "ikResponseStatus" AS "status",
-                    "ikResponseBody" AS "body"
-               FROM "dbo"."IdempotencyKey"
-              WHERE "ikScope" = :scope AND "ikKey" = :key
-                AND "ikExpiresAt" >= now()`,
+        const result = await getDb().sequelize.query(
+            `INSERT INTO "dbo"."IdempotencyKey"
+                ("ikScope", "ikKey", "ikRequestHash",
+                 "ikResponseStatus", "ikResponseBody", "ikExpiresAt")
+             VALUES (:scope, :key, :requestHash, NULL, NULL, :pendingExpiry)
+             ON CONFLICT ("ikScope", "ikKey") DO UPDATE
+                SET "ikRequestHash" = EXCLUDED."ikRequestHash",
+                    "ikResponseStatus" = NULL,
+                    "ikResponseBody" = NULL,
+                    "ikExpiresAt" = EXCLUDED."ikExpiresAt"
+                WHERE "dbo"."IdempotencyKey"."ikExpiresAt" < now()
+             RETURNING "ikId"`,
             {
-                replacements: { scope, key: rawKey },
-                type: getDb().Sequelize.QueryTypes.SELECT,
+                replacements: {
+                    scope,
+                    key: rawKey,
+                    requestHash: bodyHash,
+                    pendingExpiry: new Date(Date.now() + PENDING_TTL_MS),
+                },
             },
         );
-        existing = rows && rows[0];
+        const rows = Array.isArray(result) ? result[0] : null;
+        claimed = Array.isArray(rows) && rows.length > 0;
     } catch (error) {
-        log.warn({ err: error }, 'IdempotencyKey: lookup failed, proceeding without dedup');
+        // Best-effort: a claim failure must never block a write.
+        log.warn({ err: error }, 'IdempotencyKey: claim failed, proceeding without dedup');
         return next();
     }
 
-    if (existing) {
+    if (!claimed) {
+        // A live row already holds this (scope, key). Look it up to decide.
+        let existing;
+        try {
+            const rows = await getDb().sequelize.query(
+                `SELECT "ikRequestHash" AS "requestHash",
+                        "ikResponseStatus" AS "status",
+                        "ikResponseBody" AS "body"
+                   FROM "dbo"."IdempotencyKey"
+                  WHERE "ikScope" = :scope AND "ikKey" = :key
+                    AND "ikExpiresAt" >= now()`,
+                {
+                    replacements: { scope, key: rawKey },
+                    type: getDb().Sequelize.QueryTypes.SELECT,
+                },
+            );
+            existing = rows && rows[0];
+        } catch (error) {
+            log.warn({ err: error }, 'IdempotencyKey: lookup failed, proceeding without dedup');
+            return next();
+        }
+
+        if (!existing) {
+            // The row expired / was pruned between claim and lookup — a rare
+            // race. Proceed without dedup rather than surface a 500.
+            return next();
+        }
         if (existing.requestHash !== bodyHash) {
             return res.status(409).json({
                 message: 'Idempotency-Key was reused with a different request body.',
                 code: 'idempotency_key_reused',
             });
         }
-        // Replay the cached response verbatim. Set a header so
-        // clients can tell a replay apart from a fresh write — useful
-        // for observability and for client-side write counters.
+        if (existing.status == null) {
+            // A concurrent request with the same key+body is still executing.
+            return res.status(409).json({
+                message: 'A request with this Idempotency-Key is already in progress.',
+                code: 'idempotency_in_progress',
+            });
+        }
+        // Completed → replay the cached response verbatim. The header lets
+        // clients tell a replay apart from a fresh write.
         res.setHeader('Idempotency-Replay', 'true');
         return res.status(existing.status).json(existing.body);
     }
 
-    // First time seeing this key. Intercept the handler's response
-    // so we can persist it BEFORE the bytes flush to the client. We
-    // wrap res.json (the controllers' uniform exit) and store there.
+    // WE own the execution. COMPLETE the claim (cache the response) on a
+    // 2xx/4xx, or RELEASE it (delete the still-pending row) on a 5xx or a
+    // no-JSON exit so a retry re-runs. `settled` guards against the finish
+    // safety-net double-acting.
+    let settled = false;
+    const completeClaim = (status, body) => {
+        if (settled) return;
+        settled = true;
+        getDb().sequelize.query(
+            `UPDATE "dbo"."IdempotencyKey"
+                SET "ikResponseStatus" = :status,
+                    "ikResponseBody" = :body::jsonb,
+                    "ikExpiresAt" = :expiresAt
+              WHERE "ikScope" = :scope AND "ikKey" = :key`,
+            {
+                replacements: {
+                    scope,
+                    key: rawKey,
+                    status,
+                    body: JSON.stringify(body),
+                    expiresAt: new Date(Date.now() + TTL_MS),
+                },
+            },
+        ).catch((error) => {
+            log.warn({ err: error }, 'IdempotencyKey: complete failed');
+        });
+    };
+    const releaseClaim = () => {
+        if (settled) return;
+        settled = true;
+        getDb().sequelize.query(
+            `DELETE FROM "dbo"."IdempotencyKey"
+              WHERE "ikScope" = :scope AND "ikKey" = :key
+                AND "ikResponseStatus" IS NULL`,
+            { replacements: { scope, key: rawKey } },
+        ).catch((error) => {
+            log.warn({ err: error }, 'IdempotencyKey: release failed');
+        });
+    };
+
     const originalJson = res.json.bind(res);
     res.json = function patchedJson(body) {
-        // Statuscode could have been set via res.status() prior to
-        // .json(). Default to 200 if nothing explicit.
         const status = res.statusCode || 200;
-        // Only persist successful or client-error writes. 5xx
-        // responses indicate the request never succeeded and we
-        // want the retry to actually re-run.
-        if (status >= 200 && status < 500) {
-            const expiresAt = new Date(Date.now() + TTL_MS);
-            // Fire and forget — the response shouldn't block on the
-            // cache write. If the INSERT loses a race with a
-            // concurrent retry the UNIQUE constraint catches it.
-            getDb().sequelize.query(
-                `INSERT INTO "dbo"."IdempotencyKey"
-                    ("ikScope", "ikKey", "ikRequestHash",
-                     "ikResponseStatus", "ikResponseBody", "ikExpiresAt")
-                 VALUES (:scope, :key, :requestHash,
-                         :status, :body::jsonb, :expiresAt)
-                 ON CONFLICT ("ikScope", "ikKey") DO NOTHING`,
-                {
-                    replacements: {
-                        scope,
-                        key: rawKey,
-                        requestHash: bodyHash,
-                        status,
-                        body: JSON.stringify(body),
-                        expiresAt,
-                    },
-                },
-            ).catch((error) => {
-                log.warn({ err: error }, 'IdempotencyKey: store failed');
-            });
-        }
+        if (status >= 200 && status < 500) completeClaim(status, body);
+        else releaseClaim();  // 5xx → release so a retry re-runs
         return originalJson(body);
     };
+    // If the response finishes WITHOUT going through res.json (a non-JSON
+    // send, a dropped connection, or an error that bypasses res.json),
+    // release the pending claim so the key isn't stuck until PENDING_TTL.
+    res.on('finish', () => { if (!settled) releaseClaim(); });
 
     return next();
 }
@@ -273,6 +346,7 @@ module.exports = {
     buildScope,
     KEY_PATTERN,
     TTL_MS,
+    PENDING_TTL_MS,
     MAX_CANONICAL_DEPTH,
     CanonicalJsonDepthError,
     // Test-only seam: pass a stub `{ sequelize: { query: ... }, Sequelize:

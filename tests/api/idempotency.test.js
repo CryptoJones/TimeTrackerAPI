@@ -90,35 +90,65 @@ describe('Idempotency middleware: mounted on POST routes', () => {
         expect(res.status).not.toBe(409);
     });
 
-    test('first write + replay round-trip works via the _setDbForTesting seam', async () => {
-        // Walk the full first-write → replay path that vi.mock alone
-        // can't reach. The stub plays both roles of the cache table:
-        // SELECT returns nothing on the first request (cache miss),
-        // INSERT writes a row, SELECT on the second request returns
-        // the stored row.
-        const idem = require('../../app/middleware/idempotency.js');
-        const storedRows = new Map();
-        const stub = {
+    // A stateful in-memory stand-in for the IdempotencyKey table that models
+    // the pre-handler CLAIM protocol (audit item #2): INSERT claims a pending
+    // slot (or re-claims an expired one), UPDATE completes it, DELETE releases
+    // or prunes. All mutations are synchronous so a sequential retry in a test
+    // deterministically sees the completed row (mirrors: the completion UPDATE
+    // is issued before the first response's bytes flush).
+    function makeClaimStub() {
+        const store = new Map();
+        const kf = (r) => `${r.scope}::${r.key}`;
+        return {
+            store,
             sequelize: {
                 query: vi.fn(async (sql, opts) => {
-                    if (/^SELECT/.test(sql)) {
-                        const key = opts && opts.replacements && opts.replacements.key;
-                        const scope = opts && opts.replacements && opts.replacements.scope;
-                        const hit = storedRows.get(`${scope}::${key}`);
-                        return hit ? [hit] : [];
-                    }
+                    const r = (opts && opts.replacements) || {};
                     if (/^INSERT/.test(sql)) {
-                        const { scope, key, requestHash, status, body } = opts.replacements;
-                        storedRows.set(`${scope}::${key}`, {
-                            requestHash, status, body: JSON.parse(body),
-                        });
-                        return [[], 1];
+                        const k = kf(r);
+                        const cur = store.get(k);
+                        const pendMs = r.pendingExpiry && r.pendingExpiry.getTime
+                            ? r.pendingExpiry.getTime() : Date.now() + 300000;
+                        if (!cur || cur.expiresAt < Date.now()) {
+                            store.set(k, { requestHash: r.requestHash, status: null, body: null, expiresAt: pendMs });
+                            return [[{ ikId: 1 }]];  // claimed
+                        }
+                        return [[]];  // conflict — a live row already holds it
                     }
-                    return [];
+                    if (/^SELECT/.test(sql)) {
+                        const cur = store.get(kf(r));
+                        return cur && cur.expiresAt >= Date.now() ? [cur] : [];
+                    }
+                    if (/^UPDATE/.test(sql)) {
+                        const cur = store.get(kf(r));
+                        if (cur) {
+                            cur.status = r.status;
+                            cur.body = JSON.parse(r.body);
+                            cur.expiresAt = r.expiresAt && r.expiresAt.getTime ? r.expiresAt.getTime() : Date.now() + 86400000;
+                        }
+                        return [[], {}];
+                    }
+                    if (/^DELETE/.test(sql)) {
+                        if (/ikResponseStatus" IS NULL/.test(sql)) {          // release
+                            const cur = store.get(kf(r));
+                            if (cur && cur.status == null) store.delete(kf(r));
+                        } else {                                              // prune expired
+                            for (const [k, v] of store) if (v.expiresAt < Date.now()) store.delete(k);
+                        }
+                        return [[], {}];
+                    }
+                    return [[], {}];
                 }),
             },
             Sequelize: { QueryTypes: { SELECT: 'SELECT' } },
         };
+    }
+
+    test('first write + replay round-trip works via the _setDbForTesting seam', async () => {
+        // Walk the full claim → complete → replay path that vi.mock alone
+        // can't reach, driven by the stateful claim stub.
+        const idem = require('../../app/middleware/idempotency.js');
+        const stub = makeClaimStub();
         idem._setDbForTesting(stub);
         try {
             const key = '01HFREPLAY12345';
@@ -152,6 +182,74 @@ describe('Idempotency middleware: mounted on POST routes', () => {
                 .send({ custCompanyName: 'Different' });
             expect(third.status).toBe(409);
             expect(third.body.code).toBe('idempotency_key_reused');
+        } finally {
+            idem._setDbForTesting(null);
+        }
+    });
+
+    test('a concurrent in-flight request (same key+body, still pending) → 409 in_progress', async () => {
+        // This is the double-execution guard (audit item #2): while one
+        // request holds a PENDING claim, a second with the SAME key+body must
+        // NOT run the handler — it gets 409 in_progress. We simulate the
+        // in-flight holder with a stub whose claim always conflicts and whose
+        // lookup returns a pending row carrying the matching request hash.
+        const idem = require('../../app/middleware/idempotency.js');
+        const body = { custCompanyName: 'Acme' };
+        const bodyHash = idem.hashBody(body);
+        const stub = {
+            sequelize: {
+                query: vi.fn(async (sql) => {
+                    if (/^INSERT/.test(sql)) return [[]];                          // claim lost — a live row exists
+                    if (/^SELECT/.test(sql)) return [{ requestHash: bodyHash, status: null, body: null }]; // pending
+                    return [[], {}];
+                }),
+            },
+            Sequelize: { QueryTypes: { SELECT: 'SELECT' } },
+        };
+        idem._setDbForTesting(stub);
+        try {
+            const res = await request(app)
+                .post('/v1/customer')
+                .set('authKey', 'any')
+                .set('Idempotency-Key', '01HFINFLIGHT999')
+                .send(body);
+            expect(res.status).toBe(409);
+            expect(res.body.code).toBe('idempotency_in_progress');
+        } finally {
+            idem._setDbForTesting(null);
+        }
+    });
+
+    test('a pending claim past PENDING_TTL is re-claimable (a stuck holder does not block forever)', async () => {
+        // Seed an EXPIRED pending row; the next request must win the claim
+        // (the INSERT…ON CONFLICT DO UPDATE WHERE expiresAt < now() path) and
+        // reach the handler rather than 409.
+        const idem = require('../../app/middleware/idempotency.js');
+        const stub = makeClaimStub();
+        // Pre-seed an expired pending row for whatever (scope,key) the request
+        // computes — easier to force via the stub: first INSERT sees the
+        // expired row and re-claims. We emulate "expired" by seeding with a
+        // past expiry keyed to the first INSERT's replacements.
+        let seeded = false;
+        const realQuery = stub.sequelize.query;
+        stub.sequelize.query = vi.fn(async (sql, opts) => {
+            if (/^INSERT/.test(sql) && !seeded) {
+                seeded = true;
+                const r = opts.replacements;
+                stub.store.set(`${r.scope}::${r.key}`, { requestHash: 'stale', status: null, body: null, expiresAt: Date.now() - 1000 });
+            }
+            return realQuery(sql, opts);
+        });
+        idem._setDbForTesting(stub);
+        try {
+            const res = await request(app)
+                .post('/v1/customer')
+                .set('authKey', 'any')
+                .set('Idempotency-Key', '01HFSTUCK0001')
+                .send({ custCompanyName: 'Acme' });
+            // Re-claimed + ran the handler → NOT a 409 in_progress / reused.
+            expect(res.status).not.toBe(409);
+            expect(res.headers['idempotency-replay']).toBeUndefined();
         } finally {
             idem._setDbForTesting(null);
         }

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **Idempotency now prevents concurrent double-execution (#588).** The
+  `Idempotency-Key` middleware previously wrote its cache row *after* the
+  handler, so two simultaneous same-key requests both executed the side
+  effect (a double-charge risk). It now performs a **pre-handler atomic
+  claim** (`INSERT … ON CONFLICT DO UPDATE … WHERE ikExpiresAt < now()
+  RETURNING`): exactly one request wins and runs the handler; a concurrent
+  same-key+body request gets `409 idempotency_in_progress` while it's
+  in-flight and replays the cached response once it completes. The claim is
+  released on a 5xx / non-JSON exit so a genuine retry re-runs, and a
+  crashed holder's claim is re-claimable after a 5-minute `PENDING_TTL`. A
+  migration makes `ikResponseStatus`/`ikResponseBody` nullable for the
+  pending state. Resolves review-log item 2.
+
 ### Fixed
 - **`expAmount` and `phaseBudgetAmount` reject out-of-range values (400, not
   500).** The last two money fields lacking an upper bound — `expAmount`

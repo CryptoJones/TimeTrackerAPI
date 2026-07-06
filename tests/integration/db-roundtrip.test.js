@@ -288,6 +288,45 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         }
     });
 
+    test('IdempotencyKey pending-claim protocol works against the real schema', async () => {
+        if (!connected) return;
+        const scope = `${SENTINEL}-ik-scope`;
+        const key = `${SENTINEL}-ik-key`;
+        // The exact atomic claim the middleware issues: insert a pending row,
+        // or re-claim one whose ikExpiresAt is in the past.
+        const claimSql =
+            `INSERT INTO "dbo"."IdempotencyKey"
+                ("ikScope","ikKey","ikRequestHash","ikResponseStatus","ikResponseBody","ikExpiresAt")
+             VALUES (:scope,:key,:hash,NULL,NULL,:exp)
+             ON CONFLICT ("ikScope","ikKey") DO UPDATE
+                SET "ikRequestHash"=EXCLUDED."ikRequestHash",
+                    "ikResponseStatus"=NULL, "ikResponseBody"=NULL,
+                    "ikExpiresAt"=EXCLUDED."ikExpiresAt"
+                WHERE "dbo"."IdempotencyKey"."ikExpiresAt" < now()
+             RETURNING "ikId"`;
+        const soon = new Date(Date.now() + 300000);
+        try {
+            // 1) First claim inserts a PENDING row — nullable status/body proves
+            //    the migration ran (pre-migration this INSERT would violate NOT NULL).
+            const [r1] = await db.sequelize.query(claimSql, { replacements: { scope, key, hash: 'h1', exp: soon } });
+            expect(r1.length).toBe(1);
+            // 2) A second claim while the row is live → 0 rows (conflict) — the
+            //    concurrent-double-execution guard.
+            const [r2] = await db.sequelize.query(claimSql, { replacements: { scope, key, hash: 'h1', exp: soon } });
+            expect(r2.length).toBe(0);
+            // 3) Expire the row, then a claim re-claims it → 1 row (a stuck
+            //    holder doesn't block retries forever).
+            await db.sequelize.query(
+                `UPDATE "dbo"."IdempotencyKey" SET "ikExpiresAt" = now() - interval '1 second' WHERE "ikScope"=:scope AND "ikKey"=:key`,
+                { replacements: { scope, key } },
+            );
+            const [r3] = await db.sequelize.query(claimSql, { replacements: { scope, key, hash: 'h2', exp: soon } });
+            expect(r3.length).toBe(1);
+        } finally {
+            await db.sequelize.query(`DELETE FROM "dbo"."IdempotencyKey" WHERE "ikScope"=:scope`, { replacements: { scope } });
+        }
+    });
+
     test('Invoice has invSubtotal / invTax / invTotal money columns', async () => {
         if (!connected) return;
         // Selecting the new attributes proves the 20260522 migration
