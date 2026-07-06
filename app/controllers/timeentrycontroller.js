@@ -10,6 +10,7 @@ const { buildCsv } = require('./_csv-escape.js');
 const rate = require('../services/rate.js');
 const { applyAction } = require('../services/approval.js');
 const { lockReason } = require('../services/time-lock.js');
+const rbac = require('../services/rbac.js');
 const { buildApprovalDigest } = require('../services/approval-reminders.js');
 const { sendMail } = require('../services/mailer.js');
 const { createTimeEntryBody } = require('../schemas/timeentry.schema.js');
@@ -468,9 +469,8 @@ exports.stop = async (req, res) => {
  * Secure-404 scoped; 409 on an illegal transition from the current state.
  */
 exports.approval = async (req, res) => {
-    const authKey = req.get('authKey');
-    if (!authKey) {
-        return res.status(403).json({ message: "Authorization key not sent." });
+    if (!req.user && !req.get('authKey')) {
+        return res.status(403).json({ message: "Authorization required." });
     }
 
     let entry;
@@ -484,11 +484,25 @@ exports.approval = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await MasterFromReq(req, authKey);
-    if (!isMaster) {
-        const companyId = await CompanyIdFromReq(req, authKey);
-        if (companyId === -1 || entry.teCompId !== companyId) {
+    if (req.user) {
+        // A signed-in user acts within its own company (secure-404) and needs
+        // the `time:approve` permission (manager+). NOTE: self-approval (the
+        // actor being the worker who logged the time) is NOT yet blocked —
+        // that needs a User↔Worker link the model doesn't have (see item 8).
+        if (entry.teCompId !== req.user.userCompId) {
             return res.status(404).json({ message: "Not found." });
+        }
+        if (!rbac.hasPermission(req.user.userRole, 'time:approve')) {
+            return res.status(403).json({ message: "Insufficient role to approve time entries." });
+        }
+    } else {
+        const authKey = req.get('authKey');
+        const isMaster = await MasterFromReq(req, authKey);
+        if (!isMaster) {
+            const companyId = await CompanyIdFromReq(req, authKey);
+            if (companyId === -1 || entry.teCompId !== companyId) {
+                return res.status(404).json({ message: "Not found." });
+            }
         }
     }
 

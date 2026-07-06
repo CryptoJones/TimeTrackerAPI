@@ -200,6 +200,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sentinel), and `attachAuth` maps them to **503 Service Unavailable**.
 
 ### Security
+- **RBAC on the approval action (#440/#448).** The timesheet-approval endpoint
+  now enforces a new `time:approve` permission (granted to **manager and up**)
+  for a signed-in (JWT) actor, scoped to the actor's own company (secure-404);
+  a `member`/`viewer` gets a 403. The API-key path is unchanged (full
+  authority). Separation-of-duties (blocking self-approval) remains open — it
+  needs a `User`↔`Worker` link the model doesn't have yet (documented in
+  `docs/SECURITY-REVIEW-LOG.md` item 8).
 - **RBAC on the full user-management surface (#448).** Extends the initial
   role-write enforcement to the remaining user endpoints for a signed-in
   (JWT) actor: `GET /v1/user/:id` + `bycompany` require `user:read` and are

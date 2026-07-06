@@ -158,11 +158,16 @@ deliberately **not** implemented autonomously.
    *requires* approval before billing has no such gate. Requiring
    `approved` would break the default (approval-less) flow, so which
    policy applies is a per-tenant product decision.
-8. **Approver authorization / separation of duties.** The approval action
-   requires only a valid company key (no role check, no "not the logged-time
-   worker" check) — the same root cause as item 1 (RBAC is not enforced;
-   API keys resolve to a company, not a user). Self-approval is currently
-   unpreventable.
+8. **Approver authorization — role check WIRED (#585); self-approval still
+   open.** The approval action now enforces a `time:approve` permission
+   (granted to **manager and up**) for a signed-in-user (JWT) actor, scoped
+   to the actor's own company (secure-404) — using the same `attachUser`
+   mechanism as item 1. The API-key path is unchanged (full authority). What
+   remains: **separation of duties** — an actor should not approve their own
+   logged time — which needs a **User↔Worker link** the model lacks today
+   (JWT actors are `User`s; time entries reference `Worker`s). Decide whether
+   to add that link (e.g. `worker.userId`) before self-approval can be
+   blocked; and confirm `manager+` is the right approve tier.
 9. **Process-level `unhandledRejection` net.** There is no global
    `unhandledRejection` / `uncaughtException` handler, so an async rejection
    that escaped a handler would crash the process on Node ≥ 15. Both the

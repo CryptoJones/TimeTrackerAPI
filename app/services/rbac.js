@@ -18,7 +18,7 @@ const DEFAULT_ROLE = 'member';
 // Cumulative capability tiers.
 const VIEWER = ['invoice:read', 'billing:read', 'time:read', 'report:read', 'user:read'];
 const MEMBER = VIEWER.concat(['time:write']);
-const MANAGER = MEMBER.concat(['invoice:write', 'invoice:send', 'billing:write']);
+const MANAGER = MEMBER.concat(['invoice:write', 'invoice:send', 'billing:write', 'time:approve']);
 const ADMIN = MANAGER.concat(['user:write', 'user:manage-roles']);
 const OWNER = ADMIN.concat(['company:manage']);
 
