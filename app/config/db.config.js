@@ -67,6 +67,7 @@ db.PurchaseOrderHeader = require('../models/purchaseorderheader.model.js')(seque
 db.PurchaseOrderLine = require('../models/purchaseorderline.model.js')(sequelize, Sequelize);
 db.InventoryTransaction = require('../models/inventorytransaction.model.js')(sequelize, Sequelize);
 db.Expense = require('../models/expense.model.js')(sequelize, Sequelize);
+db.AuditLog = require('../models/auditlog.model.js')(sequelize, Sequelize);
 
 // ----------------------------------------------------------------------
 // Associations — centralized so the relationship graph is visible
@@ -181,5 +182,9 @@ db.Expense.belongsTo(db.Job,      { foreignKey: 'expJobId',  as: 'job' });
 // into (#418); doubles as the "invoiced" marker (NULL = unbilled).
 db.Invoice.hasMany(db.Expense,    { foreignKey: 'expInvId',  as: 'expenses' });
 db.Expense.belongsTo(db.Invoice,  { foreignKey: 'expInvId',  as: 'invoice' });
+
+// AuditLog → Company (alogCompId): the actor's company (#460).
+db.Company.hasMany(db.AuditLog,   { foreignKey: 'alogCompId', as: 'auditLogs' });
+db.AuditLog.belongsTo(db.Company, { foreignKey: 'alogCompId', as: 'company' });
 
 module.exports = db;

@@ -7,6 +7,7 @@ const swaggerUi = require('swagger-ui-express');
 const { attachAuth } = require('../middleware/auth.js');
 const { idempotency } = require('../middleware/idempotency.js');
 const { metricsHandler } = require('../middleware/metrics.js');
+const { auditLog } = require('../middleware/audit.js');
 
 const customer = require('../controllers/customercontroller.js');
 const health = require('../controllers/healthcontroller.js');
@@ -28,6 +29,7 @@ const inventoryTransaction = require('../controllers/inventorytransactioncontrol
 const whoami = require('../controllers/whoamicontroller.js');
 const report = require('../controllers/reportcontroller.js');
 const expense = require('../controllers/expensecontroller.js');
+const auditlog = require('../controllers/auditlogcontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -47,6 +49,7 @@ const purchaseOrderHeaderSchemas = require('../schemas/purchaseorderheader.schem
 const purchaseOrderLineSchemas = require('../schemas/purchaseorderline.schema.js');
 const reportSchemas = require('../schemas/report.schema.js');
 const expenseSchemas = require('../schemas/expense.schema.js');
+const auditlogSchemas = require('../schemas/auditlog.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -78,6 +81,11 @@ router.use('/v1', (req, res, next) => {
     if (req.method !== 'POST') return next();
     return idempotency(req, res, next);
 });
+
+// Audit trail (#460): record successful mutations after the response is
+// sent. Fire-and-forget; never blocks or breaks a request. Mounted after
+// attachAuth so req.isMaster / req.companyId are populated.
+router.use('/v1', auditLog);
 
 // Identity probe — returns what the calling authKey resolves to.
 // Distinguishes "header missing" (403) from "header present but
@@ -708,6 +716,14 @@ router.delete(
     '/v1/expense/:id',
     v.params(expenseSchemas.intIdParam),
     expense.remove,
+);
+
+// v1 audit-log route (compliance, #460).
+router.get(
+    '/v1/auditlog/bycompany/:id',
+    v.params(auditlogSchemas.intIdParam),
+    v.query(auditlogSchemas.listQuery),
+    auditlog.listByCompany,
 );
 
 // v1 report routes (read-only analytics).

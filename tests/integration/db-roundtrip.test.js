@@ -206,6 +206,15 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         expect(Array.isArray(withLinks)).toBe(true);
     });
 
+    test('AuditLog table exists with its columns (#460)', async () => {
+        if (!connected) return;
+        const rows = await db.AuditLog.findAll({
+            attributes: ['alogId', 'alogCompId', 'alogActor', 'alogMethod', 'alogPath', 'alogEntity', 'alogStatus'],
+            limit: 1,
+        });
+        expect(Array.isArray(rows)).toBe(true);
+    });
+
     test('Worker has the workerTargetMinsPerWeek column (#400)', async () => {
         if (!connected) return;
         const rows = await db.Worker.findAll({
