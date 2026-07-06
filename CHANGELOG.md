@@ -45,6 +45,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   explicitly) versus **400** (validation / a bad cross-tenant foreign key),
   so the distinction reads as deliberate rather than incidental.
 
+### Fixed
+- **Surface a database outage as 503, not 403** (#377). When Postgres is
+  unreachable, the auth lookups previously swallowed the connection error
+  into the same "unknown key" sentinel, so the API answered **403** —
+  indistinguishable from a bad credential and misleading during an outage.
+  `isMaster`/`getCompanyId` now re-throw genuine connection errors (a new
+  `isDbUnavailable` classifier; logical misses still collapse to the
+  sentinel), and `attachAuth` maps them to **503 Service Unavailable**.
+
 ### Security
 - **Tenant-scope `teCustId` on time-entry create** (#373). Creating a time
   entry (single or bulk) now verifies the customer belongs to the
