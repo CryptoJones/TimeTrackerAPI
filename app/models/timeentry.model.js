@@ -52,6 +52,12 @@ module.exports = (sequelize, Sequelize) => {
             // of rate resolution; NULL means "use the worker default".
             type: Sequelize.INTEGER,
         },
+        teTaskId: {
+            field: 'teTaskId',
+            // Nullable link to a Task under the job (#411). Its taskRate is
+            // the most-specific rate tier after a per-entry override.
+            type: Sequelize.INTEGER,
+        },
         teInvJobId: {
             field: 'teInvJobId',
             // The InvoiceJob line this entry was rolled into (#382), and

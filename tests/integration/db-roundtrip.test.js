@@ -127,7 +127,7 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         // Selecting the new attributes proves the 20260521 + 20260523
         // migrations added the columns (a missing column would throw).
         const rows = await db.TimeEntry.findAll({
-            attributes: ['teId', 'teWorkerId', 'teJobId', 'teBillTypeId', 'teInvJobId', 'teTags', 'teApprovalStatus'],
+            attributes: ['teId', 'teWorkerId', 'teJobId', 'teBillTypeId', 'teInvJobId', 'teTags', 'teApprovalStatus', 'teTaskId'],
             limit: 1,
         });
         expect(Array.isArray(rows)).toBe(true);
@@ -232,7 +232,7 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
     test('Task table exists with a job include (#407)', async () => {
         if (!connected) return;
         const rows = await db.Task.findAll({
-            attributes: ['taskId', 'taskJobId', 'taskName', 'taskDesc'],
+            attributes: ['taskId', 'taskJobId', 'taskName', 'taskDesc', 'taskRate'],
             limit: 1,
         });
         expect(Array.isArray(rows)).toBe(true);

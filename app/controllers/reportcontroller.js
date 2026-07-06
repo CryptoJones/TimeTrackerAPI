@@ -102,6 +102,8 @@ exports.unbilled = async (req, res) => {
                     model: db.Customer, as: 'customer', required: false,
                     attributes: ['custId', 'custCompanyName', 'custFName', 'custLName', 'custDefaultRate'],
                 },
+                // Task rate (#411) — the most-specific rate tier.
+                { model: db.Task, as: 'task', required: false, attributes: ['taskId', 'taskRate'] },
             ],
         });
     } catch (error) {
@@ -119,9 +121,10 @@ exports.unbilled = async (req, res) => {
             teBillable: e.teBillable,
             billingType: e.billingType,
             worker: e.worker,
-            // Pass job + customer so rate.js reads the project/client rate (#410, #413).
+            // Pass job + customer + task so rate.js reads project/client/task rate (#410, #413, #411).
             job: e.job,
             customer: e.customer,
+            task: e.task,
             custName: c ? (c.custCompanyName || [c.custFName, c.custLName].filter(Boolean).join(' ') || null) : null,
             jobDesc: e.job ? e.job.jobDesc : null,
         };
@@ -311,6 +314,8 @@ exports.billableSummary = async (req, res) => {
                 },
                 // Client rate card (#413) — resolveHourlyRate reads entry.customer.
                 { model: db.Customer, as: 'customer', required: false, attributes: ['custId', 'custDefaultRate'] },
+                // Task rate (#411) — the most-specific rate tier.
+                { model: db.Task, as: 'task', required: false, attributes: ['taskId', 'taskRate'] },
             ],
         });
     } catch (error) {
@@ -424,6 +429,8 @@ exports.budget = async (req, res) => {
                 },
                 // Client rate card (#413) — resolveHourlyRate reads entry.customer.
                 { model: db.Customer, as: 'customer', required: false, attributes: ['custId', 'custDefaultRate'] },
+                // Task rate (#411) — the most-specific rate tier.
+                { model: db.Task, as: 'task', required: false, attributes: ['taskId', 'taskRate'] },
             ],
         });
     } catch (error) {

@@ -26,6 +26,18 @@ describe('rate.resolveHourlyRate — precedence', () => {
         expect(rate.resolveHourlyRate(entry)).toBe(150);
     });
 
+    test('task rate wins over the project flat rate', () => {
+        expect(rate.resolveHourlyRate({ task: { taskRate: 250 }, job: { jobFlatRate: 200 } })).toBe(250);
+    });
+
+    test("entry's own BillingType wins over the task rate", () => {
+        expect(rate.resolveHourlyRate({ billingType: bt(150), task: { taskRate: 250 } })).toBe(150);
+    });
+
+    test('falls through a null task rate to the project rate', () => {
+        expect(rate.resolveHourlyRate({ task: { taskRate: null }, job: { jobFlatRate: 200 } })).toBe(200);
+    });
+
     test('project flat rate wins over the worker default', () => {
         const entry = { billingType: null, job: { jobFlatRate: 200 }, worker: { defaultBillingType: bt(100) } };
         expect(rate.resolveHourlyRate(entry)).toBe(200);

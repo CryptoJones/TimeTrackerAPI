@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Per-task rate** (#411). `Task.taskRate` + a `TimeEntry.teTaskId`
+  link (migration `20260613000000`) make the task the **most-specific**
+  tier of rate resolution in `rate.js`: per-entry override → **task** →
+  project → client → worker. It flows through the time-entry billing
+  view, the invoice roll-up, and the unbilled/billable-summary/budget
+  reports (all now eager-load `entry.task`). `teTaskId` is validated to a
+  task in the company (and, if a job is named, under that job); `taskRate`
+  settable on task create/PATCH.
 - **Retainer management** (#426). A new customer-scoped `Retainer`
   entity (`retAmount` deposit + `retBalance` remaining), migration
   `20260612000000`. Full REST: `POST /v1/retainer`,
