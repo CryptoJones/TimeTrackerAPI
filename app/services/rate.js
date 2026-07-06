@@ -9,11 +9,14 @@
  * Rate precedence (first match wins):
  *   1. the entry's OWN BillingType (teBillTypeId — a per-entry override)
  *   2. the entry's Job's flat rate (jobFlatRate — a per-project rate, #410)
- *   3. the entry's Worker's default BillingType (workerDefaultBillType)
+ *   3. the entry's Customer's default rate (custDefaultRate — a client
+ *      rate card, #413)
+ *   4. the entry's Worker's default BillingType (workerDefaultBillType)
  *
  * These functions are PURE: the caller eager-loads the associations
- * (entry.billingType, entry.job and entry.worker.defaultBillingType) so
- * rate.js never touches the database and stays trivially unit-testable.
+ * (entry.billingType, entry.job, entry.customer and
+ * entry.worker.defaultBillingType) so rate.js never touches the database
+ * and stays trivially unit-testable.
  */
 
 const money = require('./money.js');
@@ -34,12 +37,17 @@ function flatRateOf(job) {
     return job ? numOrNull(job.jobFlatRate) : null;
 }
 
+/** The client's default rate on a Customer instance, or null if absent. */
+function clientRateOf(customer) {
+    return customer ? numOrNull(customer.custDefaultRate) : null;
+}
+
 /**
  * The effective hourly rate for a time entry, or null when none can be
  * resolved. Expects eager-loaded `entry.billingType` (per-entry),
- * `entry.job` (per-project flat rate) and `entry.worker.defaultBillingType`
- * associations; a missing (or archived, hence unloaded) association
- * simply falls through to the next tier.
+ * `entry.job` (per-project flat rate), `entry.customer` (client rate
+ * card) and `entry.worker.defaultBillingType` associations; a missing
+ * association simply falls through to the next tier.
  */
 function resolveHourlyRate(entry) {
     if (!entry) return null;
@@ -47,6 +55,8 @@ function resolveHourlyRate(entry) {
     if (own != null) return own;
     const project = flatRateOf(entry.job);
     if (project != null) return project;
+    const client = clientRateOf(entry.customer);
+    if (client != null) return client;
     return rateOf(entry.worker && entry.worker.defaultBillingType);
 }
 

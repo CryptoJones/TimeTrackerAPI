@@ -215,6 +215,15 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         expect(Array.isArray(rows)).toBe(true);
     });
 
+    test('Customer has the custDefaultRate column (#413)', async () => {
+        if (!connected) return;
+        const rows = await db.Customer.findAll({
+            attributes: ['custId', 'custDefaultRate'],
+            limit: 1,
+        });
+        expect(Array.isArray(rows)).toBe(true);
+    });
+
     test('Worker has the workerTargetMinsPerWeek column (#400)', async () => {
         if (!connected) return;
         const rows = await db.Worker.findAll({

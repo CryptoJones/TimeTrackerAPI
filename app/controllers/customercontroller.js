@@ -140,7 +140,7 @@ exports.createCustomer = async (req, res) => {
         'custCompanyName', 'custFName', 'custLName',
         'custAddress1', 'custAddress2',
         'custCity', 'custState', 'custZip',
-        'custPhone', 'custEmail', 'custCompId',
+        'custPhone', 'custEmail', 'custCompId', 'custDefaultRate',
     ];
     const body = req.body || {};
     const payload = {};
@@ -372,7 +372,7 @@ exports.exportCsv = async (req, res) => {
         'custId', 'custCompanyName', 'custFName', 'custLName',
         'custAddress1', 'custAddress2',
         'custCity', 'custState', 'custZip',
-        'custPhone', 'custEmail', 'custCompId',
+        'custPhone', 'custEmail', 'custCompId', 'custDefaultRate',
     ];
     const escape = escapeCsvCell;
     const lines = [];

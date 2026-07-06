@@ -333,6 +333,8 @@ exports.rollup = async (req, res) => {
                     model: db.Worker, as: 'worker', required: false,
                     include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }],
                 },
+                // Client rate card (#413) — resolveHourlyRate reads entry.customer.
+                { model: db.Customer, as: 'customer', required: false, attributes: ['custId', 'custDefaultRate'] },
             ],
         });
     } catch (error) {

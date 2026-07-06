@@ -63,6 +63,16 @@ module.exports = (sequelize, Sequelize) => {
             type: Sequelize.INTEGER,
             allowNull: false,
         },
+        custDefaultRate: {
+            field: 'custDefaultRate',
+            // Client's default hourly rate (#413); the client tier of rate
+            // resolution. Number getter (pg NUMERIC→string).
+            type: Sequelize.DECIMAL(14, 2),
+            get() {
+                const v = this.getDataValue('custDefaultRate');
+                return v == null ? null : Number(v);
+            },
+        },
     }, {
         tableName: 'Customer',
         timestamps: true,
