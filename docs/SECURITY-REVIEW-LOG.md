@@ -23,7 +23,10 @@ plausible-but-unproven finding as not-a-finding.
 | Subsystem | Finding | Severity | PR |
 |---|---|---|---|
 | Idempotency | Unbounded `canonicalJson` → **pre-auth process-crash DoS** (the author's fix `580109b` had never been merged to `main`); depth-bounded → 400, async mount hardened | **High** | #558 |
+| Invoice PDF | Unbounded line count × long unbroken `jobDesc` → pdfkit superlinear word-fit **froze the event loop** (~6 s/req) — one authed request stalled the whole server; descriptions/notes clipped, line count capped | **High** | #568 |
+| Report PDF | Same pdfkit **event-loop-stall DoS** in `report-pdf.js` `drawTable` (uncapped rows × caller-controlled `custName`, ~9 s/req); cells clipped, rows capped | **High** | #569 |
 | Time-lock | Closed-period lock **bypass** via a timezone offset in `teStartedAt` (string bucketed to wall-clock day, `Date` to UTC) | High | #555 |
+| Billing gate | Invoice rollup ignored approval status → a reviewer-**rejected** entry still billed the client; rollup now excludes `teApprovalStatus = 'rejected'` | Med | #566 |
 | Mailer | `subject` / `from` not CR/LF-checked → **email header injection** once an SMTP transport is wired (defense-in-depth) | Med/latent | #564 |
 | RBAC | `permissionsFor` threw on prototype-named roles (`__proto__`) instead of failing closed to `[]` | Low | #561 |
 | JWT | `verify` accepted a token lacking `exp` (never expired) — now fail-closed | Low/DiD | #557 |
@@ -52,6 +55,20 @@ plausible-but-unproven finding as not-a-finding.
   JWT's** id (not a client param), so a token can't be pivoted cross-tenant;
   expiry is enforced on read; the projection is field-whitelisted; an
   invalid token 404s uniformly with no forgeable oracle.
+- **Approval state machine** — every `(status × action)` transition was
+  proven: double-approve, reject-of-approved, and skip-submit all 409; an
+  `approved` entry is frozen against **both** edit and delete, and because
+  `reject` is illegal from `approved` there is no unlock-then-edit path; the
+  approval endpoint is secure-404 scoped. (The chain/authz gaps are open
+  items 6–8 below.)
+- **CSV export** — every data cell routes through the formula-injection
+  escaper (`buildCsv` is the single, unit-tested assembly seam), the header
+  row is a trusted constant, the download filename id is `Number`-validated,
+  and an embedded newline stays quoted per RFC 4180 — no injection vector.
+- **Invoice/report PDF** — after the render-bound fixes, empty/partial data
+  degrades gracefully (no throw), the filename is sanitised to
+  `[A-Za-z0-9._-]` (no header injection), `fmtMoney` is null-safe, and no
+  server path or secret is embedded in the PDF metadata.
 
 ## Open — needs a design decision (not a bug fix)
 
@@ -99,6 +116,13 @@ deliberately **not** implemented autonomously.
    worker" check) — the same root cause as item 1 (RBAC is not enforced;
    API keys resolve to a company, not a user). Self-approval is currently
    unpreventable.
+9. **Process-level `unhandledRejection` net.** There is no global
+   `unhandledRejection` / `uncaughtException` handler, so an async rejection
+   that escaped a handler would crash the process on Node ≥ 15. Both the
+   idempotency and PDF reviews confirmed **no live escape path** (every such
+   call site catches), so this is defense-in-depth — but whether an escaped
+   rejection should crash-and-restart or log-and-continue is a deliberate
+   operational policy choice, so no global handler was added autonomously.
 
 ---
 
