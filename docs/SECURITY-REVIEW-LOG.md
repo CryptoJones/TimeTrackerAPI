@@ -22,6 +22,7 @@ plausible-but-unproven finding as not-a-finding.
 
 | Subsystem | Finding | Severity | PR |
 |---|---|---|---|
+| Webhooks (SSRF) | Tenant `whkUrl` fetched with only a structural check → **SSRF** to cloud metadata / loopback / private hosts (redirect-following bypass; `ping` status oracle); added a resolved-IP denylist + scheme pin + per-hop redirect re-validation (`ssrf-guard.js`) | **High** | #573 |
 | Idempotency | Unbounded `canonicalJson` → **pre-auth process-crash DoS** (the author's fix `580109b` had never been merged to `main`); depth-bounded → 400, async mount hardened | **High** | #558 |
 | Invoice PDF | Unbounded line count × long unbroken `jobDesc` → pdfkit superlinear word-fit **froze the event loop** (~6 s/req) — one authed request stalled the whole server; descriptions/notes clipped, line count capped | **High** | #568 |
 | Report PDF | Same pdfkit **event-loop-stall DoS** in `report-pdf.js` `drawTable` (uncapped rows × caller-controlled `custName`, ~9 s/req); cells clipped, rows capped | **High** | #569 |

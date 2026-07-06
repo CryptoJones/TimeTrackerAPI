@@ -162,6 +162,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sentinel), and `attachAuth` maps them to **503 Service Unavailable**.
 
 ### Security
+- **Block SSRF in outbound webhook delivery.** A tenant registers its own
+  `whkUrl` and the server POSTs to it, previously with only a **structural**
+  URL check — so a webhook (or its `POST /v1/webhook/:id/ping`) pointed at
+  `http://169.254.169.254/` (cloud metadata), `http://127.0.0.1:6379/`, or
+  any private / link-local host was delivered, `fetch` **followed
+  redirects** (a public→internal 302 bypassed a naive registration check),
+  and the `ping` response status leaked back as an internal-reachability
+  oracle. New `app/services/ssrf-guard.js` (`safeFetch`) pins the scheme to
+  http(s), resolves the destination and **rejects any loopback / link-local
+  / private / reserved / IPv4-mapped-to-those IP**, and **re-validates every
+  redirect hop**; the webhook schema also pins the scheme at registration.
+  Found by the outbound-HTTP SSRF review, which verified the HMAC signing,
+  write-only secret handling, timeout, and no-response-body-read as sound
+  (and confirmed the notifier is not a tenant-controlled URL surface).
 - **Tenant-check the inventory-item FK on PO lines, inventory transactions,
   and product entries.** Each of these entities validated its *parent* FK's
   company (PO header / company / job) but left the secondary inventory FK

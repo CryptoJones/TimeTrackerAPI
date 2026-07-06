@@ -24,18 +24,34 @@ describe('webhook-delivery: deliver()', () => {
         expect(fetchMock).not.toHaveBeenCalled();
     });
 
+    test('SSRF: an internal/metadata destination is blocked before fetch is called', async () => {
+        const fetchMock = vi.fn();
+        vi.stubGlobal('fetch', fetchMock);
+        // A tenant-controlled whkUrl pointed at cloud metadata / loopback
+        // must not be reached (see ssrf-guard.js). deliver() stays
+        // best-effort: it returns {ok:false} rather than throwing.
+        for (const whkUrl of ['http://169.254.169.254/latest/meta-data/', 'http://127.0.0.1:6379/', 'http://[::1]/']) {
+            const r = await deliver({ whkUrl, whkSecret: 'k' }, 'invoice.created', {});
+            expect(r.ok).toBe(false);
+        }
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    // NOTE: the success-path URLs below are public IP literals (not hostnames)
+    // so the SSRF guard passes without a real DNS lookup — fetch is mocked, so
+    // no connection is actually made.
     test('POSTs a signed JSON envelope and returns {ok, status} on a completed request', async () => {
         const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200 });
         vi.stubGlobal('fetch', fetchMock);
 
-        const webhook = { whkId: 7, whkUrl: 'https://example.test/hook', whkSecret: 's3cr3t' };
+        const webhook = { whkId: 7, whkUrl: 'http://8.8.8.8/hook', whkSecret: 's3cr3t' };
         const result = await deliver(webhook, 'invoice.created', { invId: 42 });
 
         expect(result).toEqual({ ok: true, status: 200 });
         expect(fetchMock).toHaveBeenCalledTimes(1);
 
         const [url, opts] = fetchMock.mock.calls[0];
-        expect(url).toBe('https://example.test/hook');
+        expect(url).toBe('http://8.8.8.8/hook');
         expect(opts.method).toBe('POST');
         expect(opts.headers['Content-Type']).toBe('application/json');
         expect(opts.headers['X-Webhook-Event']).toBe('invoice.created');
@@ -60,7 +76,7 @@ describe('webhook-delivery: deliver()', () => {
         const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 204 });
         vi.stubGlobal('fetch', fetchMock);
 
-        const result = await deliver({ whkUrl: 'https://example.test/hook', whkId: 1 }, 'payment.recorded', null);
+        const result = await deliver({ whkUrl: 'http://8.8.8.8/hook', whkId: 1 }, 'payment.recorded', null);
         expect(result).toEqual({ ok: true, status: 204 });
 
         const [, opts] = fetchMock.mock.calls[0];
@@ -72,21 +88,21 @@ describe('webhook-delivery: deliver()', () => {
     test('reports a non-2xx response as {ok:false, status}', async () => {
         const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 500 });
         vi.stubGlobal('fetch', fetchMock);
-        expect(await deliver({ whkUrl: 'https://x.test', whkSecret: 'k' }, 'invoice.created', {}))
+        expect(await deliver({ whkUrl: 'http://8.8.8.8', whkSecret: 'k' }, 'invoice.created', {}))
             .toEqual({ ok: false, status: 500 });
     });
 
     test('never throws — a fetch rejection resolves to {ok:false, error:<message>}', async () => {
         const fetchMock = vi.fn().mockRejectedValue(new Error('ECONNREFUSED'));
         vi.stubGlobal('fetch', fetchMock);
-        const result = await deliver({ whkUrl: 'https://x.test', whkId: 9, whkSecret: 'k' }, 'invoice.created', {});
+        const result = await deliver({ whkUrl: 'http://8.8.8.8', whkId: 9, whkSecret: 'k' }, 'invoice.created', {});
         expect(result).toEqual({ ok: false, error: 'ECONNREFUSED' });
     });
 
     test('falls back to a generic error string when the thrown value has no message', async () => {
         const fetchMock = vi.fn().mockRejectedValue({}); // e.g. a non-Error rejection
         vi.stubGlobal('fetch', fetchMock);
-        const result = await deliver({ whkUrl: 'https://x.test' }, 'invoice.created', {});
+        const result = await deliver({ whkUrl: 'http://8.8.8.8' }, 'invoice.created', {});
         expect(result).toEqual({ ok: false, error: 'delivery failed' });
     });
 });

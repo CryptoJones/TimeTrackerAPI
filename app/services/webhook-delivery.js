@@ -13,6 +13,7 @@
 
 const log = require('../config/logger.js');
 const { buildEvent, signPayload } = require('./webhook-signer.js');
+const { safeFetch } = require('./ssrf-guard.js');
 
 const TIMEOUT_MS = 5000;
 
@@ -31,7 +32,11 @@ async function deliver(webhook, event, data) {
     if (sig) headers['X-Webhook-Signature'] = sig;
 
     try {
-        const res = await fetch(url, {
+        // safeFetch enforces the SSRF guard (scheme + resolved-IP denylist)
+        // on the URL AND every redirect hop — a tenant can put any host in
+        // whkUrl, so this must not reach loopback / link-local / private
+        // ranges (e.g. cloud metadata at 169.254.169.254). See ssrf-guard.js.
+        const res = await safeFetch(url, {
             method: 'POST',
             headers,
             body,
