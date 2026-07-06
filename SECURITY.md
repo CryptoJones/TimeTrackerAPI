@@ -5,6 +5,10 @@ The project mirrors on both [GitHub](https://github.com/CryptoJones/TimeTrackerA
 and [Codeberg](https://codeberg.org/CryptoJones/TimeTrackerAPI); either
 forge is a valid place to reach us.
 
+> For the project's **implemented security controls** and a **SOC 2
+> readiness roadmap** (a companion to this disclosure policy), see
+> [`docs/SECURITY-POSTURE.md`](docs/SECURITY-POSTURE.md).
+
 ## Supported versions
 
 This is a single-track project. Security fixes land on `master` only;

@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **SOC 2 & security-posture roadmap** (#463). New
+  [`docs/SECURITY-POSTURE.md`](docs/SECURITY-POSTURE.md) inventories the
+  implemented technical controls (auth tiers, secure-404 tenant isolation,
+  RBAC, GDPR export/erase, the DCAA audit trail, formula-injection-safe
+  CSV, rate limiting, idempotency, dependency-free crypto), maps them to
+  the SOC 2 Trust Services Criteria, and lays out a prioritized readiness
+  roadmap. Cross-linked from the README and `SECURITY.md`. Docs only.
 - **DCAA-grade audit trail** (#462). Extends the audit log (#460) with the
   detail a defense-contract-grade trail needs (migration
   `20260628000000`): `alogEntityId` (the touched record — now stamped
