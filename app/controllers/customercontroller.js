@@ -2,7 +2,6 @@
 // Copyright 2026 Aaron K. Clark
 "use strict";
 
-const { sequelize } = require('../config/db.config.js');
 const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
@@ -11,13 +10,15 @@ const { makeBulkCreate } = require('./_bulk-helpers.js');
 const { escapeCsvCell } = require('./_csv-escape.js');
 const Customer = db.Customer;
 
-// IsMaster / GetCompanyId previously lived inline in this file and
-// were duplicated verbatim in timeentrycontroller.js. They moved to
-// app/middleware/auth.js — these aliases preserve the existing
-// PascalCase names used inside this controller body without churning
-// every call site.
+// IsMaster / GetCompanyId / GetCustomerCompanyId previously lived inline
+// in this file (and were duplicated across controllers). They moved to
+// app/middleware/auth.js — these aliases preserve the existing PascalCase
+// names used inside this controller body without churning every call site.
+// (#378 consolidated the customer→company lookup onto the auth helper,
+// dropping a hand-rolled raw-SQL duplicate.)
 const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
+const GetCustomerCompanyId = auth.getCompanyIdByCustomerId;
 
 /**
  * Escape the three SQL LIKE/ILIKE metacharacters in a substring so
@@ -575,36 +576,6 @@ async function findAndRespond(customerId, res) {
     } catch (error) {
         log.error({ err: error }, 'Customer.findByPk failed');
         return res.status(500).json({ message: "Error!" });
-    }
-}
-
-/**
- * Resolve a customer id to its owning company id, or -1 if not found.
- * Empty / missing ids return -1 without dereferencing an empty array.
- */
-async function GetCustomerCompanyId(customerId) {
-    // customerId comes from req.params.id (always a string). Treat empty
-    // or zero as "not found" before hitting the DB.
-    const idStr = customerId == null ? '' : String(customerId);
-    if (idStr.length === 0 || idStr === '0') {
-        return -1;
-    }
-    try {
-        const customerResult = await db.sequelize.query(
-            'SELECT * FROM "dbo"."Customer" WHERE "custId" = ? AND "custArch" = false;',
-            { replacements: [customerId], type: sequelize.QueryTypes.SELECT },
-        );
-        if (!customerResult || customerResult.length === 0) {
-            return -1;
-        }
-        const custCompanyId = customerResult[0].custCompId;
-        if (typeof custCompanyId === 'number' && custCompanyId > 0) {
-            return custCompanyId;
-        }
-        return -1;
-    } catch (error) {
-        log.error({ err: error }, 'GetCustomerCompanyId query failed');
-        return -1;
     }
 }
 
