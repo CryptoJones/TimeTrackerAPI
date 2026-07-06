@@ -35,6 +35,7 @@ const retainer = require('../controllers/retainercontroller.js');
 const phase = require('../controllers/phasecontroller.js');
 const role = require('../controllers/rolecontroller.js');
 const recurringInvoice = require('../controllers/recurringinvoicecontroller.js');
+const apikey = require('../controllers/apikeycontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -60,6 +61,7 @@ const retainerSchemas = require('../schemas/retainer.schema.js');
 const phaseSchemas = require('../schemas/phase.schema.js');
 const roleSchemas = require('../schemas/role.schema.js');
 const recurringInvoiceSchemas = require('../schemas/recurringinvoice.schema.js');
+const apiKeySchemas = require('../schemas/apikey.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -746,6 +748,34 @@ router.delete(
     '/v1/retainer/:id',
     v.params(retainerSchemas.intIdParam),
     retainer.remove,
+);
+
+// v1 api-key lifecycle routes (master-only; provision / rotate / revoke, #65).
+router.post(
+    '/v1/apikey',
+    v.body(apiKeySchemas.createApiKeyBody),
+    apikey.create,
+);
+router.get(
+    '/v1/apikey/bycompany/:id',
+    v.params(apiKeySchemas.intIdParam),
+    v.query(apiKeySchemas.listByCompanyQuery),
+    apikey.listByCompany,
+);
+router.post(
+    '/v1/apikey/:id/rotate',
+    v.params(apiKeySchemas.intIdParam),
+    apikey.rotate,
+);
+router.get(
+    '/v1/apikey/:id',
+    v.params(apiKeySchemas.intIdParam),
+    apikey.getById,
+);
+router.delete(
+    '/v1/apikey/:id',
+    v.params(apiKeySchemas.intIdParam),
+    apikey.revoke,
 );
 
 // v1 recurring-invoice routes (billing schedules, #425).

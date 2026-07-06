@@ -38,6 +38,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **API-key rotation & lifecycle** (#65). Master-only endpoints to manage
+  company credentials: `POST /v1/apikey` (provision), `POST
+  /v1/apikey/{id}/rotate` (replace the secret in place — the old key stops
+  working immediately), `DELETE /v1/apikey/{id}` (revoke), and
+  `GET /v1/apikey/{id}` + `GET /v1/apikey/bycompany/{id}` (metadata). The
+  raw key is generated server-side (256-bit) and returned **exactly once**
+  on create/rotate; only its SHA-256 hash is stored, and **no endpoint
+  ever returns the hash**. No migration — builds on the existing ApiKey
+  table + `auth.hashKey`.
 - **Recurring invoice schedules** (#425). A new customer-scoped
   `RecurringInvoice` entity (cadence, next-run date, active flag),
   migration `20260617000000`. Full REST on `/v1/recurringinvoice` (create,
