@@ -47,7 +47,12 @@ function buildPayroll(entries, workers, opts = {}) {
         const name = w ? [w.workerFName, w.workerLName].filter(Boolean).join(' ') || null : null;
         const costRate = (w && w.workerCostRate != null) ? Number(w.workerCostRate) : null;
         const totalHours = hoursFromMinutes(agg.totalMinutes);
-        const rowCost = costRate != null ? money.multiply(totalHours, costRate) : null;
+        // Labor cost is rate × exact minutes/60, rounded ONCE — NOT rate ×
+        // the 2-dp display hours. Pre-rounding the hours first injects up to
+        // 0.005×rate of error per worker (e.g. 50 min @ $100/hr: the display
+        // 0.83 h × 100 = 83.00, but the correct 100 × 50/60 = 83.33).
+        // Mirrors the rate × teMinutes/60 calc in rate.js.
+        const rowCost = costRate != null ? money.multiply(costRate, agg.totalMinutes / 60) : null;
         rows.push({
             workerId: agg.workerId,
             workerName: name,
