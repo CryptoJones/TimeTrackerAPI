@@ -137,6 +137,9 @@ organizational and outside this repository's boundary.
 
 ## 4. References
 
+- [`SECURITY-REVIEW-LOG.md`](SECURITY-REVIEW-LOG.md) — adversarial review
+  log: findings fixed, controls verified sound, and the open items awaiting
+  a design decision.
 - [`SECURITY.md`](../SECURITY.md) — vulnerability disclosure policy.
 - [`README.md`](../README.md) — "Security notes" section.
 - [`CHANGELOG.md`](../CHANGELOG.md) — per-release control history.

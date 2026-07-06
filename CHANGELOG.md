@@ -76,6 +76,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Documentation
+- **Adversarial security & correctness review log**
+  (`docs/SECURITY-REVIEW-LOG.md`). A subsystem-by-subsystem record of the
+  review — the findings fixed (a pre-auth idempotency DoS, a period-lock
+  timezone bypass, a payroll rounding error, an email header-injection
+  guard, and more), the controls verified sound (crypto/auth primitives,
+  multi-tenant scoping, the compliance data path, share links), and the
+  open items that need a **design decision** (RBAC enforcement, idempotency
+  concurrency, streamed GDPR export, per-link share revocation). Linked
+  from `docs/SECURITY-POSTURE.md`.
 - **Architecture & conventions guide** (`docs/ARCHITECTURE.md`). A
   maintainer-facing map of the system design — the request lifecycle, the
   multi-tenant auth model and `getCompanyId*` resolver family, the
