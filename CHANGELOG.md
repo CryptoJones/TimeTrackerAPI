@@ -38,6 +38,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **User accounts** (#444). A new company-scoped `User` entity (email,
+  name, scrypt-hashed password), migration `20260621000000`, with full
+  admin-provisioned REST on `/v1/user` (create, `bycompany` list,
+  get/patch/delete) and secure-404 scoping. Passwords are hashed with
+  Node's built-in **scrypt** (no dependency; per-hash salt, constant-time
+  verify — pure `password.js`) and the **hash is write-only** — no endpoint
+  returns it; email is unique per company. This is the foundation for
+  login (#445) and password reset (#446); the existing API-key auth is
+  unchanged. No live sign-in yet.
 - **Rate effective-dating** (#414). A new company-scoped `RateSchedule`
   entity (`rschRate` over `rschEffectiveFrom`..`rschEffectiveTo`, the
   latter open-ended when null), migration `20260620000000`. Full REST on

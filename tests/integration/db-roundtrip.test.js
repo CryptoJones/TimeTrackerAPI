@@ -215,6 +215,20 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         expect(Array.isArray(rows)).toBe(true);
     });
 
+    test('User table exists with a company include (#444)', async () => {
+        if (!connected) return;
+        const rows = await db.User.findAll({
+            attributes: ['userId', 'userCompId', 'userEmail', 'userName', 'userArch'],
+            limit: 1,
+        });
+        expect(Array.isArray(rows)).toBe(true);
+        const withCompany = await db.User.findAll({
+            limit: 1,
+            include: [{ model: db.Company, as: 'company', required: false }],
+        });
+        expect(Array.isArray(withCompany)).toBe(true);
+    });
+
     test('RateSchedule table exists with a company include (#414)', async () => {
         if (!connected) return;
         const rows = await db.RateSchedule.findAll({

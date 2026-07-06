@@ -39,6 +39,7 @@ const apikey = require('../controllers/apikeycontroller.js');
 const webhook = require('../controllers/webhookcontroller.js');
 const notification = require('../controllers/notificationcontroller.js');
 const rateSchedule = require('../controllers/rateschedulecontroller.js');
+const user = require('../controllers/usercontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -68,6 +69,7 @@ const apiKeySchemas = require('../schemas/apikey.schema.js');
 const webhookSchemas = require('../schemas/webhook.schema.js');
 const notificationSchemas = require('../schemas/notification.schema.js');
 const rateScheduleSchemas = require('../schemas/rateschedule.schema.js');
+const userSchemas = require('../schemas/user.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -772,6 +774,35 @@ router.delete(
     '/v1/retainer/:id',
     v.params(retainerSchemas.intIdParam),
     retainer.remove,
+);
+
+// v1 user-account routes (#444). Sign-in users, separate from API keys.
+router.post(
+    '/v1/user',
+    v.body(userSchemas.createUserBody),
+    user.create,
+);
+router.get(
+    '/v1/user/bycompany/:id',
+    v.params(userSchemas.intIdParam),
+    v.query(userSchemas.listByCompanyQuery),
+    user.listByCompany,
+);
+router.get(
+    '/v1/user/:id',
+    v.params(userSchemas.intIdParam),
+    user.getById,
+);
+router.patch(
+    '/v1/user/:id',
+    v.params(userSchemas.intIdParam),
+    v.body(userSchemas.updateUserBody),
+    user.update,
+);
+router.delete(
+    '/v1/user/:id',
+    v.params(userSchemas.intIdParam),
+    user.remove,
 );
 
 // v1 rate-schedule routes (effective-dated rates, #414).
