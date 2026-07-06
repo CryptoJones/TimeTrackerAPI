@@ -127,7 +127,7 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         // Selecting the new attributes proves the 20260521 + 20260523
         // migrations added the columns (a missing column would throw).
         const rows = await db.TimeEntry.findAll({
-            attributes: ['teId', 'teWorkerId', 'teJobId', 'teBillTypeId', 'teInvJobId', 'teTags'],
+            attributes: ['teId', 'teWorkerId', 'teJobId', 'teBillTypeId', 'teInvJobId', 'teTags', 'teApprovalStatus'],
             limit: 1,
         });
         expect(Array.isArray(rows)).toBe(true);

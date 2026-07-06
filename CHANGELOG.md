@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Timesheet approval workflow** (#440). `TimeEntry.teApprovalStatus`
+  (migration `20260608000000`, default `open`) tracks an entry through
+  **open → submitted → approved / rejected** (a rejected entry may
+  re-submit; approved is terminal). `POST /v1/timeentry/{id}/approval`
+  with `{ action: submit|approve|reject }` applies the guarded transition
+  (409 on an illegal one); both list routes accept `?approvalStatus=`.
+  New pure `app/services/approval.js` state machine.
 - **Audit log** (#460). An append-only `AuditLog` trail (migration
   `20260607000000`) — a `/v1` middleware records every **successful
   mutation** (POST/PATCH/PUT/DELETE) after the response is sent,

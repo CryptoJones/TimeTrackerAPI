@@ -166,6 +166,13 @@ router.post(
     v.params(timeEntrySchemas.intIdParam),
     timeEntry.stop,
 );
+// Timesheet approval workflow (#440): submit / approve / reject.
+router.post(
+    '/v1/timeentry/:id/approval',
+    v.params(timeEntrySchemas.intIdParam),
+    v.body(timeEntrySchemas.approvalBody),
+    timeEntry.approval,
+);
 // Literal paths declared BEFORE /:id so express doesn't try to
 // parse "export.csv" / "bycompany" as a customer id.
 router.get(

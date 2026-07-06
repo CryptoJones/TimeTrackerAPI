@@ -836,6 +836,22 @@ const spec = {
                 },
             },
         },
+        '/v1/timeentry/{id}/approval': {
+            post: {
+                summary: 'Advance a time entry through the approval workflow',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                requestBody: {
+                    content: { 'application/json': { schema: { type: 'object', properties: { action: { type: 'string', enum: ['submit', 'approve', 'reject'] } }, required: ['action'] } } },
+                },
+                responses: {
+                    200: { description: 'Approval updated' },
+                    400: { description: 'Bad action' },
+                    404: { description: 'Not found' },
+                    409: { description: 'Illegal transition from current state' },
+                },
+            },
+        },
         '/v1/timeentry': {
             post: {
                 summary: 'Create a time entry',

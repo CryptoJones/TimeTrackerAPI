@@ -103,15 +103,22 @@ const exportCsvQuery = z.object({
     message: 'Unexpected query parameter. Allowed: companyId, customerId, from, to, limit, offset.',
 });
 
+const approvalBody = z.object({
+    action: z.enum(['submit', 'approve', 'reject']),
+}).strict({
+    message: 'Body must be { action: submit|approve|reject }.',
+});
+
 const listByCompanyQuery = z.object({
     customerId: z.coerce.number().int().positive().optional(),
     tag: z.string().min(1).max(64).optional(),
+    approvalStatus: z.enum(['open', 'submitted', 'approved', 'rejected']).optional(),
     from: isoDatetime.optional(),
     to: isoDatetime.optional(),
     limit: z.coerce.number().int().positive().max(500).optional(),
     offset: z.coerce.number().int().nonnegative().optional(),
 }).strict({
-    message: 'Unexpected query parameter. Allowed: customerId, tag, from, to, limit, offset.',
+    message: 'Unexpected query parameter. Allowed: customerId, tag, approvalStatus, from, to, limit, offset.',
 });
 
 /**
@@ -138,6 +145,7 @@ module.exports = {
     createTimeEntryBody,
     updateTimeEntryBody,
     startTimerBody,
+    approvalBody,
     listByCompanyQuery,
     exportCsvQuery,
 };
