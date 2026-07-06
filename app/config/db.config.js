@@ -193,6 +193,11 @@ db.AuditLog.belongsTo(db.Company, { foreignKey: 'alogCompId', as: 'company' });
 db.Job.hasMany(db.Task,   { foreignKey: 'taskJobId', as: 'tasks' });
 db.Task.belongsTo(db.Job, { foreignKey: 'taskJobId', as: 'job' });
 
+// TimeEntry → Task (teTaskId): the task an entry was worked against (#411);
+// its taskRate is the most-specific rate tier after a per-entry override.
+db.Task.hasMany(db.TimeEntry,   { foreignKey: 'teTaskId', as: 'timeEntries' });
+db.TimeEntry.belongsTo(db.Task, { foreignKey: 'teTaskId', as: 'task' });
+
 // Retainer → Customer (retCustId): a client prepayment (#426).
 db.Customer.hasMany(db.Retainer,   { foreignKey: 'retCustId', as: 'retainers' });
 db.Retainer.belongsTo(db.Customer, { foreignKey: 'retCustId', as: 'customer' });

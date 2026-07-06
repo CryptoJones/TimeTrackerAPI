@@ -8,13 +8,14 @@
  *
  * Rate precedence (first match wins):
  *   1. the entry's OWN BillingType (teBillTypeId — a per-entry override)
- *   2. the entry's Job's flat rate (jobFlatRate — a per-project rate, #410)
- *   3. the entry's Customer's default rate (custDefaultRate — a client
+ *   2. the entry's Task's rate (taskRate — a per-task rate, #411)
+ *   3. the entry's Job's flat rate (jobFlatRate — a per-project rate, #410)
+ *   4. the entry's Customer's default rate (custDefaultRate — a client
  *      rate card, #413)
- *   4. the entry's Worker's default BillingType (workerDefaultBillType)
+ *   5. the entry's Worker's default BillingType (workerDefaultBillType)
  *
  * These functions are PURE: the caller eager-loads the associations
- * (entry.billingType, entry.job, entry.customer and
+ * (entry.billingType, entry.task, entry.job, entry.customer and
  * entry.worker.defaultBillingType) so rate.js never touches the database
  * and stays trivially unit-testable.
  */
@@ -42,17 +43,24 @@ function clientRateOf(customer) {
     return customer ? numOrNull(customer.custDefaultRate) : null;
 }
 
+/** The per-task rate on a Task instance, or null if absent. */
+function taskRateOf(task) {
+    return task ? numOrNull(task.taskRate) : null;
+}
+
 /**
  * The effective hourly rate for a time entry, or null when none can be
  * resolved. Expects eager-loaded `entry.billingType` (per-entry),
- * `entry.job` (per-project flat rate), `entry.customer` (client rate
- * card) and `entry.worker.defaultBillingType` associations; a missing
- * association simply falls through to the next tier.
+ * `entry.task` (per-task rate), `entry.job` (per-project flat rate),
+ * `entry.customer` (client rate card) and `entry.worker.defaultBillingType`
+ * associations; a missing association simply falls through to the next tier.
  */
 function resolveHourlyRate(entry) {
     if (!entry) return null;
     const own = rateOf(entry.billingType);
     if (own != null) return own;
+    const taskR = taskRateOf(entry.task);
+    if (taskR != null) return taskR;
     const project = flatRateOf(entry.job);
     if (project != null) return project;
     const client = clientRateOf(entry.customer);

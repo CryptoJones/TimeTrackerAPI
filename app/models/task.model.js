@@ -29,6 +29,16 @@ module.exports = (sequelize, Sequelize) => {
             field: 'taskDesc',
             type: Sequelize.TEXT,
         },
+        taskRate: {
+            field: 'taskRate',
+            // Per-task flat hourly rate (#411); the most-specific rate tier
+            // after a per-entry override. Number getter (pg NUMERIC→string).
+            type: Sequelize.DECIMAL(14, 2),
+            get() {
+                const v = this.getDataValue('taskRate');
+                return v == null ? null : Number(v);
+            },
+        },
         taskArch: {
             field: 'taskArch',
             type: Sequelize.BOOLEAN,

@@ -335,6 +335,8 @@ exports.rollup = async (req, res) => {
                 },
                 // Client rate card (#413) — resolveHourlyRate reads entry.customer.
                 { model: db.Customer, as: 'customer', required: false, attributes: ['custId', 'custDefaultRate'] },
+                // Task rate (#411) — the most-specific rate tier.
+                { model: db.Task, as: 'task', required: false, attributes: ['taskId', 'taskRate'] },
             ],
         });
     } catch (error) {

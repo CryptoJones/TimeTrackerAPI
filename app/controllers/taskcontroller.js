@@ -12,8 +12,8 @@ const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
 const GetCompanyIdByJobId = auth.getCompanyIdByJobId;
 
-const ALLOWED_FIELDS_CREATE = ['taskJobId', 'taskName', 'taskDesc'];
-const ALLOWED_FIELDS_UPDATE = ['taskName', 'taskDesc'];
+const ALLOWED_FIELDS_CREATE = ['taskJobId', 'taskName', 'taskDesc', 'taskRate'];
+const ALLOWED_FIELDS_UPDATE = ['taskName', 'taskDesc', 'taskRate'];
 
 /**
  * POST /v1/task — create a task under a job. The job's company (resolved

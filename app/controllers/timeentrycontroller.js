@@ -20,11 +20,11 @@ const GetCompanyId = auth.getCompanyId;
 
 const ALLOWED_FIELDS_CREATE = [
     'teCustId', 'teWorkerId', 'teJobId', 'teBillTypeId', 'teDescription',
-    'teStartedAt', 'teEndedAt', 'teBillable', 'teTags',
+    'teStartedAt', 'teEndedAt', 'teBillable', 'teTags', 'teTaskId',
 ];
 const ALLOWED_FIELDS_UPDATE = [
     'teWorkerId', 'teJobId', 'teBillTypeId', 'teDescription', 'teStartedAt',
-    'teEndedAt', 'teBillable', 'teTags',
+    'teEndedAt', 'teBillable', 'teTags', 'teTaskId',
 ];
 
 function computeMinutes(startedAt, endedAt) {
@@ -99,7 +99,7 @@ function isInvertedRange(startedAt, endedAt) {
  * Archived rows are filtered by defaultScope and therefore read as
  * "not found" → 400.
  */
-async function checkEntryLinks({ teWorkerId, teJobId, teBillTypeId }, companyId, custId) {
+async function checkEntryLinks({ teWorkerId, teJobId, teBillTypeId, teTaskId }, companyId, custId) {
     if (teWorkerId !== undefined && teWorkerId !== null) {
         const worker = await db.Worker.findByPk(Number(teWorkerId), {
             attributes: ['workerCompId'],
@@ -134,6 +134,22 @@ async function checkEntryLinks({ teWorkerId, teJobId, teBillTypeId }, companyId,
         });
         if (!bt || bt.btCompId !== companyId) {
             return { status: 400, message: 'teBillTypeId must reference a billing type in your company.' };
+        }
+    }
+    if (teTaskId !== undefined && teTaskId !== null) {
+        const task = await db.Task.findByPk(Number(teTaskId), {
+            attributes: ['taskJobId'],
+            include: [{
+                model: db.Job, as: 'job', attributes: ['jobCustId'], required: true,
+                include: [{ model: db.Customer, as: 'customer', attributes: ['custCompId'], required: true }],
+            }],
+        });
+        if (!task || !task.job || !task.job.customer || task.job.customer.custCompId !== companyId) {
+            return { status: 400, message: 'teTaskId must reference a task in your company.' };
+        }
+        // If the entry also names a job, the task must be under that job.
+        if (teJobId !== undefined && teJobId !== null && task.taskJobId !== Number(teJobId)) {
+            return { status: 400, message: 'teTaskId must belong to the job (teJobId).' };
         }
     }
     return null;
@@ -221,7 +237,7 @@ exports.create = async (req, res) => {
 };
 
 const START_FIELDS = [
-    'teCustId', 'teWorkerId', 'teJobId', 'teBillTypeId', 'teDescription', 'teBillable', 'teTags',
+    'teCustId', 'teWorkerId', 'teJobId', 'teBillTypeId', 'teDescription', 'teBillable', 'teTags', 'teTaskId',
 ];
 
 /**
@@ -512,6 +528,8 @@ exports.getById = async (req, res) => {
                 },
                 // Client rate card (#413) — resolveHourlyRate reads entry.customer.
                 { model: db.Customer, as: 'customer', required: false, attributes: ['custId', 'custDefaultRate'] },
+                // Task rate (#411) — the most-specific rate tier.
+                { model: db.Task, as: 'task', required: false, attributes: ['taskId', 'taskRate'] },
             ],
         });
     } catch (error) {

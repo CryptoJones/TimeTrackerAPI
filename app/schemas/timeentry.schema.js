@@ -38,13 +38,14 @@ const createTimeEntryBody = z.object({
     teWorkerId: z.coerce.number().int().positive().optional(),
     teJobId: z.coerce.number().int().positive().optional(),
     teBillTypeId: z.coerce.number().int().positive().optional(),
+    teTaskId: z.coerce.number().int().positive().optional(),
     teDescription: z.string().max(10000).optional(),
     teStartedAt: isoDatetime,
     teEndedAt: isoDatetime.optional(),
     teBillable: z.boolean().optional(),
     teTags: tagsField.optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: teCustId, teCompId, teWorkerId, teJobId, teBillTypeId, teDescription, teStartedAt, teEndedAt, teBillable, teTags.',
+    message: 'Unexpected field in body. Whitelist: teCustId, teCompId, teWorkerId, teJobId, teBillTypeId, teDescription, teStartedAt, teEndedAt, teBillable, teTags, teTaskId.',
 }).refine(
     (data) => !data.teEndedAt || new Date(data.teEndedAt) >= new Date(data.teStartedAt),
     {
@@ -71,13 +72,14 @@ const updateTimeEntryBody = z.object({
     teWorkerId: z.coerce.number().int().positive().nullable().optional(),
     teJobId: z.coerce.number().int().positive().nullable().optional(),
     teBillTypeId: z.coerce.number().int().positive().nullable().optional(),
+    teTaskId: z.coerce.number().int().positive().nullable().optional(),
     teDescription: z.string().max(10000).optional(),
     teStartedAt: isoDatetime.optional(),
     teEndedAt: isoDatetime.nullable().optional(),
     teBillable: z.boolean().optional(),
     teTags: tagsField.optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: teWorkerId, teJobId, teBillTypeId, teDescription, teStartedAt, teEndedAt, teBillable, teTags.',
+    message: 'Unexpected field in body. Whitelist: teWorkerId, teJobId, teBillTypeId, teDescription, teStartedAt, teEndedAt, teBillable, teTags, teTaskId.',
 }).refine(
     (data) => !(data.teStartedAt && data.teEndedAt) ||
         new Date(data.teEndedAt) >= new Date(data.teStartedAt),
@@ -148,11 +150,12 @@ const startTimerBody = z.object({
     teWorkerId: z.coerce.number().int().positive().optional(),
     teJobId: z.coerce.number().int().positive().optional(),
     teBillTypeId: z.coerce.number().int().positive().optional(),
+    teTaskId: z.coerce.number().int().positive().optional(),
     teDescription: z.string().max(10000).optional(),
     teBillable: z.boolean().optional(),
     teTags: tagsField.optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: teCustId, teCompId, teWorkerId, teJobId, teBillTypeId, teDescription, teBillable, teTags.',
+    message: 'Unexpected field in body. Whitelist: teCustId, teCompId, teWorkerId, teJobId, teBillTypeId, teDescription, teBillable, teTags, teTaskId.',
 });
 
 module.exports = {
