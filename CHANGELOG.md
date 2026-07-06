@@ -109,6 +109,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sentinel), and `attachAuth` maps them to **503 Service Unavailable**.
 
 ### Security
+- **Bound `canonicalJson` recursion — close a pre-auth DoS in the
+  idempotency middleware.** The middleware hashed the request body via an
+  **unbounded** recursive `canonicalJson`, so a deeply-nested JSON body
+  (well within the 100 KB `express.json` limit) overflowed the V8 call
+  stack. Because the middleware is mounted async **without** a `.catch` and
+  the process has no `unhandledRejection` net, that `RangeError` could
+  **crash the process** — reachable **pre-auth** on any `POST /v1/*` that
+  carries an `Idempotency-Key`. `canonicalJson` is now depth-bounded
+  (`MAX_CANONICAL_DEPTH = 64`, throwing a tagged `CanonicalJsonDepthError`
+  that the middleware returns as a clean `400 { code: 'body_too_deep' }`),
+  and the router mount now routes any async rejection to the error handler
+  (→ 500) rather than to the process. This brings the previously-unmerged
+  fix (`580109b`) onto `main` and hardens the mount. Found by an
+  adversarial review of the idempotency middleware.
 - **JWT `verify` requires the `exp` claim (fail-closed)** (#445). `verify`
   checked expiry only when `exp` was present, so a token minted without one
   (or with a non-numeric `exp`) never expired — despite the module
