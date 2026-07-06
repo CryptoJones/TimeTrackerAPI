@@ -97,7 +97,7 @@ exports.unbilled = async (req, res) => {
                 { model: db.BillingType, as: 'billingType', required: false },
                 {
                     model: db.Worker, as: 'worker', required: false,
-                    include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }],
+                    include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }, { model: db.Role, as: 'role', required: false }],
                 },
                 { model: db.Job, as: 'job', required: false, attributes: ['jobId', 'jobDesc', 'jobFlatRate'] },
                 {
@@ -312,7 +312,7 @@ exports.billableSummary = async (req, res) => {
                 { model: db.Job, as: 'job', required: false, attributes: ['jobId', 'jobFlatRate'] },
                 {
                     model: db.Worker, as: 'worker', required: false,
-                    include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }],
+                    include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }, { model: db.Role, as: 'role', required: false }],
                 },
                 // Client rate card (#413) — resolveHourlyRate reads entry.customer.
                 { model: db.Customer, as: 'customer', required: false, attributes: ['custId', 'custDefaultRate'] },
@@ -368,7 +368,7 @@ exports.profitability = async (req, res) => {
                 { model: db.Job, as: 'job', required: false, attributes: ['jobId', 'jobDesc', 'jobFlatRate'] },
                 {
                     model: db.Worker, as: 'worker', required: false,
-                    include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }],
+                    include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }, { model: db.Role, as: 'role', required: false }],
                 },
                 { model: db.Customer, as: 'customer', required: false, attributes: ['custId', 'custDefaultRate'] },
                 { model: db.Task, as: 'task', required: false, attributes: ['taskId', 'taskRate'] },
@@ -481,7 +481,7 @@ exports.budget = async (req, res) => {
                 { model: db.Job, as: 'job', required: false, attributes: ['jobId', 'jobFlatRate'] },
                 {
                     model: db.Worker, as: 'worker', required: false,
-                    include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }],
+                    include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }, { model: db.Role, as: 'role', required: false }],
                 },
                 // Client rate card (#413) — resolveHourlyRate reads entry.customer.
                 { model: db.Customer, as: 'customer', required: false, attributes: ['custId', 'custDefaultRate'] },

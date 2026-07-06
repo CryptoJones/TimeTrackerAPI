@@ -33,6 +33,7 @@ const auditlog = require('../controllers/auditlogcontroller.js');
 const task = require('../controllers/taskcontroller.js');
 const retainer = require('../controllers/retainercontroller.js');
 const phase = require('../controllers/phasecontroller.js');
+const role = require('../controllers/rolecontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -56,6 +57,7 @@ const auditlogSchemas = require('../schemas/auditlog.schema.js');
 const taskSchemas = require('../schemas/task.schema.js');
 const retainerSchemas = require('../schemas/retainer.schema.js');
 const phaseSchemas = require('../schemas/phase.schema.js');
+const roleSchemas = require('../schemas/role.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -742,6 +744,35 @@ router.delete(
     '/v1/retainer/:id',
     v.params(retainerSchemas.intIdParam),
     retainer.remove,
+);
+
+// v1 role routes (role rate cards, #412).
+router.post(
+    '/v1/role',
+    v.body(roleSchemas.createRoleBody),
+    role.create,
+);
+router.get(
+    '/v1/role/bycompany/:id',
+    v.params(roleSchemas.intIdParam),
+    v.query(roleSchemas.listByCompanyQuery),
+    role.listByCompany,
+);
+router.get(
+    '/v1/role/:id',
+    v.params(roleSchemas.intIdParam),
+    role.getById,
+);
+router.patch(
+    '/v1/role/:id',
+    v.params(roleSchemas.intIdParam),
+    v.body(roleSchemas.updateRoleBody),
+    role.update,
+);
+router.delete(
+    '/v1/role/:id',
+    v.params(roleSchemas.intIdParam),
+    role.remove,
 );
 
 // v1 phase routes (date-bounded billing stages under jobs, #408).

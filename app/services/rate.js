@@ -12,12 +12,13 @@
  *   3. the entry's Job's flat rate (jobFlatRate — a per-project rate, #410)
  *   4. the entry's Customer's default rate (custDefaultRate — a client
  *      rate card, #413)
- *   5. the entry's Worker's default BillingType (workerDefaultBillType)
+ *   5. the entry's Worker's Role rate (roleRate — a role rate card, #412)
+ *   6. the entry's Worker's default BillingType (workerDefaultBillType)
  *
  * These functions are PURE: the caller eager-loads the associations
- * (entry.billingType, entry.task, entry.job, entry.customer and
- * entry.worker.defaultBillingType) so rate.js never touches the database
- * and stays trivially unit-testable.
+ * (entry.billingType, entry.task, entry.job, entry.customer,
+ * entry.worker.role and entry.worker.defaultBillingType) so rate.js never
+ * touches the database and stays trivially unit-testable.
  */
 
 const money = require('./money.js');
@@ -48,6 +49,11 @@ function taskRateOf(task) {
     return task ? numOrNull(task.taskRate) : null;
 }
 
+/** The role rate on a Worker's linked Role, or null if absent. */
+function roleRateOf(worker) {
+    return worker && worker.role ? numOrNull(worker.role.roleRate) : null;
+}
+
 /**
  * The effective hourly rate for a time entry, or null when none can be
  * resolved. Expects eager-loaded `entry.billingType` (per-entry),
@@ -65,6 +71,8 @@ function resolveHourlyRate(entry) {
     if (project != null) return project;
     const client = clientRateOf(entry.customer);
     if (client != null) return client;
+    const role = roleRateOf(entry.worker);
+    if (role != null) return role;
     return rateOf(entry.worker && entry.worker.defaultBillingType);
 }
 

@@ -331,7 +331,7 @@ exports.rollup = async (req, res) => {
                 { model: db.Job, as: 'job', required: false, attributes: ['jobId', 'jobFlatRate'] },
                 {
                     model: db.Worker, as: 'worker', required: false,
-                    include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }],
+                    include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }, { model: db.Role, as: 'role', required: false }],
                 },
                 // Client rate card (#413) — resolveHourlyRate reads entry.customer.
                 { model: db.Customer, as: 'customer', required: false, attributes: ['custId', 'custDefaultRate'] },

@@ -71,6 +71,7 @@ db.AuditLog = require('../models/auditlog.model.js')(sequelize, Sequelize);
 db.Task = require('../models/task.model.js')(sequelize, Sequelize);
 db.Retainer = require('../models/retainer.model.js')(sequelize, Sequelize);
 db.Phase = require('../models/phase.model.js')(sequelize, Sequelize);
+db.Role = require('../models/role.model.js')(sequelize, Sequelize);
 
 // ----------------------------------------------------------------------
 // Associations — centralized so the relationship graph is visible
@@ -206,5 +207,11 @@ db.Retainer.belongsTo(db.Customer, { foreignKey: 'retCustId', as: 'customer' });
 // Phase → Job (phaseJobId): a date-bounded billing stage of a project (#408).
 db.Job.hasMany(db.Phase,   { foreignKey: 'phaseJobId', as: 'phases' });
 db.Phase.belongsTo(db.Job, { foreignKey: 'phaseJobId', as: 'job' });
+
+// Role → Company (roleCompId) + Worker → Role (workerRoleId): role rate card (#412).
+db.Company.hasMany(db.Role,  { foreignKey: 'roleCompId', as: 'roles' });
+db.Role.belongsTo(db.Company, { foreignKey: 'roleCompId', as: 'company' });
+db.Role.hasMany(db.Worker,   { foreignKey: 'workerRoleId', as: 'workers' });
+db.Worker.belongsTo(db.Role, { foreignKey: 'workerRoleId', as: 'role' });
 
 module.exports = db;

@@ -1426,6 +1426,49 @@ const spec = {
                 responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
             },
         },
+        '/v1/role': {
+            post: {
+                summary: 'Create a billing role (name + rate)',
+                security: [{ authKey: [] }],
+                responses: {
+                    201: { description: 'Created' },
+                    400: { description: 'Validation error; master keys must specify roleCompId' },
+                    403: { description: 'Auth failure' },
+                },
+            },
+        },
+        '/v1/role/bycompany/{id}': {
+            get: {
+                summary: "List a company's roles",
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer' } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer' } },
+                ],
+                responses: { 200: { description: 'Found (paginated)' }, 403: { description: 'Cross-tenant' } },
+            },
+        },
+        '/v1/role/{id}': {
+            get: {
+                summary: 'Fetch a role',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found' }, 404: { description: 'Not found' } },
+            },
+            patch: {
+                summary: 'Update a role',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Updated' }, 400: { description: 'Validation error' }, 404: { description: 'Not found' } },
+            },
+            delete: {
+                summary: 'Archive a role',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
+            },
+        },
         '/v1/phase': {
             post: {
                 summary: 'Create a phase / billing stage under a job',
