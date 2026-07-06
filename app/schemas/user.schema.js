@@ -3,6 +3,7 @@
 "use strict";
 
 const { z } = require('zod');
+const { ROLES } = require('../services/rbac.js');
 
 const intIdParam = z.object({
     id: z.coerce.number().int().positive(),
@@ -18,9 +19,17 @@ const createUserBody = z.object({
     userEmail: z.string().email().max(320),
     password: password,
     userName: z.string().min(1).max(255).optional(),
+    userRole: z.enum(ROLES).optional(),
     userCompId: z.coerce.number().int().positive().optional(),
 }).strict({
-    message: 'Unexpected field in body. Whitelist: userEmail, password, userName, userCompId.',
+    message: 'Unexpected field in body. Whitelist: userEmail, password, userName, userRole, userCompId.',
+});
+
+/** PATCH /v1/user/:id/role body (#448). */
+const setRoleBody = z.object({
+    userRole: z.enum(ROLES),
+}).strict({
+    message: 'Unexpected field in body. Whitelist: userRole.',
 });
 
 /** PATCH /v1/user/:id — userCompId is not patchable; password optional (re-hash). */
@@ -43,5 +52,6 @@ module.exports = {
     intIdParam,
     createUserBody,
     updateUserBody,
+    setRoleBody,
     listByCompanyQuery,
 };

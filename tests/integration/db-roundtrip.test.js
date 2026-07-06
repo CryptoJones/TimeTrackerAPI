@@ -247,7 +247,7 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
     test('User table exists with a company include (#444)', async () => {
         if (!connected) return;
         const rows = await db.User.findAll({
-            attributes: ['userId', 'userCompId', 'userEmail', 'userName', 'userArch', 'userResetTokenHash', 'userResetExpires'],
+            attributes: ['userId', 'userCompId', 'userEmail', 'userName', 'userRole', 'userArch', 'userResetTokenHash', 'userResetExpires'],
             limit: 1,
         });
         expect(Array.isArray(rows)).toBe(true);
