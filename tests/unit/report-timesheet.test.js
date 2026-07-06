@@ -19,6 +19,13 @@ describe('report-timesheet keys', () => {
         // 2026-07-06 is a Monday → itself.
         expect(weekKey('2026-07-06T09:00:00Z')).toBe('2026-07-06');
     });
+    test('weekKey returns the "unknown" sentinel on a calendar-invalid date (no throw)', () => {
+        // isoDatePart only validates format; '2026-13-45' parses to Invalid
+        // Date. weekKey must not throw RangeError — parity with dayKey.
+        expect(() => weekKey('2026-13-45')).not.toThrow();
+        expect(weekKey('2026-13-45')).toBe('unknown');
+        expect(weekKey('nope')).toBe('unknown');
+    });
 });
 
 describe('report-timesheet.buildTimesheet', () => {

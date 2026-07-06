@@ -38,8 +38,11 @@ function buildDunningDigest(invoices, opts = {}) {
         const outstanding = money.subtract(total, collected);
         if (outstanding <= 0) continue;
         const refDate = inv.dueDate || inv.date || null;
-        // Overdue when the reference date is strictly before the cutoff.
-        if (!refDate || !cutoff || refDate >= cutoff) continue;
+        // Flag when the reference date is on OR before the cutoff — i.e. the
+        // invoice is *at least* olderThanDays days in the past, matching the
+        // module contract. An invoice due exactly olderThanDays ago counts
+        // (previously a strict `>= cutoff` skip excluded that boundary day).
+        if (!refDate || !cutoff || refDate > cutoff) continue;
         rows.push({
             invId: inv.invId,
             invNumber: inv.invNumber || null,

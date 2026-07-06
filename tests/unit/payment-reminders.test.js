@@ -41,6 +41,16 @@ describe('buildDunningDigest (#10)', () => {
         expect(buildDunningDigest(invs, { today: TODAY, olderThanDays: 30 }).count).toBe(0); // within 30-day grace
     });
 
+    test('an invoice due exactly olderThanDays ago is included (boundary)', () => {
+        // today 2026-03-01, olderThanDays 30 → cutoff 2026-01-30. An invoice
+        // due exactly on the cutoff is "at least 30 days in the past" and
+        // must be flagged; one day newer (2026-01-31) is still within grace.
+        expect(buildDunningDigest([{ invId: 1, dueDate: '2026-01-30', total: 100, collected: 0 }],
+            { today: TODAY, olderThanDays: 30 }).count).toBe(1);
+        expect(buildDunningDigest([{ invId: 2, dueDate: '2026-01-31', total: 100, collected: 0 }],
+            { today: TODAY, olderThanDays: 30 }).count).toBe(0);
+    });
+
     test('falls back to invoice date when no due date', () => {
         const d = buildDunningDigest([
             { invId: 1, date: '2026-01-01', total: 200, collected: 0 },
