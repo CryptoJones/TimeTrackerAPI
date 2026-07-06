@@ -36,6 +36,7 @@ const phase = require('../controllers/phasecontroller.js');
 const role = require('../controllers/rolecontroller.js');
 const recurringInvoice = require('../controllers/recurringinvoicecontroller.js');
 const apikey = require('../controllers/apikeycontroller.js');
+const webhook = require('../controllers/webhookcontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -62,6 +63,7 @@ const phaseSchemas = require('../schemas/phase.schema.js');
 const roleSchemas = require('../schemas/role.schema.js');
 const recurringInvoiceSchemas = require('../schemas/recurringinvoice.schema.js');
 const apiKeySchemas = require('../schemas/apikey.schema.js');
+const webhookSchemas = require('../schemas/webhook.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -748,6 +750,40 @@ router.delete(
     '/v1/retainer/:id',
     v.params(retainerSchemas.intIdParam),
     retainer.remove,
+);
+
+// v1 webhook routes (outbound event subscriptions, #69).
+router.post(
+    '/v1/webhook',
+    v.body(webhookSchemas.createWebhookBody),
+    webhook.create,
+);
+router.get(
+    '/v1/webhook/bycompany/:id',
+    v.params(webhookSchemas.intIdParam),
+    v.query(webhookSchemas.listByCompanyQuery),
+    webhook.listByCompany,
+);
+router.post(
+    '/v1/webhook/:id/ping',
+    v.params(webhookSchemas.intIdParam),
+    webhook.ping,
+);
+router.get(
+    '/v1/webhook/:id',
+    v.params(webhookSchemas.intIdParam),
+    webhook.getById,
+);
+router.patch(
+    '/v1/webhook/:id',
+    v.params(webhookSchemas.intIdParam),
+    v.body(webhookSchemas.updateWebhookBody),
+    webhook.update,
+);
+router.delete(
+    '/v1/webhook/:id',
+    v.params(webhookSchemas.intIdParam),
+    webhook.remove,
 );
 
 // v1 api-key lifecycle routes (master-only; provision / rotate / revoke, #65).
