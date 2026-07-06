@@ -15,6 +15,7 @@
 
 const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
+const { entityIdOf } = require('../services/audit-trail.js');
 
 const MUTATING = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
 
@@ -43,6 +44,7 @@ function auditLog(req, res, next) {
                 alogMethod: method,
                 alogPath: fullPath,
                 alogEntity: entityOf(fullPath),
+                alogEntityId: entityIdOf(fullPath),
                 alogStatus: res.statusCode,
             };
 

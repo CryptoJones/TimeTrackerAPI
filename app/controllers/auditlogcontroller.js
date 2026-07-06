@@ -40,6 +40,16 @@ exports.listByCompany = async (req, res) => {
     const where = { alogCompId: targetCompanyId };
     if (typeof req.query.method === 'string' && req.query.method) where.alogMethod = req.query.method;
     if (typeof req.query.entity === 'string' && req.query.entity) where.alogEntity = req.query.entity.toLowerCase();
+    // DCAA filters (#462): a specific record, actor, and/or a date window.
+    const entityId = Number(req.query.entityId);
+    if (Number.isInteger(entityId) && entityId > 0) where.alogEntityId = entityId;
+    if (typeof req.query.actor === 'string' && req.query.actor) where.alogActor = req.query.actor;
+    const Op = db.Sequelize && db.Sequelize.Op;
+    if (Op && (req.query.from || req.query.to)) {
+        where.createdAt = {};
+        if (req.query.from) where.createdAt[Op.gte] = `${req.query.from}T00:00:00.000Z`;
+        if (req.query.to) where.createdAt[Op.lte] = `${req.query.to}T23:59:59.999Z`;
+    }
 
     const requestedLimit = parseInt(req.query.limit, 10);
     const limit = Number.isInteger(requestedLimit) && requestedLimit > 0 ? Math.min(requestedLimit, 500) : 100;

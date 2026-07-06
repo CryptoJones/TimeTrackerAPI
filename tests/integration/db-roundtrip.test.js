@@ -209,7 +209,7 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
     test('AuditLog table exists with its columns (#460)', async () => {
         if (!connected) return;
         const rows = await db.AuditLog.findAll({
-            attributes: ['alogId', 'alogCompId', 'alogActor', 'alogMethod', 'alogPath', 'alogEntity', 'alogStatus'],
+            attributes: ['alogId', 'alogCompId', 'alogActor', 'alogMethod', 'alogPath', 'alogEntity', 'alogStatus', 'alogEntityId', 'alogChanges', 'alogReason'],
             limit: 1,
         });
         expect(Array.isArray(rows)).toBe(true);
