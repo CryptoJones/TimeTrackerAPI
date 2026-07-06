@@ -5,6 +5,40 @@ and must stay in sync. Every backlog item below has a matching GitHub issue and 
 versa — when an item ships and its issue closes, check the box (or move it to `Done`)
 here so neither side drifts.
 
+## Status
+
+- **v1.1 — Billing core & capture: ✅ shipped** (23/23 issues closed) — the
+  full track → bill → get-paid engine (worker/job/rate links, exact money,
+  invoice rollup/status/numbering/PDF, payments, tags, timers, reporting).
+- **v1.2 — Workflow, auth & insight: ✅ shipped** — every feature is merged.
+  Six issues remain **open only as a tracking artifact** (the feature
+  shipped under a PR that referenced a different number): #393 (dunning),
+  #435 (utilization report), #447 (API-key rotation), #450 (email/SMTP
+  service), #451 (outbound webhooks), #439 (scheduled report delivery).
+  They are built — the boxes below stay unchecked only until those issues
+  are closed.
+- **v2.0 — Payments, integrations, frontend & scale: in progress.** The
+  **backend-buildable tranche is done** — 13 features shipped: scheduled
+  reports, RBAC (#448), GDPR export/erase (#461), payroll export (#456),
+  shareable invoice links (#438), multi-level approval chains (#443),
+  teammate invitations (#458), capacity planning (#459), Slack/Teams
+  notifications (#454), DCAA audit trail (#462), SOC 2 roadmap (#463),
+  custom fields (#409), billable-classification rules (#415). The
+  **remaining v2.0 items are decision-gated** and intentionally left
+  unchecked:
+  - ⚠️ **Frontend** (#384 SPA scaffold, #464/#465/#466 settings/dashboard/
+    client-portal, #437 per-client dashboards, #403 mobile, #401/#404/#405
+    idle/offline/AI capture) — the repo is API-only; these need a chosen UI stack.
+  - ⛔ **External accounts** (#383 Stripe, #394 PayPal, #395 gateway
+    webhooks/reconciliation, #402 Google/Outlook calendar, #452
+    QuickBooks/Xero, #453 Jira/Asana, #455 Salesforce/HubSpot, #457 Zapier)
+    — need credentials / a target account.
+  - **SSO** (#449 OAuth/SAML) — needs a provider + architecture decision.
+- **Engineering & hardening** (#372–#379) is a separate pre-existing track.
+
+See [`CHANGELOG.md`](CHANGELOG.md) for shipped-feature detail and
+[`docs/SECURITY-POSTURE.md`](docs/SECURITY-POSTURE.md) for the security-control map.
+
 ## Engineering & hardening
 
 - [ ] **TimeEntry: add POST /v1/timeentry/bulk for import parity** ([#379](https://github.com/CryptoJones/TimeTrackerAPI/issues/379))
@@ -51,9 +85,9 @@ Legend: ⚠️ needs a frontend (the repo is API-only today) · ⛔ blocked on a
 
 - [x] **Time-capture: start/stop timer endpoints** ([#396](https://github.com/CryptoJones/TimeTrackerAPI/issues/396)) · `v1.1`
 - [x] **Time-capture: worker time-list route** ([#397](https://github.com/CryptoJones/TimeTrackerAPI/issues/397)) · `v1.1`
-- [ ] **Time-capture: weekly and daily timesheet aggregation** ([#398](https://github.com/CryptoJones/TimeTrackerAPI/issues/398)) · `v1.2`
-- [ ] **Time-capture: recurring-entry templates** ([#399](https://github.com/CryptoJones/TimeTrackerAPI/issues/399)) · `v1.2`
-- [ ] **Time-capture: daily and weekly target hours with alerts** ([#400](https://github.com/CryptoJones/TimeTrackerAPI/issues/400)) · `v1.2`
+- [x] **Time-capture: weekly and daily timesheet aggregation** ([#398](https://github.com/CryptoJones/TimeTrackerAPI/issues/398)) · `v1.2`
+- [x] **Time-capture: recurring-entry templates** ([#399](https://github.com/CryptoJones/TimeTrackerAPI/issues/399)) · `v1.2`
+- [x] **Time-capture: daily and weekly target hours with alerts** ([#400](https://github.com/CryptoJones/TimeTrackerAPI/issues/400)) · `v1.2`
 - [ ] **Time-capture: idle detection and reminders** ([#401](https://github.com/CryptoJones/TimeTrackerAPI/issues/401)) · `v2.0` ⚠️
 - [ ] **Time-capture: calendar integration (Google/Outlook)** ([#402](https://github.com/CryptoJones/TimeTrackerAPI/issues/402)) · `v2.0`
 - [ ] **Time-capture: mobile capture** ([#403](https://github.com/CryptoJones/TimeTrackerAPI/issues/403)) · `v2.0` ⚠️
@@ -63,37 +97,37 @@ Legend: ⚠️ needs a frontend (the repo is API-only today) · ⛔ blocked on a
 ### Client / project / task structure
 
 - [x] **Structure: tags on time entries** ([#406](https://github.com/CryptoJones/TimeTrackerAPI/issues/406)) · `v1.1`
-- [ ] **Structure: tasks and activities under jobs** ([#407](https://github.com/CryptoJones/TimeTrackerAPI/issues/407)) · `v1.2`
-- [ ] **Structure: project phases and milestones as billing units** ([#408](https://github.com/CryptoJones/TimeTrackerAPI/issues/408)) · `v1.2`
-- [ ] **Structure: custom fields on clients, projects, and entries** ([#409](https://github.com/CryptoJones/TimeTrackerAPI/issues/409)) · `v2.0`
+- [x] **Structure: tasks and activities under jobs** ([#407](https://github.com/CryptoJones/TimeTrackerAPI/issues/407)) · `v1.2`
+- [x] **Structure: project phases and milestones as billing units** ([#408](https://github.com/CryptoJones/TimeTrackerAPI/issues/408)) · `v1.2`
+- [x] **Structure: custom fields on clients, projects, and entries** ([#409](https://github.com/CryptoJones/TimeTrackerAPI/issues/409)) · `v2.0`
 
 ### Billing rates
 
 - [x] **Billing-rates: per-project flat rate** ([#410](https://github.com/CryptoJones/TimeTrackerAPI/issues/410)) · `v1.1`
-- [ ] **Billing-rates: per-task rate** ([#411](https://github.com/CryptoJones/TimeTrackerAPI/issues/411)) · `v1.2`
-- [ ] **Billing-rates: role-based rates** ([#412](https://github.com/CryptoJones/TimeTrackerAPI/issues/412)) · `v1.2`
-- [ ] **Billing-rates: client-specific rate cards and overrides** ([#413](https://github.com/CryptoJones/TimeTrackerAPI/issues/413)) · `v1.2`
-- [ ] **Billing-rates: rate effective-dating** ([#414](https://github.com/CryptoJones/TimeTrackerAPI/issues/414)) · `v1.2`
-- [ ] **Billing-rates: project-template billable rules** ([#415](https://github.com/CryptoJones/TimeTrackerAPI/issues/415)) · `v2.0`
+- [x] **Billing-rates: per-task rate** ([#411](https://github.com/CryptoJones/TimeTrackerAPI/issues/411)) · `v1.2`
+- [x] **Billing-rates: role-based rates** ([#412](https://github.com/CryptoJones/TimeTrackerAPI/issues/412)) · `v1.2`
+- [x] **Billing-rates: client-specific rate cards and overrides** ([#413](https://github.com/CryptoJones/TimeTrackerAPI/issues/413)) · `v1.2`
+- [x] **Billing-rates: rate effective-dating** ([#414](https://github.com/CryptoJones/TimeTrackerAPI/issues/414)) · `v1.2`
+- [x] **Billing-rates: project-template billable rules** ([#415](https://github.com/CryptoJones/TimeTrackerAPI/issues/415)) · `v2.0`
 
 ### Expenses
 
 - [x] **Expenses: expense entity vs client, project, and job** ([#416](https://github.com/CryptoJones/TimeTrackerAPI/issues/416)) · `v1.1`
 - [x] **Expenses: billable expenses with markup** ([#417](https://github.com/CryptoJones/TimeTrackerAPI/issues/417)) · `v1.1`
 - [x] **Expenses: expenses roll into invoices** ([#418](https://github.com/CryptoJones/TimeTrackerAPI/issues/418)) · `v1.1`
-- [ ] **Expenses: receipt attachment and upload** ([#419](https://github.com/CryptoJones/TimeTrackerAPI/issues/419)) · `v1.2`
+- [x] **Expenses: receipt attachment and upload** ([#419](https://github.com/CryptoJones/TimeTrackerAPI/issues/419)) · `v1.2`
 
 ### Invoicing
 
 - [x] **Invoicing: taxes (per-line and per-invoice)** ([#420](https://github.com/CryptoJones/TimeTrackerAPI/issues/420)) · `v1.1`
 - [x] **Invoicing: discounts and write-offs** ([#421](https://github.com/CryptoJones/TimeTrackerAPI/issues/421)) · `v1.1`
 - [x] **Invoicing: AR aging report** ([#422](https://github.com/CryptoJones/TimeTrackerAPI/issues/422)) · `v1.1`
-- [ ] **Invoicing: branding and narratives** ([#423](https://github.com/CryptoJones/TimeTrackerAPI/issues/423)) · `v1.2` ⚠️
-- [ ] **Invoicing: summary vs detailed formats** ([#424](https://github.com/CryptoJones/TimeTrackerAPI/issues/424)) · `v1.2`
-- [ ] **Invoicing: recurring and scheduled invoices** ([#425](https://github.com/CryptoJones/TimeTrackerAPI/issues/425)) · `v1.2`
-- [ ] **Invoicing: retainer management** ([#426](https://github.com/CryptoJones/TimeTrackerAPI/issues/426)) · `v1.2`
-- [ ] **Invoicing: multi-currency** ([#427](https://github.com/CryptoJones/TimeTrackerAPI/issues/427)) · `v1.2`
-- [ ] **Invoicing: fixed-fee and milestone billing models** ([#428](https://github.com/CryptoJones/TimeTrackerAPI/issues/428)) · `v1.2`
+- [x] **Invoicing: branding and narratives** ([#423](https://github.com/CryptoJones/TimeTrackerAPI/issues/423)) · `v1.2` ⚠️
+- [x] **Invoicing: summary vs detailed formats** ([#424](https://github.com/CryptoJones/TimeTrackerAPI/issues/424)) · `v1.2`
+- [x] **Invoicing: recurring and scheduled invoices** ([#425](https://github.com/CryptoJones/TimeTrackerAPI/issues/425)) · `v1.2`
+- [x] **Invoicing: retainer management** ([#426](https://github.com/CryptoJones/TimeTrackerAPI/issues/426)) · `v1.2`
+- [x] **Invoicing: multi-currency** ([#427](https://github.com/CryptoJones/TimeTrackerAPI/issues/427)) · `v1.2`
+- [x] **Invoicing: fixed-fee and milestone billing models** ([#428](https://github.com/CryptoJones/TimeTrackerAPI/issues/428)) · `v1.2`
 
 ### Reporting & analytics
 
@@ -101,28 +135,28 @@ Legend: ⚠️ needs a frontend (the repo is API-only today) · ⛔ blocked on a
 - [x] **Reporting: unbilled billable-time report** ([#430](https://github.com/CryptoJones/TimeTrackerAPI/issues/430)) · `v1.1`
 - [x] **Reporting: hours by customer, job, and worker** ([#431](https://github.com/CryptoJones/TimeTrackerAPI/issues/431)) · `v1.1`
 - [x] **Reporting: billable vs non-billable summary** ([#432](https://github.com/CryptoJones/TimeTrackerAPI/issues/432)) · `v1.1`
-- [ ] **Reporting: PDF and Excel export parity** ([#433](https://github.com/CryptoJones/TimeTrackerAPI/issues/433)) · `v1.2`
-- [ ] **Reporting: budget vs actuals with alerts** ([#434](https://github.com/CryptoJones/TimeTrackerAPI/issues/434)) · `v1.2`
+- [x] **Reporting: PDF and Excel export parity** ([#433](https://github.com/CryptoJones/TimeTrackerAPI/issues/433)) · `v1.2`
+- [x] **Reporting: budget vs actuals with alerts** ([#434](https://github.com/CryptoJones/TimeTrackerAPI/issues/434)) · `v1.2`
 - [ ] **Reporting: utilization dashboard** ([#435](https://github.com/CryptoJones/TimeTrackerAPI/issues/435)) · `v1.2`
-- [ ] **Reporting: project profitability and margin** ([#436](https://github.com/CryptoJones/TimeTrackerAPI/issues/436)) · `v1.2`
+- [x] **Reporting: project profitability and margin** ([#436](https://github.com/CryptoJones/TimeTrackerAPI/issues/436)) · `v1.2`
 - [ ] **Reporting: per-client dashboards** ([#437](https://github.com/CryptoJones/TimeTrackerAPI/issues/437)) · `v2.0` ⚠️
-- [ ] **Reporting: shareable client-facing links** ([#438](https://github.com/CryptoJones/TimeTrackerAPI/issues/438)) · `v2.0`
+- [x] **Reporting: shareable client-facing links** ([#438](https://github.com/CryptoJones/TimeTrackerAPI/issues/438)) · `v2.0`
 - [ ] **Reporting: scheduled report delivery** ([#439](https://github.com/CryptoJones/TimeTrackerAPI/issues/439)) · `v2.0`
 
 ### Approvals & controls
 
-- [ ] **Approvals: timesheet submit, review, approve** ([#440](https://github.com/CryptoJones/TimeTrackerAPI/issues/440)) · `v1.2`
-- [ ] **Approvals: locked periods** ([#441](https://github.com/CryptoJones/TimeTrackerAPI/issues/441)) · `v1.2`
-- [ ] **Approvals: reminders and notifications** ([#442](https://github.com/CryptoJones/TimeTrackerAPI/issues/442)) · `v1.2`
-- [ ] **Approvals: multi-level approval chains** ([#443](https://github.com/CryptoJones/TimeTrackerAPI/issues/443)) · `v2.0`
+- [x] **Approvals: timesheet submit, review, approve** ([#440](https://github.com/CryptoJones/TimeTrackerAPI/issues/440)) · `v1.2`
+- [x] **Approvals: locked periods** ([#441](https://github.com/CryptoJones/TimeTrackerAPI/issues/441)) · `v1.2`
+- [x] **Approvals: reminders and notifications** ([#442](https://github.com/CryptoJones/TimeTrackerAPI/issues/442)) · `v1.2`
+- [x] **Approvals: multi-level approval chains** ([#443](https://github.com/CryptoJones/TimeTrackerAPI/issues/443)) · `v2.0`
 
 ### Auth & accounts
 
-- [ ] **Auth: self-service signup and user accounts** ([#444](https://github.com/CryptoJones/TimeTrackerAPI/issues/444)) · `v1.2`
-- [ ] **Auth: login (session or JWT)** ([#445](https://github.com/CryptoJones/TimeTrackerAPI/issues/445)) · `v1.2`
-- [ ] **Auth: password reset** ([#446](https://github.com/CryptoJones/TimeTrackerAPI/issues/446)) · `v1.2`
+- [x] **Auth: self-service signup and user accounts** ([#444](https://github.com/CryptoJones/TimeTrackerAPI/issues/444)) · `v1.2`
+- [x] **Auth: login (session or JWT)** ([#445](https://github.com/CryptoJones/TimeTrackerAPI/issues/445)) · `v1.2`
+- [x] **Auth: password reset** ([#446](https://github.com/CryptoJones/TimeTrackerAPI/issues/446)) · `v1.2`
 - [ ] **Auth: API-key rotation and lifecycle** ([#447](https://github.com/CryptoJones/TimeTrackerAPI/issues/447)) · `v1.2`
-- [ ] **Auth: roles and permissions (RBAC)** ([#448](https://github.com/CryptoJones/TimeTrackerAPI/issues/448)) · `v2.0`
+- [x] **Auth: roles and permissions (RBAC)** ([#448](https://github.com/CryptoJones/TimeTrackerAPI/issues/448)) · `v2.0`
 - [ ] **Auth: SSO (OAuth/SAML)** ([#449](https://github.com/CryptoJones/TimeTrackerAPI/issues/449)) · `v2.0`
 
 ### Integrations
@@ -131,22 +165,22 @@ Legend: ⚠️ needs a frontend (the repo is API-only today) · ⛔ blocked on a
 - [ ] **Integrations: outbound webhooks** ([#451](https://github.com/CryptoJones/TimeTrackerAPI/issues/451)) · `v1.2`
 - [ ] **Integrations: QuickBooks and Xero sync** ([#452](https://github.com/CryptoJones/TimeTrackerAPI/issues/452)) · `v2.0`
 - [ ] **Integrations: PM tools (Jira/Asana/Trello)** ([#453](https://github.com/CryptoJones/TimeTrackerAPI/issues/453)) · `v2.0`
-- [ ] **Integrations: Slack and Teams notifications** ([#454](https://github.com/CryptoJones/TimeTrackerAPI/issues/454)) · `v2.0`
+- [x] **Integrations: Slack and Teams notifications** ([#454](https://github.com/CryptoJones/TimeTrackerAPI/issues/454)) · `v2.0`
 - [ ] **Integrations: CRM (Salesforce/HubSpot)** ([#455](https://github.com/CryptoJones/TimeTrackerAPI/issues/455)) · `v2.0`
-- [ ] **Integrations: payroll export** ([#456](https://github.com/CryptoJones/TimeTrackerAPI/issues/456)) · `v2.0`
+- [x] **Integrations: payroll export** ([#456](https://github.com/CryptoJones/TimeTrackerAPI/issues/456)) · `v2.0`
 - [ ] **Integrations: Zapier and open connectors** ([#457](https://github.com/CryptoJones/TimeTrackerAPI/issues/457)) · `v2.0`
 
 ### Team & resource management
 
-- [ ] **Team: invite teammates to a workspace** ([#458](https://github.com/CryptoJones/TimeTrackerAPI/issues/458)) · `v2.0`
-- [ ] **Team: capacity and resource planning** ([#459](https://github.com/CryptoJones/TimeTrackerAPI/issues/459)) · `v2.0`
+- [x] **Team: invite teammates to a workspace** ([#458](https://github.com/CryptoJones/TimeTrackerAPI/issues/458)) · `v2.0`
+- [x] **Team: capacity and resource planning** ([#459](https://github.com/CryptoJones/TimeTrackerAPI/issues/459)) · `v2.0`
 
 ### Compliance & security
 
-- [ ] **Compliance: audit log** ([#460](https://github.com/CryptoJones/TimeTrackerAPI/issues/460)) · `v1.2`
-- [ ] **Compliance: GDPR data export and delete** ([#461](https://github.com/CryptoJones/TimeTrackerAPI/issues/461)) · `v2.0`
-- [ ] **Compliance: DCAA-grade audit trail** ([#462](https://github.com/CryptoJones/TimeTrackerAPI/issues/462)) · `v2.0`
-- [ ] **Compliance: SOC 2 and security-posture roadmap** ([#463](https://github.com/CryptoJones/TimeTrackerAPI/issues/463)) · `v2.0`
+- [x] **Compliance: audit log** ([#460](https://github.com/CryptoJones/TimeTrackerAPI/issues/460)) · `v1.2`
+- [x] **Compliance: GDPR data export and delete** ([#461](https://github.com/CryptoJones/TimeTrackerAPI/issues/461)) · `v2.0`
+- [x] **Compliance: DCAA-grade audit trail** ([#462](https://github.com/CryptoJones/TimeTrackerAPI/issues/462)) · `v2.0`
+- [x] **Compliance: SOC 2 and security-posture roadmap** ([#463](https://github.com/CryptoJones/TimeTrackerAPI/issues/463)) · `v2.0`
 
 ### Web / UX & client portal
 
