@@ -14,14 +14,29 @@
  * here. Returns a human-readable reason string when locked, else null.
  */
 
-/** 'YYYY-MM-DD' from a Date or ISO string, else null. */
+/**
+ * The UTC calendar day ('YYYY-MM-DD') of a Date or ISO string, else null.
+ *
+ * A Date is taken via toISOString (UTC). A string needs care: a bare
+ * 'YYYY-MM-DD' is already a zone-free calendar day, but a date-TIME string
+ * may carry a zone offset (the Zod `isoDatetime` validator accepts
+ * offsets). Both must resolve to the SAME UTC day a Date input would, or an
+ * offset like `+05:00` shifts the entry to the wrong day and can slip past
+ * the closed-period lock (#441) — e.g. `2026-07-07T01:00:00+05:00` is the
+ * instant `2026-07-06T20:00:00Z`, which belongs to the locked day.
+ */
 function dateOf(startedAt) {
     if (!startedAt) return null;
-    let s;
-    if (typeof startedAt === 'string') s = startedAt;
-    else if (startedAt instanceof Date) s = startedAt.toISOString();
-    else s = String(startedAt);
-    return /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : null;
+    if (startedAt instanceof Date) {
+        return Number.isNaN(startedAt.getTime()) ? null : startedAt.toISOString().slice(0, 10);
+    }
+    const s = typeof startedAt === 'string' ? startedAt : String(startedAt);
+    if (!/^\d{4}-\d{2}-\d{2}/.test(s)) return null;
+    // Bare calendar day (no time component) — no zone to reconcile.
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s.slice(0, 10);
+    // Date-time string: normalize to the UTC day the instant falls on.
+    const dt = new Date(s);
+    return Number.isNaN(dt.getTime()) ? null : dt.toISOString().slice(0, 10);
 }
 
 /**

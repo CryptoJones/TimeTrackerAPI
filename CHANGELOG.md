@@ -97,6 +97,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sentinel), and `attachAuth` maps them to **503 Service Unavailable**.
 
 ### Security
+- **Close a closed-period lock bypass via a timezone offset** (#441).
+  `time-lock.js` derived an entry's calendar day from the literal
+  `YYYY-MM-DD` prefix of a `teStartedAt` **string** (wall-clock) but from
+  `toISOString()` (UTC) for a `Date`. An offset-bearing timestamp such as
+  `2026-07-07T01:00:00+05:00` — the instant `2026-07-06T20:00:00Z`, which
+  belongs to a *locked* day — was bucketed to `2026-07-07` and slipped
+  past the lock, so create/edit/delete was wrongly allowed in a closed
+  period (and, in reverse, a genuinely-editable entry could be wrongly
+  frozen). `dateOf` now normalizes a date-time string to the true UTC day
+  the instant falls on (a bare `YYYY-MM-DD` is still taken as-is), matching
+  the `Date` path; malformed dates resolve to `null` instead of a wrong
+  slice. Found by an adversarial date/time review; regression tests pin
+  both offset directions.
 - **Tenant-scope `teCustId` on time-entry create** (#373). Creating a time
   entry (single or bulk) now verifies the customer belongs to the
   effective company — a scoped key can no longer book time against another
