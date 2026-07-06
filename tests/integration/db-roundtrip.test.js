@@ -226,6 +226,25 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         }
     });
 
+    test('billingType/role FK resolvers work against the real schema (Worker rate-source guard)', async () => {
+        if (!connected) return;
+        const auth = require('../../app/middleware/auth.js');
+        const company = await db.Company.create({ compName: `${SENTINEL}-wrkco`, compArch: false });
+        const bt = await db.BillingType.create({ btName: 'Std', btHourlyRate: 150, btCompId: company.compId, btArch: false });
+        const role = await db.Role.create({ roleName: 'Eng', roleCompId: company.compId, roleArch: false });
+        try {
+            expect(await auth.getCompanyIdByBtId(bt.btId)).toBe(company.compId);
+            expect(await auth.getCompanyIdByRoleId(role.roleId)).toBe(company.compId);
+            expect(await auth.billingTypeFkBelongsTo(bt.btId, company.compId)).toBe(true);
+            expect(await auth.billingTypeFkBelongsTo(bt.btId, company.compId + 99999)).toBe(false);
+            expect(await auth.roleFkBelongsTo(role.roleId, company.compId + 99999)).toBe(false);
+        } finally {
+            await bt.destroy();
+            await role.destroy();
+            await company.destroy();
+        }
+    });
+
     test('Invoice has invSubtotal / invTax / invTotal money columns', async () => {
         if (!connected) return;
         // Selecting the new attributes proves the 20260522 migration

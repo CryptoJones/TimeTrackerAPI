@@ -192,6 +192,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sentinel), and `attachAuth` maps them to **503 Service Unavailable**.
 
 ### Security
+- **Tenant-check the Worker rate-source FKs (`workerDefaultBillType`,
+  `workerRoleId`).** Both were **unchecked** on create / update / bulk, so a
+  company-scoped caller could point a worker at **another tenant's
+  BillingType or Role** — and because `rate.js` resolves a worker's rate from
+  `worker.defaultBillingType.btHourlyRate` / `worker.role.roleRate`, that
+  pulls a **foreign rate card into billing** (proven: resolved to company
+  B's `roleRate`). New `auth.getCompanyIdByBtId` / `getCompanyIdByRoleId` +
+  `billingTypeFkBelongsTo` / `roleFkBelongsTo` reject a cross-tenant or
+  missing FK with a 400 on create, update, **and** bulk (the bulk
+  `secondaryFk` helper now accepts multiple FKs). Same secondary-FK class as
+  the inventory / invoice-line fixes; found by a **systematic FK audit of
+  every controller**.
 - **Tenant-check the invoice FK on invoice lines (cross-tenant injection).**
   `InvoiceJob` create/bulk tenant-checked only the parent `injbJobId` (the
   job's company), leaving `injbInvId` — the **invoice** the line attaches to
