@@ -11,6 +11,11 @@ const InventoryItem = db.InventoryItem;
 
 const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
+// #374: prefer attachAuth's resolved context in the handlers below; the
+// raw IsMaster / GetCompanyId above are retained only for the _internals
+// test seam.
+const MasterFromReq = auth.masterFromReq;
+const CompanyIdFromReq = auth.companyIdFromReq;
 
 const ALLOWED_FIELDS_CREATE = ['invitDescription', 'invitQty', 'invitCompId'];
 const ALLOWED_FIELDS_UPDATE = ['invitDescription', 'invitQty'];
@@ -23,7 +28,7 @@ exports.create = async (req, res) => {
 
     let isAuthKeyMasterKey;
     try {
-        isAuthKeyMasterKey = await IsMaster(authKey);
+        isAuthKeyMasterKey = await MasterFromReq(req, authKey);
     } catch (error) {
         log.error({ err: error }, 'IsMaster failed');
         return res.status(500).json({ message: "Error!" });
@@ -38,7 +43,7 @@ exports.create = async (req, res) => {
     if (!isAuthKeyMasterKey) {
         let authKeyCompanyId;
         try {
-            authKeyCompanyId = await GetCompanyId(authKey);
+            authKeyCompanyId = await CompanyIdFromReq(req, authKey);
         } catch (error) {
             log.error({ err: error }, 'GetCompanyId failed');
             return res.status(500).json({ message: "Error!" });
@@ -88,9 +93,9 @@ exports.getById = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         // Cross-tenant access is reported as 404, not 403 — otherwise
         // a scoped caller can enumerate which InventoryItem ids are
         // populated across the whole tenant table by status code.
@@ -114,9 +119,9 @@ exports.listByCompany = async (req, res) => {
         return res.status(400).json({ message: "Invalid company id." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1 || companyId !== targetCompanyId) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
         }
@@ -170,9 +175,9 @@ exports.update = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         // Secure-404 on PATCH for the same reason as GET.
         if (companyId === -1 || inventoryItem.invitCompId !== companyId) {
             return res.status(404).json({ message: "Not found." });
@@ -214,9 +219,9 @@ exports.remove = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         // Secure-404 on DELETE for the same reason as GET / PATCH.
         if (companyId === -1 || inventoryItem.invitCompId !== companyId) {
             return res.status(404).json({ message: "Not found." });

@@ -17,6 +17,11 @@ const InvoiceJob = db.InvoiceJob;
 const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
 const GetCompanyIdByJobId = auth.getCompanyIdByJobId;
+// #374: prefer attachAuth's resolved context in the handlers below; the
+// raw IsMaster / GetCompanyId above are retained only for the _internals
+// test seam.
+const MasterFromReq = auth.masterFromReq;
+const CompanyIdFromReq = auth.companyIdFromReq;
 
 const ALLOWED_FIELDS_CREATE = ['injbInvId', 'injbJobId', 'injbAmount'];
 const ALLOWED_FIELDS_UPDATE = ['injbAmount'];
@@ -36,9 +41,9 @@ exports.create = async (req, res) => {
         return res.status(400).json({ message: "injbInvId and injbJobId are required." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const authCompanyId = await GetCompanyId(authKey);
+        const authCompanyId = await CompanyIdFromReq(req, authKey);
         const jobCompanyId = await GetCompanyIdByJobId(payload.injbJobId);
         if (authCompanyId === -1 || jobCompanyId === -1 || authCompanyId !== jobCompanyId) {
             return res.status(403).json({
@@ -75,9 +80,9 @@ exports.getById = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const authCompanyId = await GetCompanyId(authKey);
+        const authCompanyId = await CompanyIdFromReq(req, authKey);
         const jobCompanyId = await GetCompanyIdByJobId(invoiceJob.injbJobId);
         // Cross-tenant access is reported as 404, not 403 — otherwise
         // a scoped caller can enumerate which InvoiceJob ids are
@@ -102,13 +107,13 @@ exports.listByInvoice = async (req, res) => {
         return res.status(400).json({ message: "Invalid invoice id." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     // For non-master, we'd want to verify the invoice's company. To keep
     // this lookup cheap we resolve a single row from InvoiceJob and walk
     // its job to compId. If the invoice has no lines yet, non-master
     // callers get 403 (they can use the Invoice GET to verify access first).
     if (!isMaster) {
-        const authCompanyId = await GetCompanyId(authKey);
+        const authCompanyId = await CompanyIdFromReq(req, authKey);
         if (authCompanyId === -1) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
         }
@@ -172,9 +177,9 @@ exports.update = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const authCompanyId = await GetCompanyId(authKey);
+        const authCompanyId = await CompanyIdFromReq(req, authKey);
         const jobCompanyId = await GetCompanyIdByJobId(invoiceJob.injbJobId);
         // Secure-404 on PATCH for the same reason as GET.
         if (authCompanyId === -1 || jobCompanyId === -1 || authCompanyId !== jobCompanyId) {
@@ -217,9 +222,9 @@ exports.remove = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const authCompanyId = await GetCompanyId(authKey);
+        const authCompanyId = await CompanyIdFromReq(req, authKey);
         const jobCompanyId = await GetCompanyIdByJobId(invoiceJob.injbJobId);
         // Secure-404 on DELETE for the same reason as GET / PATCH.
         if (authCompanyId === -1 || jobCompanyId === -1 || authCompanyId !== jobCompanyId) {
