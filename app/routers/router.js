@@ -41,6 +41,7 @@ const notification = require('../controllers/notificationcontroller.js');
 const rateSchedule = require('../controllers/rateschedulecontroller.js');
 const user = require('../controllers/usercontroller.js');
 const authController = require('../controllers/authcontroller.js');
+const receipt = require('../controllers/receiptcontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -72,6 +73,7 @@ const notificationSchemas = require('../schemas/notification.schema.js');
 const rateScheduleSchemas = require('../schemas/rateschedule.schema.js');
 const userSchemas = require('../schemas/user.schema.js');
 const authSchemas = require('../schemas/auth.schema.js');
+const receiptSchemas = require('../schemas/receipt.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -800,6 +802,35 @@ router.post(
     '/v1/password-reset/confirm',
     v.body(authSchemas.confirmResetBody),
     authController.confirmReset,
+);
+
+// v1 receipt routes (#419). Files attached to expenses; bytes in Postgres.
+// GET /:id/download streams the file; /byexpense/:id lists metadata.
+router.post(
+    '/v1/receipt',
+    v.body(receiptSchemas.createReceiptBody),
+    receipt.create,
+);
+router.get(
+    '/v1/receipt/byexpense/:id',
+    v.params(receiptSchemas.intIdParam),
+    v.query(receiptSchemas.listByExpenseQuery),
+    receipt.listByExpense,
+);
+router.get(
+    '/v1/receipt/:id/download',
+    v.params(receiptSchemas.intIdParam),
+    receipt.download,
+);
+router.get(
+    '/v1/receipt/:id',
+    v.params(receiptSchemas.intIdParam),
+    receipt.getById,
+);
+router.delete(
+    '/v1/receipt/:id',
+    v.params(receiptSchemas.intIdParam),
+    receipt.remove,
 );
 
 // v1 user-account routes (#444). Sign-in users, separate from API keys.

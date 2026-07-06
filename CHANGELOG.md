@@ -38,6 +38,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Receipt attachment / upload** (#419). A new `Receipt` entity attached
+  to an expense (#416), migration `20260623000000`. Upload a file as
+  base64 JSON (`POST /v1/receipt`) — the bytes are stored in Postgres
+  (`bytea`), capped at 5 MB decoded, content-type whitelisted; the
+  effective upload size is governed by the `JSON_BODY_LIMIT` env var
+  (default 100kb). `GET /v1/receipt/{id}/download` streams the file;
+  `GET /v1/receipt/{id}` + `GET /v1/receipt/byexpense/{id}` return metadata
+  only (never the bytes); `DELETE` soft-deletes. Expense→company scoped
+  with secure-404. Self-contained (no object-store dependency); an S3
+  backend can drop in behind the controller later.
 - **Password reset** (#446). `POST /v1/password-reset/request` mints a
   one-time token, stores only its SHA-256 + a 1-hour expiry on the user
   (migration `20260622000000`), and emails the token via the mailer (#68);

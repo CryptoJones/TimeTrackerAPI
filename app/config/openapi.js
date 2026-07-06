@@ -1463,6 +1463,51 @@ const spec = {
                 responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
             },
         },
+        '/v1/receipt': {
+            post: {
+                summary: 'Attach a base64 file to an expense (#419)',
+                security: [{ authKey: [] }],
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { expId: { type: 'integer' }, filename: { type: 'string' }, contentType: { type: 'string' }, dataBase64: { type: 'string' } }, required: ['expId', 'filename', 'contentType', 'dataBase64'] } } } },
+                responses: {
+                    201: { description: 'Attached (metadata; bytes not echoed)' },
+                    400: { description: 'Validation error / bad expense / too large' },
+                    403: { description: 'Auth failure' },
+                },
+            },
+        },
+        '/v1/receipt/byexpense/{id}': {
+            get: {
+                summary: "List an expense's receipts (metadata only)",
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found (paginated; no file bytes)' }, 404: { description: 'Expense not found / cross-tenant' } },
+            },
+        },
+        '/v1/receipt/{id}/download': {
+            get: {
+                summary: 'Download a receipt file',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: {
+                    200: { description: 'The file (Content-Type + Content-Disposition attachment)', content: { 'application/octet-stream': { schema: { type: 'string', format: 'binary' } } } },
+                    404: { description: 'Not found' },
+                },
+            },
+        },
+        '/v1/receipt/{id}': {
+            get: {
+                summary: 'Fetch receipt metadata (not the bytes)',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found' }, 404: { description: 'Not found' } },
+            },
+            delete: {
+                summary: 'Archive a receipt',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
+            },
+        },
         '/v1/login': {
             post: {
                 summary: 'Sign in a user — returns a JWT (#445)',

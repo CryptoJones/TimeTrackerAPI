@@ -76,6 +76,7 @@ db.RecurringInvoice = require('../models/recurringinvoice.model.js')(sequelize, 
 db.Webhook = require('../models/webhook.model.js')(sequelize, Sequelize);
 db.RateSchedule = require('../models/rateschedule.model.js')(sequelize, Sequelize);
 db.User = require('../models/user.model.js')(sequelize, Sequelize);
+db.Receipt = require('../models/receipt.model.js')(sequelize, Sequelize);
 
 // ----------------------------------------------------------------------
 // Associations — centralized so the relationship graph is visible
@@ -233,5 +234,9 @@ db.RateSchedule.belongsTo(db.Company, { foreignKey: 'rschCompId', as: 'company' 
 // User → Company (userCompId): a person who signs in to a company (#444).
 db.Company.hasMany(db.User,   { foreignKey: 'userCompId', as: 'users' });
 db.User.belongsTo(db.Company, { foreignKey: 'userCompId', as: 'company' });
+
+// Receipt → Expense (rcptExpId): a file attached to an expense (#419).
+db.Expense.hasMany(db.Receipt,   { foreignKey: 'rcptExpId', as: 'receipts' });
+db.Receipt.belongsTo(db.Expense, { foreignKey: 'rcptExpId', as: 'expense' });
 
 module.exports = db;

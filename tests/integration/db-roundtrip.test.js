@@ -215,6 +215,21 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         expect(Array.isArray(rows)).toBe(true);
     });
 
+    test('Receipt table exists with an expense include (#419)', async () => {
+        if (!connected) return;
+        const rows = await db.Receipt.findAll({
+            attributes: ['rcptId', 'rcptExpId', 'rcptCompId', 'rcptFilename', 'rcptContentType', 'rcptSize'],
+            limit: 1,
+        });
+        expect(Array.isArray(rows)).toBe(true);
+        const withExpense = await db.Receipt.findAll({
+            attributes: ['rcptId'],
+            limit: 1,
+            include: [{ model: db.Expense, as: 'expense', required: false }],
+        });
+        expect(Array.isArray(withExpense)).toBe(true);
+    });
+
     test('User table exists with a company include (#444)', async () => {
         if (!connected) return;
         const rows = await db.User.findAll({
