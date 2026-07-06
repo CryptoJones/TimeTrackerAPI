@@ -37,6 +37,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`pg` bumped 8.20.0 → 8.21.0** (#122). Patch-level dep refresh
   in the `minor-and-patch` Dependabot group.
 
+### Security
+- **Tenant-scope `teCustId` on time-entry create** (#373). Creating a time
+  entry (single or bulk) now verifies the customer belongs to the
+  effective company — a scoped key can no longer book time against another
+  tenant's customer (previously only a supplied `teJobId`'s customer was
+  cross-checked; a jobless entry with a foreign `teCustId` slipped through).
+  Returns 400 when the customer is missing or in another company.
+
 ### Added
 - **Bulk time-entry import** (#379). `POST /v1/timeentry/bulk`
   `{ entries: [...] }` creates up to 200 entries in one call. Each row is
