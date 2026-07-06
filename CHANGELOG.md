@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Invoice PDF shows the discount line.** A discounted invoice's PDF
+  rendered Subtotal / Tax / Total with **no Discount row**, so the printed
+  document didn't add up — e.g. Subtotal 30.00 + Tax 2.06 shown against a
+  Total of 27.06, an unexplained 5.00 gap — even though the billed Total and
+  Balance Due were correct. The footer now emits a `Discount` deduction row
+  when a discount is present, so `Subtotal − Discount + Tax = Total`
+  reconciles on the page (the totals-row logic is extracted to a testable
+  `totalsRows` helper). Found by the invoice financial-computation review,
+  which otherwise verified the tax, balance, aging, and numbering math sound.
 - **Invoice rollup excludes REJECTED time entries** (#440). The
   time-entry → invoice rollup filtered on billable / job-linked /
   not-yet-invoiced but **not** on approval status, so an entry a reviewer

@@ -45,6 +45,28 @@ function clip(val, max) {
     return s.length > max ? s.slice(0, max - 1) + '…' : s;
 }
 
+/**
+ * Ordered totals rows for the invoice footer, as [label, value, bold]
+ * tuples. Extracted from drawInvoice so the discount-visibility rule is
+ * unit-testable — the rendered PDF's text is compressed and can't be
+ * asserted on directly. The Discount row (shown as a deduction) is emitted
+ * only when a discount is present, so that Subtotal − Discount + Tax =
+ * Total reconciles on the printed page (tax is on the post-discount base).
+ */
+function totalsRows(totals, payment, usd) {
+    const rows = [['Subtotal', usd(totals.subtotal), false]];
+    if (totals.discount != null && Number(totals.discount) !== 0) {
+        rows.push(['Discount', '-' + usd(totals.discount), false]);
+    }
+    rows.push(['Tax', usd(totals.tax), false]);
+    rows.push(['Total', usd(totals.total), true]);
+    if (payment.amountPaid != null && payment.amountPaid !== 0) {
+        rows.push(['Paid', usd(payment.amountPaid), false]);
+    }
+    rows.push(['Balance Due', usd(payment.balance != null ? payment.balance : totals.total), true]);
+    return rows;
+}
+
 function drawInvoice(doc, data) {
     const company = data.company || {};
     const customer = data.customer || {};
@@ -122,13 +144,9 @@ function drawInvoice(doc, data) {
         doc.text(value, 430, y, { align: 'right', width: 115 });
         y += 16;
     };
-    totalRow('Subtotal', usd(totals.subtotal));
-    totalRow('Tax', usd(totals.tax));
-    totalRow('Total', usd(totals.total), true);
-    if (payment.amountPaid != null && payment.amountPaid !== 0) {
-        totalRow('Paid', usd(payment.amountPaid));
+    for (const [label, value, bold] of totalsRows(totals, payment, usd)) {
+        totalRow(label, value, bold);
     }
-    totalRow('Balance Due', usd(payment.balance != null ? payment.balance : totals.total), true);
 
     // ---- Notes / narrative (per-invoice, #423) ----
     if (invoice.notes) {
@@ -165,4 +183,4 @@ function renderInvoicePdf(data) {
     });
 }
 
-module.exports = { renderInvoicePdf, clip, MAX_DESC_CHARS, MAX_NOTES_CHARS, MAX_PDF_LINES };
+module.exports = { renderInvoicePdf, totalsRows, clip, MAX_DESC_CHARS, MAX_NOTES_CHARS, MAX_PDF_LINES };

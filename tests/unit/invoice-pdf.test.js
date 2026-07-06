@@ -7,7 +7,11 @@
 
 import { describe, test, expect } from 'vitest';
 
-const { renderInvoicePdf, clip, MAX_DESC_CHARS, MAX_PDF_LINES } = require('../../app/services/invoice-pdf.js');
+const { renderInvoicePdf, totalsRows, clip, MAX_DESC_CHARS, MAX_PDF_LINES } = require('../../app/services/invoice-pdf.js');
+
+// A trivial money formatter for asserting the totals rows (the real one is
+// currency-aware; the row LOGIC is what we pin here).
+const usd = (n) => '$' + Number(n == null ? 0 : n).toFixed(2);
 
 const isPdf = (buf) => Buffer.isBuffer(buf) && buf.slice(0, 5).toString('latin1') === '%PDF-';
 
@@ -72,6 +76,30 @@ describe('invoice-pdf.renderInvoicePdf', () => {
         });
         expect(isPdf(eur)).toBe(true);
         expect(isPdf(other)).toBe(true);
+    });
+
+    test('totalsRows shows a Discount deduction so a discounted invoice reconciles', () => {
+        // Subtotal 30 − Discount 5 → taxable 25; Tax 2.06; Total 27.06.
+        const rows = totalsRows({ subtotal: 30, discount: 5, tax: 2.06, total: 27.06 }, { balance: 27.06 }, usd);
+        const labels = rows.map((r) => r[0]);
+        expect(labels).toEqual(['Subtotal', 'Discount', 'Tax', 'Total', 'Balance Due']);
+        const discount = rows.find((r) => r[0] === 'Discount');
+        expect(discount[1]).toBe('-$5.00'); // rendered as a deduction
+    });
+
+    test('totalsRows omits the Discount row when there is no discount', () => {
+        expect(totalsRows({ subtotal: 30, discount: 0, tax: 2.48, total: 32.48 }, {}, usd)
+            .map((r) => r[0])).not.toContain('Discount');
+        // absent discount field behaves the same as zero
+        expect(totalsRows({ subtotal: 30, tax: 2.48, total: 32.48 }, {}, usd)
+            .map((r) => r[0])).not.toContain('Discount');
+    });
+
+    test('totalsRows includes a Paid row only when a payment was made', () => {
+        expect(totalsRows({ subtotal: 30, tax: 0, total: 30 }, { amountPaid: 10, balance: 20 }, usd)
+            .map((r) => r[0])).toContain('Paid');
+        expect(totalsRows({ subtotal: 30, tax: 0, total: 30 }, { amountPaid: 0, balance: 30 }, usd)
+            .map((r) => r[0])).not.toContain('Paid');
     });
 
     test('clip bounds text length (guards the pdfkit event-loop stall)', () => {
