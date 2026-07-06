@@ -17,6 +17,11 @@ const PurchaseOrderLine = db.PurchaseOrderLine;
 const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
 const GetCompanyIdByPohId = auth.getCompanyIdByPohId;
+// #374: prefer attachAuth's resolved context in the handlers below; the
+// raw IsMaster / GetCompanyId above are retained only for the _internals
+// test seam.
+const MasterFromReq = auth.masterFromReq;
+const CompanyIdFromReq = auth.companyIdFromReq;
 
 const ALLOWED_FIELDS_CREATE = ['polpoh', 'polItemDesc', 'polQty', 'polPrice', 'polInvtId'];
 const ALLOWED_FIELDS_UPDATE = ['polItemDesc', 'polQty', 'polPrice', 'polInvtId'];
@@ -36,9 +41,9 @@ exports.create = async (req, res) => {
         return res.status(400).json({ message: "polpoh (PO header id) is required." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const authCompanyId = await GetCompanyId(authKey);
+        const authCompanyId = await CompanyIdFromReq(req, authKey);
         const headerCompanyId = await GetCompanyIdByPohId(payload.polpoh);
         if (authCompanyId === -1 || headerCompanyId === -1 || authCompanyId !== headerCompanyId) {
             return res.status(403).json({
@@ -75,9 +80,9 @@ exports.getById = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const authCompanyId = await GetCompanyId(authKey);
+        const authCompanyId = await CompanyIdFromReq(req, authKey);
         const headerCompanyId = await GetCompanyIdByPohId(line.polpoh);
         // Cross-tenant access is reported as 404, not 403 — otherwise
         // a scoped caller can enumerate which PurchaseOrderLine ids
@@ -102,9 +107,9 @@ exports.listByHeader = async (req, res) => {
         return res.status(400).json({ message: "Invalid header id." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const authCompanyId = await GetCompanyId(authKey);
+        const authCompanyId = await CompanyIdFromReq(req, authKey);
         const headerCompanyId = await GetCompanyIdByPohId(targetHeaderId);
         if (authCompanyId === -1 || headerCompanyId === -1 || authCompanyId !== headerCompanyId) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
@@ -153,9 +158,9 @@ exports.update = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const authCompanyId = await GetCompanyId(authKey);
+        const authCompanyId = await CompanyIdFromReq(req, authKey);
         const headerCompanyId = await GetCompanyIdByPohId(line.polpoh);
         // Secure-404 on PATCH for the same reason as GET.
         if (authCompanyId === -1 || headerCompanyId === -1 || authCompanyId !== headerCompanyId) {
@@ -198,9 +203,9 @@ exports.remove = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const authCompanyId = await GetCompanyId(authKey);
+        const authCompanyId = await CompanyIdFromReq(req, authKey);
         const headerCompanyId = await GetCompanyIdByPohId(line.polpoh);
         // Secure-404 on DELETE for the same reason as GET / PATCH.
         if (authCompanyId === -1 || headerCompanyId === -1 || authCompanyId !== headerCompanyId) {
