@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Process-level safety net for escaped async errors (#594).** `server.js`
+  installs global handlers: an `unhandledRejection` is logged and the process
+  continues (a stray missed `.catch` shouldn't drop in-flight connections),
+  while an `uncaughtException` is logged then triggers `exit(1)` so a
+  supervisor (systemd/k8s/docker) restarts a clean process. Defense-in-depth —
+  no known live escape path. Resolves review-log item 9.
 - **Time entries snapshot their billing rate at creation (#593).** A new
   nullable `TimeEntry.teRateSnapshot` freezes the hourly rate resolved when an
   entry is created (also on timer-start and copy); `rate.js#resolveHourlyRate`

@@ -187,13 +187,14 @@ deliberately **not** implemented autonomously.
    acting user) with a 403. The API-key path stays full-authority. Remaining
    product knob: the approve tier defaults to `manager+` (adjustable), and
    the `workerUserId` link is populated by whoever provisions workers.
-9. **Process-level `unhandledRejection` net.** There is no global
-   `unhandledRejection` / `uncaughtException` handler, so an async rejection
-   that escaped a handler would crash the process on Node ≥ 15. Both the
-   idempotency and PDF reviews confirmed **no live escape path** (every such
-   call site catches), so this is defense-in-depth — but whether an escaped
-   rejection should crash-and-restart or log-and-continue is a deliberate
-   operational policy choice, so no global handler was added autonomously.
+9. **Process-level safety net — RESOLVED (#594).** `server.js` now installs
+   `app/config/process-safety.js`: an `unhandledRejection` is **logged** (and
+   the process continues — a stray missed `.catch` shouldn't drop every
+   in-flight connection), while an `uncaughtException` is **logged then
+   `exit(1)`** so a supervisor restarts a clean process (state may be corrupt
+   after an uncaught throw). Both reviews confirmed **no live escape path**, so
+   this is defense-in-depth. The policy is documented as adjustable (an
+   operator preferring fail-fast can flip the rejection branch).
 10. **Rate snapshot — RESOLVED (#593).** `resolveHourlyRate` read the
     *current* rate sources at invoice/report time, so editing a rate
     retroactively re-priced a not-yet-invoiced backlog. A new nullable
