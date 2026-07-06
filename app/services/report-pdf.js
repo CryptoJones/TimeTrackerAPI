@@ -22,6 +22,19 @@ function fmtMoney(n, currency) {
     return sym ? sym + money.toFixedString(n) : code + ' ' + money.toFixedString(n);
 }
 
+// Bound the text handed to pdfkit. A long — especially unbroken — string
+// makes its word-fit measurement SUPERLINEAR and freezes the single-
+// threaded event loop (measured ~9s for 100 rows × a 10k-char custName),
+// so an uncapped report with a caller-controlled customer name could stall
+// the whole server. Cells are clipped and the row count capped. (Same
+// class of DoS fixed in invoice-pdf.js.)
+const MAX_CELL_CHARS = 200;
+const MAX_TABLE_ROWS = 2000;
+function clip(val, max) {
+    const s = val == null ? '' : String(val);
+    return s.length > max ? s.slice(0, max - 1) + '…' : s;
+}
+
 /** Draw a simple table; returns the y after the last row. Paginates at the page foot. */
 function drawTable(doc, y, headers, rows, cols) {
     doc.fontSize(9).font('Helvetica-Bold').fillColor('#000');
@@ -34,9 +47,15 @@ function drawTable(doc, y, headers, rows, cols) {
         doc.fillColor('#666').text('No data for this range.', 50, y);
         return y + 16;
     }
-    for (const r of rows) {
+    for (const r of rows.slice(0, MAX_TABLE_ROWS)) {
         if (y > 770) { doc.addPage(); y = 50; }
-        r.forEach((cell, i) => doc.text(String(cell), cols[i].x, y, { width: cols[i].w, align: cols[i].align || 'left' }));
+        r.forEach((cell, i) => doc.text(clip(cell, MAX_CELL_CHARS), cols[i].x, y, { width: cols[i].w, align: cols[i].align || 'left' }));
+        y += 14;
+    }
+    if (rows.length > MAX_TABLE_ROWS) {
+        if (y > 770) { doc.addPage(); y = 50; }
+        doc.fillColor('#666').text(`… and ${rows.length - MAX_TABLE_ROWS} more row(s) not shown.`, 50, y);
+        doc.fillColor('#000');
         y += 14;
     }
     return y;
@@ -132,4 +151,4 @@ function renderRevenuePdf(data) {
     });
 }
 
-module.exports = { renderRevenuePdf };
+module.exports = { renderRevenuePdf, clip, MAX_CELL_CHARS, MAX_TABLE_ROWS };

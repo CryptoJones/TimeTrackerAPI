@@ -153,6 +153,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sentinel), and `attachAuth` maps them to **503 Service Unavailable**.
 
 ### Security
+- **Bound report-PDF rendering — the same event-loop-stall DoS.**
+  `report-pdf.js` `drawTable` rendered every row's cells with no cap and no
+  clip, and the customer name (`custName`) is caller-controlled — 100 rows
+  × a 10 000-char name froze the single-threaded event loop ~9 s per
+  revenue-report PDF (worse than the invoice case). Cells are now clipped
+  (`MAX_CELL_CHARS`) and the row count capped (`MAX_TABLE_ROWS`, remainder
+  summarised), bounding render time to well under a second (9 s → 0.11 s).
+  Sibling fix to the invoice-PDF bound below; found by extending the same
+  review to the report renderer.
 - **Bound invoice-PDF rendering — stop a synchronous event-loop-stall
   DoS.** `drawInvoice` rendered every line item synchronously with no cap,
   and a long unbroken `jobDesc` (up to 10 000 chars) triggers pdfkit's
