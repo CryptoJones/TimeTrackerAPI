@@ -42,7 +42,15 @@ function roleRank(role) {
 
 /** The permission strings granted to `role` (empty for unknown roles). */
 function permissionsFor(role) {
-    return (PERMISSIONS[role] || []).slice();
+    // hasOwnProperty guard: a prototype-named role ('__proto__',
+    // 'constructor', 'toString', …) would otherwise resolve PERMISSIONS[role]
+    // to an inherited non-array and throw a TypeError on `.slice()`. Treat
+    // anything that isn't an OWN role key as unknown → [] (fail-closed),
+    // matching the docstring — and keeping hasPermission / canAssignRole
+    // robust for the day they are wired to user-supplied input.
+    return Object.prototype.hasOwnProperty.call(PERMISSIONS, role)
+        ? PERMISSIONS[role].slice()
+        : [];
 }
 
 /** Does `role` grant `permission`? */

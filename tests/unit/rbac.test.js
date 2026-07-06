@@ -38,6 +38,21 @@ describe('rbac (#448)', () => {
         expect(hasPermission('ghost', 'time:read')).toBe(false);
     });
 
+    test('prototype-named roles/permissions fail closed (no throw)', () => {
+        // PERMISSIONS[role] must not resolve to an inherited object; a
+        // prototype key has to read as an unknown role → [] / false, never a
+        // TypeError from calling .slice() on Object.prototype.__proto__ etc.
+        for (const k of ['__proto__', 'constructor', 'toString', 'hasOwnProperty']) {
+            expect(() => permissionsFor(k)).not.toThrow();
+            expect(permissionsFor(k)).toEqual([]);
+            expect(hasPermission(k, 'time:read')).toBe(false);
+            expect(canAssignRole(k, 'owner')).toBe(false);
+        }
+        // A prototype key as the PERMISSION also grants nothing.
+        expect(hasPermission('owner', '__proto__')).toBe(false);
+        expect(hasPermission('owner', 'toString')).toBe(false);
+    });
+
     test('canAssignRole: needs manage-roles and no privilege escalation', () => {
         // Admin can assign member/viewer/manager/admin, but NOT owner.
         expect(canAssignRole('admin', 'member')).toBe(true);

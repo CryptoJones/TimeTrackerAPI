@@ -115,6 +115,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sentinel), and `attachAuth` maps them to **503 Service Unavailable**.
 
 ### Security
+- **`rbac.permissionsFor` fails closed on prototype-named roles** (#448). A
+  role string matching an `Object.prototype` key (`__proto__`,
+  `constructor`, `toString`) resolved `PERMISSIONS[role]` to an inherited
+  non-array and threw `TypeError` on `.slice()`, rather than returning `[]`
+  as it does for any other unknown role. Guarded with `hasOwnProperty` so a
+  non-own key reads as unknown → no permissions (and no throw), propagating
+  through `hasPermission` / `canAssignRole`. Not currently exploitable
+  (role writes pass through `isRole` / `z.enum(ROLES)`), but removes a
+  landmine for when `canAssignRole` is wired to user-supplied input. Found
+  by an adversarial RBAC review.
 - **Bound `canonicalJson` recursion — close a pre-auth DoS in the
   idempotency middleware.** The middleware hashed the request body via an
   **unbounded** recursive `canonicalJson`, so a deeply-nested JSON body
