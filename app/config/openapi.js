@@ -1463,6 +1463,61 @@ const spec = {
                 responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
             },
         },
+        '/v1/reportschedule': {
+            post: {
+                summary: 'Schedule a report for email delivery (#57)',
+                security: [{ authKey: [] }],
+                responses: { 201: { description: 'Created' }, 400: { description: 'Validation error; master keys must specify rptschCompId' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/reportschedule/due': {
+            get: {
+                summary: 'List report schedules due (next run ≤ today)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys.' },
+                    { name: 'limit', in: 'query', schema: { type: 'integer' } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer' } },
+                ],
+                responses: { 200: { description: 'Found (paginated)' }, 400: { description: 'Master keys must specify companyId' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/reportschedule/bycompany/{id}': {
+            get: {
+                summary: "List a company's report schedules",
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found (paginated)' }, 403: { description: 'Cross-tenant' } },
+            },
+        },
+        '/v1/reportschedule/{id}/run': {
+            post: {
+                summary: 'Render the report, email it, and advance the schedule',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Delivered (returns previousRun + nextRun)' }, 404: { description: 'Not found' }, 409: { description: 'Schedule is not active' } },
+            },
+        },
+        '/v1/reportschedule/{id}': {
+            get: {
+                summary: 'Fetch a report schedule',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found' }, 404: { description: 'Not found' } },
+            },
+            patch: {
+                summary: 'Update a report schedule',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Updated' }, 400: { description: 'Validation error' }, 404: { description: 'Not found' } },
+            },
+            delete: {
+                summary: 'Archive a report schedule',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
+            },
+        },
         '/v1/receipt': {
             post: {
                 summary: 'Attach a base64 file to an expense (#419)',

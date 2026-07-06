@@ -38,6 +38,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Scheduled report delivery** (#57). A new company-scoped
+  `ReportSchedule` entity (report, recipient, cadence, next-run),
+  migration `20260624000000`. Full REST on `/v1/reportschedule` (create,
+  `bycompany` list, get/patch/delete) plus `GET /due` (schedules due ≤
+  today) and `POST /{id}/run` which **renders the report** (revenue
+  summary via `report-revenue.js`), **emails it** through the mailer
+  (#68), then advances `rptschNextRun` by the cadence (via the #425
+  engine). Pure `report-email.js` formatter. First v2.0 item — ties
+  together the reporting, mail, and cadence subsystems.
 - **Receipt attachment / upload** (#419). A new `Receipt` entity attached
   to an expense (#416), migration `20260623000000`. Upload a file as
   base64 JSON (`POST /v1/receipt`) — the bytes are stored in Postgres
