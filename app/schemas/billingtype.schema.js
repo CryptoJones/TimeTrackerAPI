@@ -22,7 +22,10 @@ const intIdParam = z.object({
 // validators (#172 / #180 / #194).
 const btHourlyRateField = z.coerce.number()
     .finite({ message: 'btHourlyRate must be a finite number.' })
-    .nonnegative();
+    .nonnegative()
+    // Cap well under the NUMERIC(14,2) column limit so an out-of-range rate
+    // returns a clean 400 instead of overflowing to a 500 at write time.
+    .max(999999999.99, { message: 'btHourlyRate exceeds the maximum allowed value.' });
 
 const createBillingTypeBody = z.object({
     btName: z.string().min(1).max(255),

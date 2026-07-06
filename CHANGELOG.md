@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Rate / amount fields reject out-of-range values with a 400.** The rate
+  and money fields (`btHourlyRate`, `jobFlatRate`, `jobBudgetAmount`,
+  `taskRate`, `custDefaultRate`, `roleRate`, `rschRate`, `workerCostRate`)
+  had no upper bound, so a value above the `NUMERIC(14,2)` column limit
+  parsed fine and **overflowed to a 500** at write time. Each now caps at
+  `999,999,999.99` → a clean 400. Found by the rate-resolution review, which
+  verified the resolution arithmetic, precedence, `$0`-vs-unset handling,
+  effective-dating boundaries, and tenant scoping **sound** (the deeper
+  temporal findings — no rate snapshot, archive-fallthrough — are recorded
+  as design decisions in `docs/SECURITY-REVIEW-LOG.md`).
 - **Invoice PDF shows the discount line.** A discounted invoice's PDF
   rendered Subtotal / Tax / Total with **no Discount row**, so the printed
   document didn't add up — e.g. Subtotal 30.00 + Tax 2.06 shown against a

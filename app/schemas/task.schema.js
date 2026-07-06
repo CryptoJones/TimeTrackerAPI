@@ -13,7 +13,7 @@ const createTaskBody = z.object({
     taskJobId: z.coerce.number().int().positive(),
     taskName: z.string().min(1).max(255),
     taskDesc: z.string().max(10000).optional(),
-    taskRate: z.coerce.number().positive().optional(),
+    taskRate: z.coerce.number().positive().max(999999999.99).optional(),
 }).strict({
     message: 'Unexpected field in body. Whitelist: taskJobId, taskName, taskDesc, taskRate.',
 });
@@ -22,7 +22,7 @@ const createTaskBody = z.object({
 const updateTaskBody = z.object({
     taskName: z.string().min(1).max(255).optional(),
     taskDesc: z.string().max(10000).nullable().optional(),
-    taskRate: z.coerce.number().positive().nullable().optional(),
+    taskRate: z.coerce.number().positive().max(999999999.99).nullable().optional(),
 }).strict({
     message: 'Unexpected field in body. Whitelist: taskName, taskDesc, taskRate.',
 });
