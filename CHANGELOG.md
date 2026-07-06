@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Multi-level approval chains are now enforced (#591).** Previously an
+  `ApprovalChain` was advisory — the first `approve` fully approved a
+  timesheet, skipping every configured level. A new `TimeEntry.teApprovalLevel`
+  counter tracks cleared levels: for a signed-in (JWT) actor each `approve`
+  checks their role against the next required level (`canApproveAt`) and
+  advances one step; the entry stays `submitted` until the final level clears,
+  only then `approved`. submit/reject reset the counter. An API key keeps full
+  authority (single approve), and a company with no active chain is unchanged.
+  Resolves review-log item 6.
+
 ### Security
 - **Per-link share-link revocation (#590).** Shareable invoice links are
   stateless JWTs, so an individual link couldn't be killed before its `exp`

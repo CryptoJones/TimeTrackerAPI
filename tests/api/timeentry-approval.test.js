@@ -50,8 +50,10 @@ describe('approval — RBAC for a JWT actor (time:approve)', () => {
     // DIFFERENT user, so it's not self-approval unless overridden to ACTOR).
     function mock(actorRole, entryComp = 1, status = 'submitted', workerUserId = 999) {
         db.User = { findByPk: vi.fn().mockResolvedValue({ userId: ACTOR, userCompId: 1, userRole: actorRole, userArch: false }) };
-        db.TimeEntry.findByPk = vi.fn().mockResolvedValue({ teId: ENTRY, teCompId: entryComp, teArch: false, teApprovalStatus: status, teWorkerId: 50, update: vi.fn().mockResolvedValue(undefined) });
+        db.TimeEntry.findByPk = vi.fn().mockResolvedValue({ teId: ENTRY, teCompId: entryComp, teArch: false, teApprovalStatus: status, teApprovalLevel: 0, teWorkerId: 50, update: vi.fn().mockResolvedValue(undefined) });
         db.Worker = { findByPk: vi.fn().mockResolvedValue({ workerUserId }) };
+        // No active approval chain by default → single approve → approved.
+        db.ApprovalChain = { findOne: vi.fn().mockResolvedValue(null) };
     }
     afterEach(() => { delete process.env.JWT_SECRET; });
     const post = () => request(app).post(`/v1/timeentry/${ENTRY}/approval`).set('authorization', `Bearer ${token()}`).send({ action: 'approve' });
@@ -78,5 +80,36 @@ describe('approval — RBAC for a JWT actor (time:approve)', () => {
     test('a manager CAN approve another worker\'s time (worker linked to a different user) → 200', async () => {
         mock('manager', 1, 'submitted', 777); // worker's user != actor
         expect((await post()).status).toBe(200);
+    });
+
+    // Multi-level approval-chain enforcement (#6). A 2-level chain: level 1
+    // manager, level 2 admin. Each approve advances one level; 'approved' only
+    // once the final level clears.
+    const LEVELS = [{ level: 1, approverRole: 'manager' }, { level: 2, approverRole: 'admin' }];
+    function mockChain(actorRole, levels, currentLevel) {
+        const update = vi.fn().mockResolvedValue(undefined);
+        db.User = { findByPk: vi.fn().mockResolvedValue({ userId: ACTOR, userCompId: 1, userRole: actorRole, userArch: false }) };
+        db.TimeEntry.findByPk = vi.fn().mockResolvedValue({ teId: ENTRY, teCompId: 1, teArch: false, teApprovalStatus: 'submitted', teApprovalLevel: currentLevel, teWorkerId: 50, update });
+        db.Worker = { findByPk: vi.fn().mockResolvedValue({ workerUserId: 999 }) };
+        db.ApprovalChain = { findOne: vi.fn().mockResolvedValue({ apchLevels: levels, apchActive: true }) };
+        return update;
+    }
+
+    test('level 1: a manager advances the entry one level but it stays submitted', async () => {
+        const update = mockChain('manager', LEVELS, 0);
+        expect((await post()).status).toBe(200);
+        expect(update).toHaveBeenCalledWith(expect.objectContaining({ teApprovalLevel: 1, teApprovalStatus: 'submitted' }));
+    });
+
+    test('final level: an admin clears level 2 → approved', async () => {
+        const update = mockChain('admin', LEVELS, 1);
+        expect((await post()).status).toBe(200);
+        expect(update).toHaveBeenCalledWith(expect.objectContaining({ teApprovalLevel: 2, teApprovalStatus: 'approved' }));
+    });
+
+    test('a manager cannot approve the admin-required level 2 → 403, no update', async () => {
+        const update = mockChain('manager', LEVELS, 1); // next required level = admin
+        expect((await post()).status).toBe(403);
+        expect(update).not.toHaveBeenCalled();
     });
 });
