@@ -1426,6 +1426,49 @@ const spec = {
                 responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
             },
         },
+        '/v1/phase': {
+            post: {
+                summary: 'Create a phase / billing stage under a job',
+                security: [{ authKey: [] }],
+                responses: {
+                    201: { description: 'Created' },
+                    400: { description: 'Validation error or bad phaseJobId' },
+                    403: { description: 'Auth failure' },
+                },
+            },
+        },
+        '/v1/phase/byjob/{id}': {
+            get: {
+                summary: "List a job's phases",
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer' } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer' } },
+                ],
+                responses: { 200: { description: 'Found (paginated)' }, 404: { description: 'Job not found / cross-tenant' } },
+            },
+        },
+        '/v1/phase/{id}': {
+            get: {
+                summary: 'Fetch a phase',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found' }, 404: { description: 'Not found' } },
+            },
+            patch: {
+                summary: 'Update a phase',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Updated' }, 400: { description: 'Validation error' }, 404: { description: 'Not found' } },
+            },
+            delete: {
+                summary: 'Archive a phase',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
+            },
+        },
         '/v1/task': {
             post: {
                 summary: 'Create a task / activity under a job',

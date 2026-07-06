@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Project phases / billing stages** (#408). A new `Phase` model under a
+  Job (`phaseName`, `phaseStartDate`, `phaseEndDate`, `phaseBudgetAmount`),
+  migration `20260615000000` — a date-bounded, budgeted stage, the unit of
+  milestone billing (distinct from a task/activity). Full REST:
+  `POST /v1/phase`, `GET /v1/phase/byjob/{id}` (paginated, ordered by start
+  date), `GET|PATCH|DELETE /v1/phase/{id}`, all job→company scoped with
+  secure-404 + soft-delete (`phaseArch`); end-date validated on or after
+  the start.
 - **Worker utilization report** (#53). `GET /v1/report/utilization`:
   per worker, **billable hours vs capacity** (`workerTargetMinsPerWeek` ×
   weeks in the range) → utilization %, plus the billable ratio

@@ -70,6 +70,7 @@ db.Expense = require('../models/expense.model.js')(sequelize, Sequelize);
 db.AuditLog = require('../models/auditlog.model.js')(sequelize, Sequelize);
 db.Task = require('../models/task.model.js')(sequelize, Sequelize);
 db.Retainer = require('../models/retainer.model.js')(sequelize, Sequelize);
+db.Phase = require('../models/phase.model.js')(sequelize, Sequelize);
 
 // ----------------------------------------------------------------------
 // Associations — centralized so the relationship graph is visible
@@ -201,5 +202,9 @@ db.TimeEntry.belongsTo(db.Task, { foreignKey: 'teTaskId', as: 'task' });
 // Retainer → Customer (retCustId): a client prepayment (#426).
 db.Customer.hasMany(db.Retainer,   { foreignKey: 'retCustId', as: 'retainers' });
 db.Retainer.belongsTo(db.Customer, { foreignKey: 'retCustId', as: 'customer' });
+
+// Phase → Job (phaseJobId): a date-bounded billing stage of a project (#408).
+db.Job.hasMany(db.Phase,   { foreignKey: 'phaseJobId', as: 'phases' });
+db.Phase.belongsTo(db.Job, { foreignKey: 'phaseJobId', as: 'job' });
 
 module.exports = db;
