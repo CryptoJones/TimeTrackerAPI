@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Documentation
+- **Align the OpenAPI `TimeEntry` component with the model + schema** (#372).
+  The published component omitted `teWorkerId` / `teJobId` / `teBillTypeId`
+  / `teTaskId` (and `teTags`, plus the read-only `teApprovalStatus` /
+  `teInvJobId`) even though the create/update schema accepts them and the
+  model stores them — so the spec (and the generated Postman collection)
+  understated the API. The component now lists all of them. (Regenerate
+  `setup/TimeTrackerAPI.postman_collection.json` from the spec to propagate.)
 - **Cross-tenant response-code policy** (#375). The README's "Secure-404 on
   cross-tenant access" section now spells out, in a table, exactly when the
   API returns **404** (a specific row you don't own — anti-enumeration)
