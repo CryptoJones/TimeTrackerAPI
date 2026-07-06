@@ -129,12 +129,19 @@ deliberately **not** implemented autonomously.
    (#584): read (`user:read`), update (self-edit or `user:write`), remove
    (`user:write`), and `listByCompany` (own company). Remaining follow-up:
    gate the approval action the same way (open item 8).
-2. **Idempotency concurrent double-execution.** The cache row is written
-   *after* the handler, so two simultaneous same-key requests both execute
-   the side effect (a double-charge risk); sequential retries are correctly
-   deduped. The fix is a **pre-handler claim** (insert a pending row →
-   conflicting request replays or 409s) with release-on-5xx / `res.finish`
-   handling and a nullable-columns migration.
+2. **Idempotency concurrent double-execution — RESOLVED (#588).** Previously
+   the cache row was written *after* the handler, so two simultaneous same-key
+   requests both executed the side effect (a double-charge risk). The
+   middleware now performs a **pre-handler atomic claim**: `INSERT … ON
+   CONFLICT DO UPDATE … WHERE ikExpiresAt < now() RETURNING` inserts a PENDING
+   row (or re-claims one left past a 5-min `PENDING_TTL`); Postgres serializes
+   the conflict so exactly one request wins. The winner runs the handler and
+   COMPLETEs the row on a 2xx/4xx (cached 24 h) or RELEASEs it on a 5xx /
+   `res.finish` with no JSON (so a retry re-runs); a losing request with the
+   same key+body gets `409 idempotency_in_progress` while the holder is live,
+   replays once it completes, or `409 idempotency_key_reused` on a body
+   mismatch. Nullable `ikResponseStatus`/`ikResponseBody` migration backs the
+   pending state.
 3. **Streamed GDPR export.** `exportCustomer` issues un-`limit`ed
    `findAll`s — an OOM/DoS vector for a very large customer. A cap conflicts
    with GDPR's completeness requirement, so it wants a **streamed** export
