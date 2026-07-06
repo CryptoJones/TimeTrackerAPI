@@ -42,6 +42,7 @@ const rateSchedule = require('../controllers/rateschedulecontroller.js');
 const user = require('../controllers/usercontroller.js');
 const authController = require('../controllers/authcontroller.js');
 const receipt = require('../controllers/receiptcontroller.js');
+const reportSchedule = require('../controllers/reportschedulecontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -74,6 +75,7 @@ const rateScheduleSchemas = require('../schemas/rateschedule.schema.js');
 const userSchemas = require('../schemas/user.schema.js');
 const authSchemas = require('../schemas/auth.schema.js');
 const receiptSchemas = require('../schemas/receipt.schema.js');
+const reportScheduleSchemas = require('../schemas/reportschedule.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -802,6 +804,46 @@ router.post(
     '/v1/password-reset/confirm',
     v.body(authSchemas.confirmResetBody),
     authController.confirmReset,
+);
+
+// v1 report-schedule routes (scheduled report delivery, #57).
+// GET /due is declared before GET /:id so "due" isn't parsed as an id.
+router.post(
+    '/v1/reportschedule',
+    v.body(reportScheduleSchemas.createReportScheduleBody),
+    reportSchedule.create,
+);
+router.get(
+    '/v1/reportschedule/due',
+    v.query(reportScheduleSchemas.dueQuery),
+    reportSchedule.listDue,
+);
+router.get(
+    '/v1/reportschedule/bycompany/:id',
+    v.params(reportScheduleSchemas.intIdParam),
+    v.query(reportScheduleSchemas.listByCompanyQuery),
+    reportSchedule.listByCompany,
+);
+router.post(
+    '/v1/reportschedule/:id/run',
+    v.params(reportScheduleSchemas.intIdParam),
+    reportSchedule.run,
+);
+router.get(
+    '/v1/reportschedule/:id',
+    v.params(reportScheduleSchemas.intIdParam),
+    reportSchedule.getById,
+);
+router.patch(
+    '/v1/reportschedule/:id',
+    v.params(reportScheduleSchemas.intIdParam),
+    v.body(reportScheduleSchemas.updateReportScheduleBody),
+    reportSchedule.update,
+);
+router.delete(
+    '/v1/reportschedule/:id',
+    v.params(reportScheduleSchemas.intIdParam),
+    reportSchedule.remove,
 );
 
 // v1 receipt routes (#419). Files attached to expenses; bytes in Postgres.
