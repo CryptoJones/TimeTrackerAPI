@@ -44,6 +44,7 @@ const authController = require('../controllers/authcontroller.js');
 const receipt = require('../controllers/receiptcontroller.js');
 const reportSchedule = require('../controllers/reportschedulecontroller.js');
 const gdpr = require('../controllers/gdprcontroller.js');
+const payroll = require('../controllers/payrollcontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -78,6 +79,7 @@ const authSchemas = require('../schemas/auth.schema.js');
 const receiptSchemas = require('../schemas/receipt.schema.js');
 const reportScheduleSchemas = require('../schemas/reportschedule.schema.js');
 const gdprSchemas = require('../schemas/gdpr.schema.js');
+const payrollSchemas = require('../schemas/payroll.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -929,6 +931,19 @@ router.post(
     '/v1/gdpr/customer/:id/erase',
     v.params(gdprSchemas.intIdParam),
     gdpr.eraseCustomer,
+);
+
+// v1 payroll routes (#456): aggregate completed worker hours over a pay
+// period as JSON (summary) or a payroll-ready CSV (export).
+router.get(
+    '/v1/payroll/summary',
+    v.query(payrollSchemas.payrollQuery),
+    payroll.summary,
+);
+router.get(
+    '/v1/payroll/export',
+    v.query(payrollSchemas.payrollQuery),
+    payroll.exportCsv,
 );
 
 // v1 rate-schedule routes (effective-dated rates, #414).
