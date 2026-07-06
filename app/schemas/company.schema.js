@@ -17,8 +17,9 @@ const invNumberingFields = {
     compTaxRate: z.coerce.number().min(0).max(1).optional(),
     compInvFooter: z.string().max(2000).optional(),
     compCurrency: z.string().regex(/^[A-Z]{3}$/, { message: 'Must be a 3-letter uppercase ISO 4217 code.' }).optional(),
+    compTimeLockDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Must be an ISO 8601 date (YYYY-MM-DD).' }).nullable().optional(),
 };
-const NUMBERING_WHITELIST = ', compInvPrefix, compInvPad, compInvNextSeq, compTaxRate, compInvFooter, compCurrency';
+const NUMBERING_WHITELIST = ', compInvPrefix, compInvPad, compInvNextSeq, compTaxRate, compInvFooter, compCurrency, compTimeLockDate';
 
 const createCompanyBody = z.object({
     compName: z.string().min(1).max(255),

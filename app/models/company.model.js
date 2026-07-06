@@ -60,6 +60,11 @@ module.exports = (sequelize, Sequelize) => {
             allowNull: false,
             defaultValue: 'USD',
         },
+        compTimeLockDate: {
+            field: 'compTimeLockDate',
+            // Locked-period cutoff (#441); time on/before this is frozen.
+            type: Sequelize.DATEONLY,
+        },
         compArch: {
             field: 'compArch',
             type: Sequelize.BOOLEAN,

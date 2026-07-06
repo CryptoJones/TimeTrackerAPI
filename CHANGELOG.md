@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Locked periods** (#441). Two freezes on time entries: an
+  **approved** entry (from #440) can no longer be edited or deleted, and
+  a per-company `compTimeLockDate` (migration `20260609000000`, settable
+  on company create/PATCH) closes every entry dated **on or before** it.
+  `POST` (create), `PATCH`, and `DELETE` on a frozen entry — or moving
+  one into a closed period — return **409**. New pure
+  `app/services/time-lock.js`.
 - **Timesheet approval workflow** (#440). `TimeEntry.teApprovalStatus`
   (migration `20260608000000`, default `open`) tracks an entry through
   **open → submitted → approved / rejected** (a rejected entry may
