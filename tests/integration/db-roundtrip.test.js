@@ -269,6 +269,25 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         }
     });
 
+    test('btHourlyRate / cpayAmount / injbAmount are NUMERIC(14,2) after the migration', async () => {
+        if (!connected) return;
+        const rows = await db.sequelize.query(
+            `SELECT table_name, column_name, data_type, numeric_precision, numeric_scale
+             FROM information_schema.columns
+             WHERE table_schema = 'dbo'
+               AND ( (table_name = 'BillingType'     AND column_name = 'btHourlyRate')
+                  OR (table_name = 'CustomerPayment' AND column_name = 'cpayAmount')
+                  OR (table_name = 'InvoiceJob'      AND column_name = 'injbAmount') )`,
+            { type: db.Sequelize.QueryTypes.SELECT },
+        );
+        expect(rows.length).toBe(3);
+        for (const r of rows) {
+            expect(r.data_type).toBe('numeric');
+            expect(Number(r.numeric_precision)).toBe(14);
+            expect(Number(r.numeric_scale)).toBe(2);
+        }
+    });
+
     test('Invoice has invSubtotal / invTax / invTotal money columns', async () => {
         if (!connected) return;
         // Selecting the new attributes proves the 20260522 migration

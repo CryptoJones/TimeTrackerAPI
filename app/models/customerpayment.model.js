@@ -37,8 +37,14 @@ module.exports = (sequelize, Sequelize) => {
         },
         cpayAmount: {
             field: 'cpayAmount',
-            type: Sequelize.DOUBLE,
+            // NUMERIC(14,2) with a Number getter (pg NUMERIC→string), matching
+            // every other money column — exact-decimal at rest.
+            type: Sequelize.DECIMAL(14, 2),
             allowNull: false,
+            get() {
+                const v = this.getDataValue('cpayAmount');
+                return v == null ? null : Number(v);
+            },
         },
         cpayArch: {
             field: 'cpayArch',
