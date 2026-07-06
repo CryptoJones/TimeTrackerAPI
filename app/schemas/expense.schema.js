@@ -15,7 +15,11 @@ const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
 // A finite, positive amount. Zero/negative expenses are operator error.
 const expAmountField = z.coerce.number().finite({
     message: 'expAmount must be a finite number.',
-}).positive({ message: 'expAmount must be greater than zero.' });
+}).positive({ message: 'expAmount must be greater than zero.' })
+    // Bound the magnitude so an out-of-range value returns a clean 400
+    // instead of overflowing money.toCents() to Infinity in the billing view
+    // / rollup (a 500), matching every other money field.
+    .max(999999999.99);
 
 /**
  * POST /v1/expense body. expCompId is optional for non-master keys
