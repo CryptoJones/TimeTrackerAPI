@@ -181,6 +181,27 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         }
     });
 
+    test('getCompanyIdByInvitId / inventoryFkBelongsTo resolve against the real schema', async () => {
+        if (!connected) return;
+        const auth = require('../../app/middleware/auth.js');
+        const company = await db.Company.create({ compName: `${SENTINEL}-invtco`, compArch: false });
+        const item = await db.InventoryItem.create({
+            invitDescription: 'widget', invitQty: 5, invitCompId: company.compId, invitArch: false,
+        });
+        try {
+            // Proves the resolver's column name (invitCompId) + query are
+            // correct against real Postgres — a mock can't catch a typo'd column.
+            expect(await auth.getCompanyIdByInvitId(item.invitId)).toBe(company.compId);
+            expect(await auth.inventoryFkBelongsTo(item.invitId, company.compId)).toBe(true);
+            // cross-tenant + dangling both fail closed
+            expect(await auth.inventoryFkBelongsTo(item.invitId, company.compId + 99999)).toBe(false);
+            expect(await auth.getCompanyIdByInvitId(999999999)).toBe(-1);
+        } finally {
+            await item.destroy();
+            await company.destroy();
+        }
+    });
+
     test('Invoice has invSubtotal / invTax / invTotal money columns', async () => {
         if (!connected) return;
         // Selecting the new attributes proves the 20260522 migration

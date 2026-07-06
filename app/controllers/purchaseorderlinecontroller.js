@@ -50,6 +50,12 @@ exports.create = async (req, res) => {
                 message: "Cannot create a PO line for a header in a company you do not belong to.",
             });
         }
+        // The secondary inventory-item FK must also belong to the caller's
+        // company — the parent header is scoped above, but polInvtId was
+        // previously unchecked (cross-tenant / dangling reference).
+        if (!(await auth.inventoryFkBelongsTo(payload.polInvtId, authCompanyId))) {
+            return res.status(400).json({ message: "Invalid inventory item." });
+        }
     }
 
     payload.polArch = false;
@@ -176,6 +182,13 @@ exports.update = async (req, res) => {
     if (Object.keys(updates).length === 0) {
         return res.status(400).json({ message: "No updatable fields supplied." });
     }
+    // A changed inventory-item FK must belong to the caller's company.
+    if (!isMaster && updates.polInvtId !== undefined) {
+        const authCompanyId = await CompanyIdFromReq(req, authKey);
+        if (!(await auth.inventoryFkBelongsTo(updates.polInvtId, authCompanyId))) {
+            return res.status(400).json({ message: "Invalid inventory item." });
+        }
+    }
 
     try {
         await line.update(updates);
@@ -231,6 +244,7 @@ exports.bulkCreate = makeBulkCreateIndirect({
     archField: 'polArch',
     bodyKey: 'purchaseOrderLines',
     createdKey: 'purchaseOrderLines',
+    secondaryFk: { field: 'polInvtId', belongsTo: auth.inventoryFkBelongsTo },
 });
 
 exports._internals = { IsMaster, GetCompanyId, GetCompanyIdByPohId };

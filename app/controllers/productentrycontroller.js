@@ -45,6 +45,12 @@ exports.create = async (req, res) => {
                 message: "Cannot create a product entry for a job in a company you do not belong to.",
             });
         }
+        // The secondary inventory-item FK must also belong to the caller's
+        // company — the parent job is scoped above, but pentInvtId was
+        // previously unchecked (cross-tenant / dangling reference).
+        if (!(await auth.inventoryFkBelongsTo(payload.pentInvtId, authCompanyId))) {
+            return res.status(400).json({ message: "Invalid inventory item." });
+        }
     }
 
     payload.penArch = false;
@@ -173,6 +179,13 @@ exports.update = async (req, res) => {
     if (Object.keys(updates).length === 0) {
         return res.status(400).json({ message: "No updatable fields supplied." });
     }
+    // A changed inventory-item FK must belong to the caller's company.
+    if (!isMaster && updates.pentInvtId !== undefined) {
+        const authCompanyId = await CompanyIdFromReq(req, authKey);
+        if (!(await auth.inventoryFkBelongsTo(updates.pentInvtId, authCompanyId))) {
+            return res.status(400).json({ message: "Invalid inventory item." });
+        }
+    }
 
     try {
         await productEntry.update(updates);
@@ -228,6 +241,7 @@ exports.bulkCreate = makeBulkCreateIndirect({
     archField: 'penArch',
     bodyKey: 'productEntries',
     createdKey: 'productEntries',
+    secondaryFk: { field: 'pentInvtId', belongsTo: auth.inventoryFkBelongsTo },
 });
 
 exports._internals = { IsMaster, GetCompanyId, GetCompanyIdByJobId };

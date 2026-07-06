@@ -59,6 +59,11 @@ exports.create = async (req, res) => {
             });
         }
         payload.invtCompanyId = authKeyCompanyId;
+        // The inventory-item FK (invtInitId) must belong to the caller's
+        // company — previously unchecked (cross-tenant / dangling reference).
+        if (!(await auth.inventoryFkBelongsTo(payload.invtInitId, authKeyCompanyId))) {
+            return res.status(400).json({ message: "Invalid inventory item." });
+        }
     } else {
         if (payload.invtCompanyId === undefined || Number(payload.invtCompanyId) <= 0) {
             return res.status(400).json({
@@ -189,6 +194,13 @@ exports.update = async (req, res) => {
     if (Object.keys(updates).length === 0) {
         return res.status(400).json({ message: "No updatable fields supplied." });
     }
+    // A changed inventory-item FK must belong to the caller's company.
+    if (!isMaster && updates.invtInitId !== undefined) {
+        const companyId = await CompanyIdFromReq(req, authKey);
+        if (!(await auth.inventoryFkBelongsTo(updates.invtInitId, companyId))) {
+            return res.status(400).json({ message: "Invalid inventory item." });
+        }
+    }
 
     try {
         await txn.update(updates);
@@ -242,6 +254,7 @@ exports.bulkCreate = makeBulkCreate({
     archField: 'invtArch',
     bodyKey: 'inventoryTransactions',
     createdKey: 'inventoryTransactions',
+    secondaryFk: { field: 'invtInitId', belongsTo: auth.inventoryFkBelongsTo },
 });
 
 exports._internals = { IsMaster, GetCompanyId };
