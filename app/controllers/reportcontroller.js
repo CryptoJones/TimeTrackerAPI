@@ -24,8 +24,10 @@ const { buildUtilization } = require('../services/report-utilization.js');
 const { renderRevenuePdf } = require('../services/report-pdf.js');
 const rate = require('../services/rate.js');
 
-const IsMaster = auth.isMaster;
-const GetCompanyId = auth.getCompanyId;
+// #374: reuse attachAuth's resolved context (req.isMaster / req.companyId)
+// instead of a second DB lookup; falls back to a live lookup if absent.
+const MasterFromReq = auth.masterFromReq;
+const CompanyIdFromReq = auth.companyIdFromReq;
 
 /** Parse a strict YYYY-MM-DD into a Date at UTC start/end of day, or null. */
 function parseDate(s, endOfDay) {
@@ -39,7 +41,7 @@ function parseDate(s, endOfDay) {
  * Returns { companyId } or { error: { status, message } }.
  */
 async function resolveCompany(req) {
-    const isMaster = await IsMaster(req.authKey);
+    const isMaster = await MasterFromReq(req, req.authKey);
     if (isMaster) {
         const companyId = Number(req.query.companyId);
         if (!Number.isInteger(companyId) || companyId <= 0) {
@@ -47,7 +49,7 @@ async function resolveCompany(req) {
         }
         return { companyId };
     }
-    const companyId = await GetCompanyId(req.authKey);
+    const companyId = await CompanyIdFromReq(req, req.authKey);
     if (companyId === -1) {
         return { error: { status: 403, message: "Invalid Authorization Key." } };
     }
