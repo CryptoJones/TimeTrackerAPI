@@ -19,6 +19,7 @@ const { buildBillableSummary } = require('../services/report-billable-summary.js
 const { buildTimesheet } = require('../services/report-timesheet.js');
 const { buildBudget } = require('../services/report-budget.js');
 const { buildTargets, weeksBetween } = require('../services/report-targets.js');
+const { buildProfitability } = require('../services/report-profitability.js');
 const rate = require('../services/rate.js');
 
 const IsMaster = auth.isMaster;
@@ -325,6 +326,60 @@ exports.billableSummary = async (req, res) => {
 
     const report = buildBillableSummary(entries);
     return res.status(200).json({ message: "Billable vs non-billable summary.", companyId, ...report });
+};
+
+/**
+ * GET /v1/report/profitability — project profitability & margin (#436):
+ * per-job revenue (billable time priced via rate.js) net of cost (all
+ * logged time × the worker's cost rate). Company-scoped; optional
+ * customerId / jobId / from / to.
+ */
+exports.profitability = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+    req.authKey = authKey;
+
+    const scope = await resolveCompany(req);
+    if (scope.error) {
+        return res.status(scope.error.status).json({ message: scope.error.message });
+    }
+    const { companyId } = scope;
+
+    const Op = db.Sequelize && db.Sequelize.Op;
+    const where = { teCompId: companyId };
+    const customerId = Number(req.query.customerId);
+    if (Number.isInteger(customerId) && customerId > 0) where.teCustId = customerId;
+    const jobId = Number(req.query.jobId);
+    if (Number.isInteger(jobId) && jobId > 0) where.teJobId = jobId;
+    const from = parseDate(req.query.from, false);
+    const to = parseDate(req.query.to, true);
+    if (Op && from) where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.gte]: from });
+    if (Op && to) where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.lte]: to });
+
+    let entries;
+    try {
+        entries = await db.TimeEntry.findAll({
+            where,
+            include: [
+                { model: db.BillingType, as: 'billingType', required: false },
+                { model: db.Job, as: 'job', required: false, attributes: ['jobId', 'jobDesc', 'jobFlatRate'] },
+                {
+                    model: db.Worker, as: 'worker', required: false,
+                    include: [{ model: db.BillingType, as: 'defaultBillingType', required: false }],
+                },
+                { model: db.Customer, as: 'customer', required: false, attributes: ['custId', 'custDefaultRate'] },
+                { model: db.Task, as: 'task', required: false, attributes: ['taskId', 'taskRate'] },
+            ],
+        });
+    } catch (error) {
+        log.error({ err: error }, 'profitability: TimeEntry.findAll failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+
+    const report = buildProfitability(entries);
+    return res.status(200).json({ message: "Project profitability & margin.", companyId, ...report });
 };
 
 /**

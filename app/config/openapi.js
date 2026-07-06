@@ -1580,6 +1580,24 @@ const spec = {
                 },
             },
         },
+        '/v1/report/profitability': {
+            get: {
+                summary: 'Project profitability & margin (revenue − cost per job)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys.' },
+                    { name: 'customerId', in: 'query', schema: { type: 'integer' } },
+                    { name: 'jobId', in: 'query', schema: { type: 'integer' } },
+                    { name: 'from', in: 'query', schema: { type: 'string', format: 'date' } },
+                    { name: 'to', in: 'query', schema: { type: 'string', format: 'date' } },
+                ],
+                responses: {
+                    200: { description: 'Per-job {revenue, cost, margin, marginPct} + totals; flags entries missing a rate/cost basis' },
+                    400: { description: 'Master keys must specify companyId' },
+                    403: { description: 'Auth failure' },
+                },
+            },
+        },
         '/v1/report/revenue': {
             get: {
                 summary: 'Revenue & earnings summary (by customer and month)',

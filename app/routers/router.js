@@ -830,6 +830,11 @@ router.get(
     report.billableSummary,
 );
 router.get(
+    '/v1/report/profitability',
+    v.query(reportSchemas.profitabilityQuery),
+    report.profitability,
+);
+router.get(
     '/v1/report/timesheet',
     v.query(reportSchemas.timesheetQuery),
     report.timesheet,

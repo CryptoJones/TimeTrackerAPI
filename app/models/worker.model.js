@@ -57,6 +57,16 @@ module.exports = (sequelize, Sequelize) => {
             // Weekly capacity target in minutes (#400); null = no target.
             type: Sequelize.INTEGER,
         },
+        workerCostRate: {
+            field: 'workerCostRate',
+            // Internal cost per hour (#436); powers profitability/margin.
+            // Number getter (pg NUMERIC→string). null = no cost basis.
+            type: Sequelize.DECIMAL(14, 2),
+            get() {
+                const v = this.getDataValue('workerCostRate');
+                return v == null ? null : Number(v);
+            },
+        },
     }, {
         tableName: 'Worker',
         timestamps: true,

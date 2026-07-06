@@ -100,4 +100,18 @@ const targetsQuery = z.object({
     message: 'Unexpected query parameter. Allowed: companyId, from, to.',
 });
 
-module.exports = { unbilledQuery, hoursQuery, revenueQuery, billableSummaryQuery, timesheetQuery, budgetQuery, targetsQuery };
+/**
+ * GET /v1/report/profitability query. companyId required for master keys.
+ * Optional customerId / jobId filters and from/to bounds.
+ */
+const profitabilityQuery = z.object({
+    companyId: z.coerce.number().int().positive().optional(),
+    customerId: z.coerce.number().int().positive().optional(),
+    jobId: z.coerce.number().int().positive().optional(),
+    from: isoDate.optional(),
+    to: isoDate.optional(),
+}).strict({
+    message: 'Unexpected query parameter. Allowed: companyId, customerId, jobId, from, to.',
+});
+
+module.exports = { unbilledQuery, hoursQuery, revenueQuery, billableSummaryQuery, timesheetQuery, budgetQuery, targetsQuery, profitabilityQuery };
