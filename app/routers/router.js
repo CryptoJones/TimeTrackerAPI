@@ -958,6 +958,12 @@ router.get(
     v.query(reportSchemas.revenueQuery),
     report.revenue,
 );
+// Export parity beyond CSV (#433): the revenue summary as a PDF.
+router.get(
+    '/v1/report/revenue.pdf',
+    v.query(reportSchemas.revenueQuery),
+    report.revenuePdf,
+);
 router.get(
     '/v1/report/billable-summary',
     v.query(reportSchemas.billableSummaryQuery),
