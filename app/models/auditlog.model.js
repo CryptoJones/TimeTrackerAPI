@@ -26,6 +26,11 @@ module.exports = (sequelize, Sequelize) => {
         alogPath: { field: 'alogPath', type: Sequelize.TEXT, allowNull: false },
         alogEntity: { field: 'alogEntity', type: Sequelize.TEXT },
         alogStatus: { field: 'alogStatus', type: Sequelize.INTEGER, allowNull: false },
+        // DCAA-grade detail (#462): the touched record id, before/after
+        // field changes, and a justification. All optional/additive.
+        alogEntityId: { field: 'alogEntityId', type: Sequelize.INTEGER },
+        alogChanges: { field: 'alogChanges', type: Sequelize.JSONB },
+        alogReason: { field: 'alogReason', type: Sequelize.TEXT },
     }, {
         tableName: 'AuditLog',
         timestamps: true,

@@ -38,6 +38,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **DCAA-grade audit trail** (#462). Extends the audit log (#460) with the
+  detail a defense-contract-grade trail needs (migration
+  `20260628000000`): `alogEntityId` (the touched record — now stamped
+  automatically by the audit middleware from the request path),
+  `alogChanges` (before/after field diff, JSONB), and `alogReason`
+  (justification). `GET /v1/auditlog/bycompany/{id}` gains **entityId /
+  actor / from / to** filters for a queryable trail. Pure `audit-trail.js`
+  (`entityIdOf`, `diffFields`, `hasChanges`) supplies the reusable
+  change-diff capability.
 - **Slack / Teams notifications** (#454). `POST /v1/notification/dispatch`
   `{ channel, text }` sends a notification to Slack or Teams via a pure
   `notifier.js` that mirrors the mailer's transport abstraction — the
