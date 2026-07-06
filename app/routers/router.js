@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 
 const swaggerUi = require('swagger-ui-express');
-const { attachAuth } = require('../middleware/auth.js');
+const { attachAuth, attachUser } = require('../middleware/auth.js');
 const { idempotency } = require('../middleware/idempotency.js');
 const { metricsHandler } = require('../middleware/metrics.js');
 const { auditLog } = require('../middleware/audit.js');
@@ -112,6 +112,12 @@ router.get('/metrics', metricsHandler);
 // used to fence /v1/whoami's downstream peers via per-controller
 // adoption in follow-up PRs).
 router.use('/v1', attachAuth);
+
+// attachUser resolves a Bearer JWT into req.user (the RBAC actor), parallel
+// to attachAuth's API-key context. Best-effort, never rejects — handlers that
+// enforce RBAC (user/invitation management) read req.user when a signed-in
+// user is acting; an API key stays the tenant's full-authority credential.
+router.use('/v1', attachUser);
 
 // Idempotency-Key support for POSTs. The middleware is a no-op
 // for non-POST methods and for POSTs that don't send the header;

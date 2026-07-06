@@ -30,8 +30,17 @@ function safeView(u) {
     };
 }
 
-/** Load a user (with hash, if needed) and enforce the secure-404 company scope. */
+/**
+ * Load a user and enforce the secure-404 company scope for EITHER a
+ * signed-in user (req.user, Bearer JWT — the RBAC actor) or an API key. A
+ * JWT actor is scoped to its own company; the API-key path keeps the
+ * master / company-match behavior. 403s if neither auth is present.
+ */
 async function findScoped(req, res) {
+    if (!req.user && !req.get('authKey')) {
+        res.status(403).json({ message: "Authorization required." });
+        return null;
+    }
     let user;
     try {
         user = await User.findByPk(req.params.id);
@@ -43,6 +52,14 @@ async function findScoped(req, res) {
     if (!user || user.userArch) {
         res.status(404).json({ message: "Not found." });
         return null;
+    }
+    if (req.user) {
+        // A signed-in user acts only within its own company (secure-404).
+        if (user.userCompId !== req.user.userCompId) {
+            res.status(404).json({ message: "Not found." });
+            return null;
+        }
+        return user;
     }
     const isMaster = await MasterFromReq(req, req.get('authKey'));
     if (!isMaster) {
@@ -56,7 +73,52 @@ async function findScoped(req, res) {
 }
 
 /** POST /v1/user — create a user account. Non-master defaults userCompId to its own company. */
+/** Shared tail of create: email-uniqueness check within the company, then insert. */
+async function insertUser(res, companyId, role, body) {
+    try {
+        const existing = await User.findOne({ where: { userCompId: companyId, userEmail: body.userEmail } });
+        if (existing) {
+            return res.status(409).json({ message: "A user with that email already exists." });
+        }
+    } catch (error) {
+        log.error({ err: error }, 'User email uniqueness check failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    try {
+        const created = await User.create({
+            userCompId: companyId,
+            userEmail: body.userEmail,
+            userName: body.userName,
+            userRole: role,
+            userPasswordHash: hashPassword(body.password),
+            userArch: false,
+        });
+        return res.status(201).json({ message: "User created.", user: safeView(created) });
+    } catch (error) {
+        log.error({ err: error }, 'User.create failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+}
+
 exports.create = async (req, res) => {
+    const body = req.body || {};
+
+    // Signed-in USER (Bearer JWT): RBAC-enforced, creates in its OWN company.
+    // canAssignRole requires the manage-roles permission AND no escalation —
+    // so only an admin/owner can create users, and an admin cannot mint an
+    // owner. Falls back to DEFAULT_ROLE when none is supplied.
+    if (req.user) {
+        const role = rbac.isRole(body.userRole) ? body.userRole : rbac.DEFAULT_ROLE;
+        if (!rbac.canAssignRole(req.user.userRole, role)) {
+            return res.status(403).json({ message: "Insufficient role to create a user with that role." });
+        }
+        if (body.userCompId !== undefined && Number(body.userCompId) !== req.user.userCompId) {
+            return res.status(403).json({ message: "Cannot create a user for another company." });
+        }
+        return insertUser(res, req.user.userCompId, role, body);
+    }
+
+    // API-key path (the tenant's full-authority credential) — unchanged.
     const authKey = req.get('authKey');
     if (!authKey) {
         return res.status(403).json({ message: "Authorization key not sent." });
@@ -70,7 +132,6 @@ exports.create = async (req, res) => {
         return res.status(500).json({ message: "Error!" });
     }
 
-    const body = req.body || {};
     let companyId;
     if (!isMaster) {
         try {
@@ -92,32 +153,7 @@ exports.create = async (req, res) => {
         }
     }
 
-    // Enforce email uniqueness within the company (active users only).
-    try {
-        const existing = await User.findOne({ where: { userCompId: companyId, userEmail: body.userEmail } });
-        if (existing) {
-            return res.status(409).json({ message: "A user with that email already exists." });
-        }
-    } catch (error) {
-        log.error({ err: error }, 'User email uniqueness check failed');
-        return res.status(500).json({ message: "Error!" });
-    }
-
-    const payload = {
-        userCompId: companyId,
-        userEmail: body.userEmail,
-        userName: body.userName,
-        userRole: rbac.isRole(body.userRole) ? body.userRole : rbac.DEFAULT_ROLE,
-        userPasswordHash: hashPassword(body.password),
-        userArch: false,
-    };
-    try {
-        const created = await User.create(payload);
-        return res.status(201).json({ message: "User created.", user: safeView(created) });
-    } catch (error) {
-        log.error({ err: error }, 'User.create failed');
-        return res.status(500).json({ message: "Error!" });
-    }
+    return insertUser(res, companyId, rbac.isRole(body.userRole) ? body.userRole : rbac.DEFAULT_ROLE, body);
 };
 
 /** GET /v1/user/:id — fetch one (metadata only). Secure-404 scoped. */
@@ -232,17 +268,24 @@ exports.remove = async (req, res) => {
     }
 };
 
-/** PATCH /v1/user/:id/role — set a user's RBAC role (#448). Company-scoped. */
+/**
+ * PATCH /v1/user/:id/role — set a user's RBAC role (#448). Company-scoped.
+ * A signed-in USER (Bearer JWT) is subject to RBAC: it must hold the
+ * manage-roles permission, and it can neither assign a role above its own
+ * nor modify a user who currently out-ranks it (no privilege escalation).
+ * An API key remains the tenant's full-authority credential (unchanged).
+ */
 exports.setRole = async (req, res) => {
-    if (!req.get('authKey')) {
-        return res.status(403).json({ message: "Authorization key not sent." });
-    }
     const body = req.body || {};
     if (!rbac.isRole(body.userRole)) {
         return res.status(400).json({ message: "Invalid role." });
     }
     const user = await findScoped(req, res);
     if (!user) return undefined;
+
+    if (req.user && !rbac.canChangeRole(req.user.userRole, user.userRole, body.userRole)) {
+        return res.status(403).json({ message: "Insufficient role to make this change." });
+    }
 
     try {
         await user.update({ userRole: body.userRole });

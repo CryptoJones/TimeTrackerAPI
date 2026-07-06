@@ -68,6 +68,26 @@ function canAssignRole(actorRole, targetRole) {
     return roleRank(actorRole) <= roleRank(targetRole);
 }
 
+/**
+ * May `actorRole` change a user who currently holds `currentRole` to
+ * `newRole`? The actor must be able to assign the NEW role AND out-rank (or
+ * equal) the target's CURRENT role — otherwise a manager could demote an
+ * owner. Both legs go through canAssignRole (which requires manage-roles).
+ */
+function canChangeRole(actorRole, currentRole, newRole) {
+    return canAssignRole(actorRole, newRole) && canAssignRole(actorRole, currentRole);
+}
+
+/** May an actor with `actorRole` create/update/remove user accounts? */
+function canManageUsers(actorRole) {
+    return hasPermission(actorRole, 'user:write');
+}
+
+/** May an actor with `actorRole` read user accounts? */
+function canReadUsers(actorRole) {
+    return hasPermission(actorRole, 'user:read');
+}
+
 module.exports = {
     ROLES,
     DEFAULT_ROLE,
@@ -77,4 +97,7 @@ module.exports = {
     permissionsFor,
     hasPermission,
     canAssignRole,
+    canChangeRole,
+    canManageUsers,
+    canReadUsers,
 };

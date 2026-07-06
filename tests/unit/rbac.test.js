@@ -2,7 +2,7 @@
 // Copyright 2026 Aaron K. Clark
 
 import { describe, test, expect } from 'vitest';
-import { ROLES, DEFAULT_ROLE, isRole, roleRank, permissionsFor, hasPermission, canAssignRole } from '../../app/services/rbac.js';
+import { ROLES, DEFAULT_ROLE, isRole, roleRank, permissionsFor, hasPermission, canAssignRole, canChangeRole, canManageUsers, canReadUsers } from '../../app/services/rbac.js';
 
 describe('rbac (#448)', () => {
     test('ROLES ordered highest→lowest; default is member', () => {
@@ -64,5 +64,28 @@ describe('rbac (#448)', () => {
         expect(canAssignRole('manager', 'viewer')).toBe(false);
         // Unknown target rejected.
         expect(canAssignRole('owner', 'wizard')).toBe(false);
+    });
+
+    test('canChangeRole: needs to assign the new role AND out-rank the current role', () => {
+        // Admin promotes a member to manager — allowed.
+        expect(canChangeRole('admin', 'member', 'manager')).toBe(true);
+        // Admin cannot promote anyone to owner (escalation on the new role).
+        expect(canChangeRole('admin', 'member', 'owner')).toBe(false);
+        // Admin cannot modify an OWNER at all (target out-ranks the actor).
+        expect(canChangeRole('admin', 'owner', 'member')).toBe(false);
+        // Owner can do both.
+        expect(canChangeRole('owner', 'admin', 'viewer')).toBe(true);
+        // Manager lacks manage-roles entirely.
+        expect(canChangeRole('manager', 'member', 'viewer')).toBe(false);
+    });
+
+    test('canManageUsers / canReadUsers map to user:write / user:read', () => {
+        expect(canManageUsers('admin')).toBe(true);
+        expect(canManageUsers('owner')).toBe(true);
+        expect(canManageUsers('manager')).toBe(false); // manager has no user:write
+        expect(canManageUsers('member')).toBe(false);
+        // Every role can read users.
+        for (const r of ROLES) expect(canReadUsers(r)).toBe(true);
+        expect(canReadUsers('nobody')).toBe(false);
     });
 });
