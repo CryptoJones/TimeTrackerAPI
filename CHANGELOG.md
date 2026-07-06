@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Approval reminders** (#442). `POST /v1/timeentry/approval-reminders`
+  finds time entries stuck in `submitted` past a threshold
+  (`olderThanDays`, default 7) and emails an approver (`to`) a digest —
+  wiring the approval workflow (#440) to the mail service (#68). Pure
+  `approval-reminders.js` builds the subject/body; delivery goes through
+  `mailer.sendMail` (captured, not sent, until a real SMTP transport is
+  configured). Company-scoped (master keys pass `companyId`). No migration.
 - **Email / notification service** (#68). A transport-abstracted mailer
   (`mailer.js`) — the foundation approval/payment reminders and scheduled
   report delivery build on: features call `sendMail({to, subject, text})`

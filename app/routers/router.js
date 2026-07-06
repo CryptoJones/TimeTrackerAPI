@@ -196,6 +196,12 @@ router.post(
     v.body(timeEntrySchemas.copyTimeEntryBody),
     timeEntry.copy,
 );
+// Approval reminders (#442): email a digest of stale pending approvals.
+router.post(
+    '/v1/timeentry/approval-reminders',
+    v.body(timeEntrySchemas.approvalRemindersBody),
+    timeEntry.approvalReminders,
+);
 // Literal paths declared BEFORE /:id so express doesn't try to
 // parse "export.csv" / "bycompany" as a customer id.
 router.get(
