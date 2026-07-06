@@ -215,6 +215,20 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         expect(Array.isArray(rows)).toBe(true);
     });
 
+    test('RateSchedule table exists with a company include (#414)', async () => {
+        if (!connected) return;
+        const rows = await db.RateSchedule.findAll({
+            attributes: ['rschId', 'rschCompId', 'rschName', 'rschRate', 'rschEffectiveFrom', 'rschEffectiveTo'],
+            limit: 1,
+        });
+        expect(Array.isArray(rows)).toBe(true);
+        const withCompany = await db.RateSchedule.findAll({
+            limit: 1,
+            include: [{ model: db.Company, as: 'company', required: false }],
+        });
+        expect(Array.isArray(withCompany)).toBe(true);
+    });
+
     test('Webhook table exists with a company include (#69)', async () => {
         if (!connected) return;
         const rows = await db.Webhook.findAll({

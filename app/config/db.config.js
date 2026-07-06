@@ -74,6 +74,7 @@ db.Phase = require('../models/phase.model.js')(sequelize, Sequelize);
 db.Role = require('../models/role.model.js')(sequelize, Sequelize);
 db.RecurringInvoice = require('../models/recurringinvoice.model.js')(sequelize, Sequelize);
 db.Webhook = require('../models/webhook.model.js')(sequelize, Sequelize);
+db.RateSchedule = require('../models/rateschedule.model.js')(sequelize, Sequelize);
 
 // ----------------------------------------------------------------------
 // Associations — centralized so the relationship graph is visible
@@ -223,5 +224,9 @@ db.RecurringInvoice.belongsTo(db.Customer, { foreignKey: 'recinvCustId', as: 'cu
 // Webhook → Company (whkCompId): an outbound event subscription (#69).
 db.Company.hasMany(db.Webhook,  { foreignKey: 'whkCompId', as: 'webhooks' });
 db.Webhook.belongsTo(db.Company, { foreignKey: 'whkCompId', as: 'company' });
+
+// RateSchedule → Company (rschCompId): effective-dated rates (#414).
+db.Company.hasMany(db.RateSchedule,   { foreignKey: 'rschCompId', as: 'rateSchedules' });
+db.RateSchedule.belongsTo(db.Company, { foreignKey: 'rschCompId', as: 'company' });
 
 module.exports = db;

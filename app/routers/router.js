@@ -38,6 +38,7 @@ const recurringInvoice = require('../controllers/recurringinvoicecontroller.js')
 const apikey = require('../controllers/apikeycontroller.js');
 const webhook = require('../controllers/webhookcontroller.js');
 const notification = require('../controllers/notificationcontroller.js');
+const rateSchedule = require('../controllers/rateschedulecontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -66,6 +67,7 @@ const recurringInvoiceSchemas = require('../schemas/recurringinvoice.schema.js')
 const apiKeySchemas = require('../schemas/apikey.schema.js');
 const webhookSchemas = require('../schemas/webhook.schema.js');
 const notificationSchemas = require('../schemas/notification.schema.js');
+const rateScheduleSchemas = require('../schemas/rateschedule.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -770,6 +772,41 @@ router.delete(
     '/v1/retainer/:id',
     v.params(retainerSchemas.intIdParam),
     retainer.remove,
+);
+
+// v1 rate-schedule routes (effective-dated rates, #414).
+// GET /resolve is declared before GET /:id so "resolve" isn't parsed as an id.
+router.post(
+    '/v1/rateschedule',
+    v.body(rateScheduleSchemas.createRateScheduleBody),
+    rateSchedule.create,
+);
+router.get(
+    '/v1/rateschedule/resolve',
+    v.query(rateScheduleSchemas.resolveQuery),
+    rateSchedule.resolve,
+);
+router.get(
+    '/v1/rateschedule/bycompany/:id',
+    v.params(rateScheduleSchemas.intIdParam),
+    v.query(rateScheduleSchemas.listByCompanyQuery),
+    rateSchedule.listByCompany,
+);
+router.get(
+    '/v1/rateschedule/:id',
+    v.params(rateScheduleSchemas.intIdParam),
+    rateSchedule.getById,
+);
+router.patch(
+    '/v1/rateschedule/:id',
+    v.params(rateScheduleSchemas.intIdParam),
+    v.body(rateScheduleSchemas.updateRateScheduleBody),
+    rateSchedule.update,
+);
+router.delete(
+    '/v1/rateschedule/:id',
+    v.params(rateScheduleSchemas.intIdParam),
+    rateSchedule.remove,
 );
 
 // v1 notification route (email service test send, master-only, #68).

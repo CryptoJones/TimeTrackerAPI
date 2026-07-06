@@ -1463,6 +1463,56 @@ const spec = {
                 responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
             },
         },
+        '/v1/rateschedule': {
+            post: {
+                summary: 'Create an effective-dated rate (#414)',
+                security: [{ authKey: [] }],
+                responses: { 201: { description: 'Created' }, 400: { description: 'Validation error; master keys must specify rschCompId' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/rateschedule/resolve': {
+            get: {
+                summary: 'Resolve the effective rate on a given date',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'date', in: 'query', required: true, schema: { type: 'string', format: 'date' } },
+                    { name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys.' },
+                ],
+                responses: { 200: { description: 'Effective rate — {companyId, date, rate}' }, 400: { description: 'Missing date / companyId' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/rateschedule/bycompany/{id}': {
+            get: {
+                summary: "List a company's rate schedules",
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer' } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer' } },
+                ],
+                responses: { 200: { description: 'Found (paginated)' }, 403: { description: 'Cross-tenant' } },
+            },
+        },
+        '/v1/rateschedule/{id}': {
+            get: {
+                summary: 'Fetch a rate schedule',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found' }, 404: { description: 'Not found' } },
+            },
+            patch: {
+                summary: 'Update a rate schedule',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Updated' }, 400: { description: 'Validation error' }, 404: { description: 'Not found' } },
+            },
+            delete: {
+                summary: 'Archive a rate schedule',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
+            },
+        },
         '/v1/notification/test': {
             post: {
                 summary: 'Send a test email to verify the mail transport (master only)',
