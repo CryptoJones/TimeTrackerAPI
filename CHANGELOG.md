@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **`report-timesheet.weekKey` no longer throws on a calendar-invalid
+  date** (#68). `isoDatePart` validates format only, so a value like
+  `2026-13-45` parsed to Invalid Date and `weekKey`'s `toISOString()` threw
+  `RangeError` — while `dayKey` tolerated the same input. `weekKey` now
+  returns its `unknown` sentinel instead, giving parity and keeping the
+  week-report path crash-safe. Found by an adversarial date/time review.
+- **Dunning digest includes an invoice due exactly `olderThanDays` ago**
+  (#10). The overdue cutoff used a strict `>= cutoff` skip, excluding an
+  invoice on the exact boundary even though the module contract flags
+  anything "at least `olderThanDays` days in the past". The boundary day is
+  now included (`> cutoff` skip); a regression test pins it. Found by the
+  same review.
 - **Payroll labor cost is computed from exact minutes, not pre-rounded
   hours** (#456). `payroll.js` multiplied each worker's *display* hours
   (already snapped to 2 decimals) by the cost rate, injecting up to

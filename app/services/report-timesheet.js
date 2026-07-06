@@ -33,6 +33,11 @@ function weekKey(startedAt) {
     const d = isoDatePart(startedAt);
     if (d === 'unknown') return 'unknown';
     const dt = new Date(d + 'T00:00:00.000Z');
+    // isoDatePart validates FORMAT, not validity — a calendar-invalid date
+    // (e.g. '2026-13-45') parses to Invalid Date, and the toISOString below
+    // would throw RangeError. Return the 'unknown' sentinel instead, giving
+    // parity with dayKey (which tolerates the same input).
+    if (Number.isNaN(dt.getTime())) return 'unknown';
     const dow = dt.getUTCDay();          // 0=Sun..6=Sat
     const backToMonday = dow === 0 ? 6 : dow - 1;
     dt.setUTCDate(dt.getUTCDate() - backToMonday);
