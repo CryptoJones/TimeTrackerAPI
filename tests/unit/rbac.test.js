@@ -79,6 +79,14 @@ describe('rbac (#448)', () => {
         expect(canChangeRole('manager', 'member', 'viewer')).toBe(false);
     });
 
+    test('time:approve is granted to manager and up, not to member/viewer', () => {
+        expect(hasPermission('viewer', 'time:approve')).toBe(false);
+        expect(hasPermission('member', 'time:approve')).toBe(false);
+        expect(hasPermission('manager', 'time:approve')).toBe(true);
+        expect(hasPermission('admin', 'time:approve')).toBe(true);
+        expect(hasPermission('owner', 'time:approve')).toBe(true);
+    });
+
     test('canManageUsers / canReadUsers map to user:write / user:read', () => {
         expect(canManageUsers('admin')).toBe(true);
         expect(canManageUsers('owner')).toBe(true);
