@@ -1598,6 +1598,23 @@ const spec = {
                 },
             },
         },
+        '/v1/report/utilization': {
+            get: {
+                summary: 'Worker utilization (billable hours vs capacity)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys.' },
+                    { name: 'workerId', in: 'query', schema: { type: 'integer' } },
+                    { name: 'from', in: 'query', required: true, schema: { type: 'string', format: 'date' } },
+                    { name: 'to', in: 'query', required: true, schema: { type: 'string', format: 'date' } },
+                ],
+                responses: {
+                    200: { description: 'Per-worker {capacity, billable, utilizationPct, billableRatioPct} + team totals' },
+                    400: { description: 'from/to required; master keys must specify companyId' },
+                    403: { description: 'Auth failure' },
+                },
+            },
+        },
         '/v1/report/revenue': {
             get: {
                 summary: 'Revenue & earnings summary (by customer and month)',
