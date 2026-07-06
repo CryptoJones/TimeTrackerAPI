@@ -245,6 +245,30 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         }
     });
 
+    test('Worker.workerUserId column + getCompanyIdByUserId resolve against the real schema', async () => {
+        if (!connected) return;
+        const auth = require('../../app/middleware/auth.js');
+        const company = await db.Company.create({ compName: `${SENTINEL}-uwco`, compArch: false });
+        const user = await db.User.create({
+            userCompId: company.compId, userEmail: `${SENTINEL}@x.co`, userName: 'U', userPasswordHash: 'x', userArch: false,
+        });
+        // The migration added workerUserId; a worker can carry it.
+        const worker = await db.Worker.create({
+            workerFName: 'W', workerLName: 'K', workerTitle: 'Dev', workerDefaultBillType: 1,
+            workerCompId: company.compId, workerUserId: user.userId, workerArch: false,
+        });
+        try {
+            expect(await auth.getCompanyIdByUserId(user.userId)).toBe(company.compId);
+            expect(await auth.userFkBelongsTo(user.userId, company.compId)).toBe(true);
+            expect(await auth.userFkBelongsTo(user.userId, company.compId + 99999)).toBe(false);
+            expect(worker.workerUserId).toBe(user.userId); // column round-trips
+        } finally {
+            await worker.destroy();
+            await user.destroy();
+            await company.destroy();
+        }
+    });
+
     test('Invoice has invSubtotal / invTax / invTotal money columns', async () => {
         if (!connected) return;
         // Selecting the new attributes proves the 20260522 migration

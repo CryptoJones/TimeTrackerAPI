@@ -290,6 +290,21 @@ describe('auth.getCompanyIdByRoleId / roleFkBelongsTo (Worker rate-source guard)
     });
 });
 
+describe('auth.getCompanyIdByUserId / userFkBelongsTo (Worker→User link guard)', () => {
+    test('resolves a user to its company; belongsTo enforces it', async () => {
+        stub.User.findByPk.mockResolvedValueOnce({ userCompId: 4 });
+        expect(await auth.getCompanyIdByUserId(1)).toBe(4);
+        stub.User.findByPk.mockResolvedValueOnce({ userCompId: 5 });
+        expect(await auth.userFkBelongsTo(1, 4)).toBe(false); // cross-tenant
+        expect(await auth.userFkBelongsTo(null, 4)).toBe(true); // absent optional
+    });
+    test('missing user → -1; non-positive id → -1 without a query', async () => {
+        stub.User.findByPk.mockResolvedValueOnce(null);
+        expect(await auth.getCompanyIdByUserId(9)).toBe(-1);
+        expect(await auth.getCompanyIdByUserId(0)).toBe(-1);
+    });
+});
+
 describe('auth.attachUser middleware (RBAC actor from a Bearer JWT)', () => {
     const jwt = require('../../app/services/jwt.js');
     const SECRET = 'test-jwt-secret';

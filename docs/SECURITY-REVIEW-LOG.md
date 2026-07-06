@@ -158,16 +158,16 @@ deliberately **not** implemented autonomously.
    *requires* approval before billing has no such gate. Requiring
    `approved` would break the default (approval-less) flow, so which
    policy applies is a per-tenant product decision.
-8. **Approver authorization — role check WIRED (#585); self-approval still
-   open.** The approval action now enforces a `time:approve` permission
-   (granted to **manager and up**) for a signed-in-user (JWT) actor, scoped
-   to the actor's own company (secure-404) — using the same `attachUser`
-   mechanism as item 1. The API-key path is unchanged (full authority). What
-   remains: **separation of duties** — an actor should not approve their own
-   logged time — which needs a **User↔Worker link** the model lacks today
-   (JWT actors are `User`s; time entries reference `Worker`s). Decide whether
-   to add that link (e.g. `worker.userId`) before self-approval can be
-   blocked; and confirm `manager+` is the right approve tier.
+8. **Approver authorization — RESOLVED (#585, #586).** The approval action
+   enforces a `time:approve` permission (granted to **manager and up**) for a
+   signed-in-user (JWT) actor, scoped to the actor's own company (secure-404),
+   using the same `attachUser` mechanism as item 1. **Separation of duties is
+   now enforced too (#586):** a nullable `workerUserId` link (Worker → User,
+   tenant-checked like every other FK) lets the approval action reject a user
+   approving their **own** logged time (the entry's worker resolves to the
+   acting user) with a 403. The API-key path stays full-authority. Remaining
+   product knob: the approve tier defaults to `manager+` (adjustable), and
+   the `workerUserId` link is populated by whoever provisions workers.
 9. **Process-level `unhandledRejection` net.** There is no global
    `unhandledRejection` / `uncaughtException` handler, so an async rejection
    that escaped a handler would crash the process on Node ≥ 15. Both the

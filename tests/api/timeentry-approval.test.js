@@ -46,9 +46,12 @@ describe('approval — RBAC for a JWT actor (time:approve)', () => {
     const ACTOR = 100; const ENTRY = 7;
 
     function token() { process.env.JWT_SECRET = SECRET; return jwt.sign({ sub: ACTOR, userCompId: 1 }, SECRET, 3600); }
-    function mock(actorRole, entryComp = 1, status = 'submitted') {
+    // workerUserId = the User the entry's worker is linked to (defaults to a
+    // DIFFERENT user, so it's not self-approval unless overridden to ACTOR).
+    function mock(actorRole, entryComp = 1, status = 'submitted', workerUserId = 999) {
         db.User = { findByPk: vi.fn().mockResolvedValue({ userId: ACTOR, userCompId: 1, userRole: actorRole, userArch: false }) };
-        db.TimeEntry.findByPk = vi.fn().mockResolvedValue({ teId: ENTRY, teCompId: entryComp, teArch: false, teApprovalStatus: status, update: vi.fn().mockResolvedValue(undefined) });
+        db.TimeEntry.findByPk = vi.fn().mockResolvedValue({ teId: ENTRY, teCompId: entryComp, teArch: false, teApprovalStatus: status, teWorkerId: 50, update: vi.fn().mockResolvedValue(undefined) });
+        db.Worker = { findByPk: vi.fn().mockResolvedValue({ workerUserId }) };
     }
     afterEach(() => { delete process.env.JWT_SECRET; });
     const post = () => request(app).post(`/v1/timeentry/${ENTRY}/approval`).set('authorization', `Bearer ${token()}`).send({ action: 'approve' });
@@ -64,5 +67,16 @@ describe('approval — RBAC for a JWT actor (time:approve)', () => {
     test('a cross-company entry → secure-404', async () => {
         mock('manager', 2); // entry in company 2, actor in company 1
         expect((await post()).status).toBe(404);
+    });
+
+    test('separation of duties: a manager cannot approve their OWN logged time → 403', async () => {
+        // The entry's worker is linked to the acting user (workerUserId == ACTOR).
+        mock('manager', 1, 'submitted', ACTOR);
+        expect((await post()).status).toBe(403);
+    });
+
+    test('a manager CAN approve another worker\'s time (worker linked to a different user) → 200', async () => {
+        mock('manager', 1, 'submitted', 777); // worker's user != actor
+        expect((await post()).status).toBe(200);
     });
 });

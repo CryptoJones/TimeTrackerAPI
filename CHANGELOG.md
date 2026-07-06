@@ -200,6 +200,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sentinel), and `attachAuth` maps them to **503 Service Unavailable**.
 
 ### Security
+- **Separation of duties on approval — no self-approval (#440/#448).** Adds a
+  nullable `workerUserId` link (Worker → User; tenant-checked on
+  create/update/bulk like every other FK) so the approval action can reject a
+  signed-in user approving their **own** logged time (the entry's worker
+  resolves to the acting user) with a 403. Completes the approver-authorization
+  item — the role check (`time:approve`, manager+) plus separation of duties.
+  API-key path unchanged.
 - **RBAC on the approval action (#440/#448).** The timesheet-approval endpoint
   now enforces a new `time:approve` permission (granted to **manager and up**)
   for a signed-in (JWT) actor, scoped to the actor's own company (secure-404);
