@@ -70,6 +70,20 @@ plausible-but-unproven finding as not-a-finding.
   degrades gracefully (no throw), the filename is sanitised to
   `[A-Za-z0-9._-]` (no header injection), `fmtMoney` is null-safe, and no
   server path or secret is embedded in the PDF metadata.
+- **Expenses / receipts** — markup is exact via `money.js` (single
+  cent-round); the roll-up is billable-only + un-invoiced + company-scoped
+  and stamps `expInvId` in a transaction (no double-bill); receipt bytes are
+  a Postgres `bytea` (no disk write → no path traversal); the upload is
+  triple-bounded (100kb body → 10M-char schema → 5MB decoded); content-type
+  is an enum served as an `attachment` with `nosniff` (SVG/HTML rejected).
+- **Reporting aggregations** — profitability / utilization / budget / hours /
+  unbilled / timesheet / targets / capacity / revenue all sum through
+  `money.js`, derive hours from **exact minutes** (never pre-rounded display
+  hours), and **guard every ratio's zero denominator** (`marginPct`,
+  `utilizationPct`, budget/target ratios all emit `null`/`0`, never
+  `NaN`/`Infinity`). Denominators/units are correct (margin `= (rev−cost)/rev`),
+  buckets don't double-count, and all 11 report endpoints are company-scoped
+  with `from`/`to` required where capacity depends on them.
 
 ## Open — needs a design decision (not a bug fix)
 
@@ -143,6 +157,16 @@ deliberately **not** implemented autonomously.
     same review: `btHourlyRate` is a `DOUBLE` while every other rate column
     is `NUMERIC(14,2)` — a consistency migration; and `$0` is only settable
     at the BillingType tier — a validation-symmetry choice.)
+12. **Team utilization mixes numerator/denominator populations** (reporting
+    review, LOW / by-design). Team `utilizationPct = teamBillable /
+    teamCapacity`, but the numerator sums **all** workers' billable minutes
+    while the denominator only adds capacity for workers **with** a
+    `targetMinsPerWeek` — so an untargeted worker inflates the team figure,
+    which can exceed 100% and every per-worker row. This is currently
+    **intended** (asserted in `capacity.test.js`), but whether a team metric
+    should be able to exceed 100% is a reporting-semantics decision (exclude
+    untargeted workers from the numerator, or assume a default capacity).
+    The rest of the reporting layer was verified sound (above).
 
 ---
 
