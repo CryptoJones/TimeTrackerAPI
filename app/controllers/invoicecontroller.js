@@ -722,6 +722,9 @@ exports.paymentReminders = async (req, res) => {
             dueDate: inv.invDueDate ? String(inv.invDueDate).slice(0, 10) : null,
             total: inv.invTotal,
             collected: money.sum((inv.payments || []).map((p) => p.cpayAmount)),
+            // A write-off settles the balance like a payment — without it a
+            // forgiven invoice would be dunned for its full amount.
+            writeOff: inv.invWriteOff,
         };
     });
 

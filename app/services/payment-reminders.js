@@ -5,9 +5,10 @@
 /**
  * payment-reminders.js — build a dunning digest of overdue invoices with
  * a balance outstanding (#10). An invoice counts when its reference date
- * (due date, else invoice date) is at least `olderThanDays` days in the
- * past AND total − collected > 0. Pure: the caller loads invoices with
- * their payment totals and passes `today`; exact money via money.js.
+ * (due date, else invoice date) is strictly before `today` (overdue) AND at
+ * least `olderThanDays` days in the past AND total − collected − writeOff >
+ * 0. Pure: the caller loads invoices with their payment totals and passes
+ * `today`; exact money via money.js.
  */
 
 const money = require('./money.js');
@@ -22,7 +23,7 @@ function minusDays(iso, days) {
 }
 
 /**
- * @param invoices [{ invId, invNumber, custName, date, dueDate, total, collected }]
+ * @param invoices [{ invId, invNumber, custName, date, dueDate, total, collected, writeOff }]
  * @param opts { today: 'YYYY-MM-DD', olderThanDays?: number }
  * @returns { count, totalOutstanding, invoices: [...], subject, text }
  */
@@ -35,14 +36,20 @@ function buildDunningDigest(invoices, opts = {}) {
     for (const inv of invoices || []) {
         const total = inv.total == null ? 0 : Number(inv.total);
         const collected = inv.collected == null ? 0 : Number(inv.collected);
-        const outstanding = money.subtract(total, collected);
+        // A write-off settles a balance the same as a payment (matching
+        // invoice-status.summarize) — otherwise a fully-forgiven invoice is
+        // dunned for its full amount.
+        const writeOff = inv.writeOff == null ? 0 : Number(inv.writeOff);
+        const outstanding = money.subtract(money.subtract(total, collected), writeOff);
         if (outstanding <= 0) continue;
         const refDate = inv.dueDate || inv.date || null;
-        // Flag when the reference date is on OR before the cutoff — i.e. the
-        // invoice is *at least* olderThanDays days in the past, matching the
-        // module contract. An invoice due exactly olderThanDays ago counts
-        // (previously a strict `>= cutoff` skip excluded that boundary day).
-        if (!refDate || !cutoff || refDate > cutoff) continue;
+        // Dun only invoices that are STRICTLY overdue — the reference date is
+        // before today, matching invoice-status.deriveStatus's `dueDate <
+        // today`; an invoice due *today* is current, never dunned, regardless
+        // of olderThanDays. AND it must be at least olderThanDays in the past
+        // (cutoff inclusive, #556) — an invoice due exactly olderThanDays ago
+        // still counts.
+        if (!refDate || !today || !cutoff || refDate >= today || refDate > cutoff) continue;
         rows.push({
             invId: inv.invId,
             invNumber: inv.invNumber || null,
