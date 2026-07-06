@@ -38,6 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Report export beyond CSV — revenue PDF** (#433). `GET
+  /v1/report/revenue.pdf` streams the revenue summary as a branded,
+  printable PDF (company header, totals, by-customer and by-month tables)
+  — same data + company scoping as the JSON `GET /v1/report/revenue`.
+  Reuses the invoice-PDF's lazy-`pdfkit` pattern (no new dependency) via a
+  pure `report-pdf.js` renderer; amounts format through `money.js`.
 - **API-key rotation & lifecycle** (#65). Master-only endpoints to manage
   company credentials: `POST /v1/apikey` (provision), `POST
   /v1/apikey/{id}/rotate` (replace the secret in place — the old key stops

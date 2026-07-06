@@ -1805,6 +1805,23 @@ const spec = {
                 },
             },
         },
+        '/v1/report/revenue.pdf': {
+            get: {
+                summary: 'Revenue summary as a printable PDF (#433)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys.' },
+                    { name: 'customerId', in: 'query', schema: { type: 'integer' } },
+                    { name: 'from', in: 'query', schema: { type: 'string', format: 'date' } },
+                    { name: 'to', in: 'query', schema: { type: 'string', format: 'date' } },
+                ],
+                responses: {
+                    200: { description: 'application/pdf attachment', content: { 'application/pdf': { schema: { type: 'string', format: 'binary' } } } },
+                    400: { description: 'Master keys must specify companyId' },
+                    403: { description: 'Auth failure' },
+                },
+            },
+        },
         '/v1/report/revenue': {
             get: {
                 summary: 'Revenue & earnings summary (by customer and month)',

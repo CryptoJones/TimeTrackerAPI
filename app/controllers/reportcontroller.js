@@ -21,6 +21,7 @@ const { buildBudget } = require('../services/report-budget.js');
 const { buildTargets, weeksBetween } = require('../services/report-targets.js');
 const { buildProfitability } = require('../services/report-profitability.js');
 const { buildUtilization } = require('../services/report-utilization.js');
+const { renderRevenuePdf } = require('../services/report-pdf.js');
 const rate = require('../services/rate.js');
 
 const IsMaster = auth.isMaster;
@@ -274,6 +275,95 @@ exports.revenue = async (req, res) => {
 
     const report = buildRevenue(items);
     return res.status(200).json({ message: "Revenue summary.", companyId, ...report });
+};
+
+/**
+ * GET /v1/report/revenue.pdf — the revenue summary as a printable PDF
+ * (#433). Same data/scope as GET /v1/report/revenue; streams a PDF
+ * instead of JSON.
+ */
+exports.revenuePdf = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+    req.authKey = authKey;
+
+    const scope = await resolveCompany(req);
+    if (scope.error) {
+        return res.status(scope.error.status).json({ message: scope.error.message });
+    }
+    const { companyId } = scope;
+
+    const Op = db.Sequelize && db.Sequelize.Op;
+    const invWhere = {};
+    const customerId = Number(req.query.customerId);
+    if (Number.isInteger(customerId) && customerId > 0) invWhere.invCustId = customerId;
+    const from = String(req.query.from || '');
+    const to = String(req.query.to || '');
+    const isDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s);
+    if (Op && isDate(from)) invWhere.invDate = Object.assign(invWhere.invDate || {}, { [Op.gte]: from });
+    if (Op && isDate(to)) invWhere.invDate = Object.assign(invWhere.invDate || {}, { [Op.lte]: to });
+
+    let invoices;
+    let company;
+    try {
+        invoices = await db.Invoice.findAll({
+            where: invWhere,
+            include: [
+                {
+                    model: db.Customer, as: 'customer', required: true,
+                    where: { custCompId: companyId },
+                    attributes: ['custId', 'custCompanyName', 'custFName', 'custLName'],
+                },
+                { model: db.CustomerPayment, as: 'payments', required: false },
+            ],
+            order: [['invDate', 'ASC']],
+        });
+        company = await db.Company.findByPk(companyId, { attributes: ['compName', 'compInvFooter', 'compCurrency'] });
+    } catch (error) {
+        log.error({ err: error }, 'revenue pdf: query failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+
+    const items = invoices.map((inv) => {
+        const c = inv.customer;
+        return {
+            custId: inv.invCustId,
+            custName: c ? (c.custCompanyName || [c.custFName, c.custLName].filter(Boolean).join(' ') || null) : null,
+            invDate: inv.invDate,
+            total: inv.invTotal,
+            collected: money.sum((inv.payments || []).map((p) => p.cpayAmount)),
+        };
+    });
+    const report = buildRevenue(items);
+
+    const data = {
+        company: { name: company ? company.compName : null, footer: company ? company.compInvFooter : null },
+        title: 'Revenue Summary',
+        range: { from: isDate(from) ? from : null, to: isDate(to) ? to : null },
+        generatedAt: new Date().toISOString().slice(0, 10),
+        currency: company && company.compCurrency ? company.compCurrency : 'USD',
+        totals: {
+            invoiceCount: report.invoiceCount,
+            revenue: report.totalRevenue,
+            collected: report.totalCollected,
+            outstanding: report.totalOutstanding,
+        },
+        byCustomer: report.byCustomer,
+        byPeriod: report.byPeriod,
+    };
+
+    let pdf;
+    try {
+        pdf = await renderRevenuePdf(data);
+    } catch (error) {
+        log.error({ err: error }, 'revenue pdf render failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="revenue-summary.pdf"');
+    return res.status(200).send(pdf);
 };
 
 /**
