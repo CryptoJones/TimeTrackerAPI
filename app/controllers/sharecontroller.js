@@ -14,8 +14,10 @@ const auth = require('../middleware/auth.js');
 const jwt = require('../services/jwt.js');
 const { resolveTtl, publicInvoiceView } = require('../services/share-link.js');
 
-const IsMaster = auth.isMaster;
-const GetCompanyId = auth.getCompanyId;
+// #374: reuse attachAuth's resolved context (req.isMaster / req.companyId)
+// instead of a second DB lookup; falls back to a live lookup if absent.
+const MasterFromReq = auth.masterFromReq;
+const CompanyIdFromReq = auth.companyIdFromReq;
 const GetCompanyIdByCustomerId = auth.getCompanyIdByCustomerId;
 
 function secret() {
@@ -44,10 +46,10 @@ exports.createInvoiceShare = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
         const invCompanyId = await GetCompanyIdByCustomerId(invoice.invCustId);
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1 || invCompanyId !== companyId) {
             return res.status(404).json({ message: "Not found." });
         }

@@ -17,7 +17,9 @@ const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
 const ApiKey = db.ApiKey;
 
-const IsMaster = auth.isMaster;
+// #374: reuse attachAuth's resolved context (req.isMaster) instead of a
+// second DB lookup; falls back to a live lookup if absent.
+const MasterFromReq = auth.masterFromReq;
 const hashKey = auth.hashKey;
 
 // Metadata only — akKEY (the hash) is deliberately excluded.
@@ -40,7 +42,7 @@ async function requireMaster(req, res) {
     }
     let isMaster;
     try {
-        isMaster = await IsMaster(authKey);
+        isMaster = await MasterFromReq(req, authKey);
     } catch (error) {
         log.error({ err: error }, 'apikey: IsMaster failed');
         res.status(500).json({ message: "Error!" });

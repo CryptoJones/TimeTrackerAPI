@@ -17,15 +17,18 @@ const { buildLinkHeader } = require('../middleware/pagination.js');
 const VersionInfo = db.VersionInfo;
 
 const IsMaster = auth.isMaster;
+// #374: prefer attachAuth's resolved context; IsMaster above is retained
+// only for the _internals test seam.
+const MasterFromReq = auth.masterFromReq;
 
 const ALLOWED_FIELDS = ['viVersion', 'viDate'];
 
-async function requireMaster(authKey, res) {
+async function requireMaster(req, authKey, res) {
     if (!authKey) {
         res.status(403).json({ message: "Authorization key not sent." });
         return false;
     }
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
         res.status(403).json({ message: "Only master keys may mutate VersionInfo." });
         return false;
@@ -66,7 +69,7 @@ function requireValidAuth(req, res) {
 
 exports.create = async (req, res) => {
     const authKey = req.get('authKey');
-    if (!(await requireMaster(authKey, res))) return;
+    if (!(await requireMaster(req, authKey, res))) return;
 
     const body = req.body || {};
     const payload = {};
@@ -125,7 +128,7 @@ exports.list = async (req, res) => {
 
 exports.update = async (req, res) => {
     const authKey = req.get('authKey');
-    if (!(await requireMaster(authKey, res))) return;
+    if (!(await requireMaster(req, authKey, res))) return;
 
     let v;
     try {
@@ -156,7 +159,7 @@ exports.update = async (req, res) => {
 
 exports.remove = async (req, res) => {
     const authKey = req.get('authKey');
-    if (!(await requireMaster(authKey, res))) return;
+    if (!(await requireMaster(req, authKey, res))) return;
 
     let v;
     try {
