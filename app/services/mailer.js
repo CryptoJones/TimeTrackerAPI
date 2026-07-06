@@ -18,6 +18,11 @@
 const log = require('../config/logger.js');
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+// A CR or LF in any header field would let a user-controlled value (a
+// report subject built from a company name, a caller-supplied `from`)
+// smuggle extra SMTP headers (Bcc:, …) or split the body once a real SMTP
+// transport is wired behind setTransport(). Reject it at this choke point.
+const HEADER_CRLF = /[\r\n]/;
 const MAX_CAPTURED = 100;
 const captured = [];
 
@@ -50,6 +55,12 @@ function validate(message) {
     if (!message || typeof message !== 'object') return 'message is required';
     if (!message.to || !EMAIL_RE.test(String(message.to))) return 'a valid "to" address is required';
     if (!message.subject) return 'subject is required';
+    // Header-injection guard. `to` already can't hold whitespace (EMAIL_RE
+    // rejects \r\n), but guard subject / from (and to, belt-and-suspenders)
+    // so a newline can never reach an SMTP header.
+    if (HEADER_CRLF.test(String(message.subject))) return 'subject must not contain line breaks';
+    if (message.from != null && HEADER_CRLF.test(String(message.from))) return 'from must not contain line breaks';
+    if (HEADER_CRLF.test(String(message.to))) return 'to must not contain line breaks';
     return null;
 }
 

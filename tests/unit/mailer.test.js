@@ -28,6 +28,20 @@ describe('mailer (#68)', () => {
         await expect(sendMail({ to: 'a@b.com' })).rejects.toMatchObject({ code: 'EMAIL_INVALID' });
     });
 
+    test('rejects CR/LF in header fields (email header injection guard)', async () => {
+        // A newline in subject / from would smuggle an SMTP header (Bcc:, …)
+        // or split the body once a real SMTP transport is wired.
+        await expect(sendMail({ to: 'a@b.com', subject: 'Invoice\r\nBcc: evil@x.com' }))
+            .rejects.toMatchObject({ code: 'EMAIL_INVALID' });
+        await expect(sendMail({ to: 'a@b.com', subject: 'ok\ninjected' }))
+            .rejects.toMatchObject({ code: 'EMAIL_INVALID' });
+        await expect(sendMail({ to: 'a@b.com', subject: 'ok', from: 'a\r\nBcc: e@x.com <a@b.com>' }))
+            .rejects.toMatchObject({ code: 'EMAIL_INVALID' });
+        // A clean subject containing a company name (with punctuation) still sends.
+        const res = await sendMail({ to: 'a@b.com', subject: 'Monthly report — Acme Corp, Inc.', from: 'ok@x.com' });
+        expect(res.transport).toBe('capture');
+    });
+
     test('setTransport swaps the transport and sendMail uses it', async () => {
         const seen = [];
         setTransport({ name: 'stub', async send(m) { seen.push(m); return { ok: true }; } });

@@ -126,6 +126,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sentinel), and `attachAuth` maps them to **503 Service Unavailable**.
 
 ### Security
+- **Mailer rejects CR/LF in `subject` / `from` (email header-injection
+  guard)** (#68). `sendMail`'s validator checked the `to` address shape but
+  not `subject` or `from` for line breaks, so a user-controlled value — a
+  scheduled-report subject built from a company name, or a caller-supplied
+  `from` — could smuggle an extra SMTP header (`Bcc:`, …) or split the body
+  the moment a real SMTP transport is wired behind `setTransport`. All
+  header fields are now CRLF-rejected at the shared choke point. Latent
+  today (only the no-network capture transport is wired) — defense in depth
+  for the SMTP-adapter follow-up. Found by an adversarial data-egress
+  review that otherwise confirmed the path sound: recipient injection is
+  blocked, and share links are non-forgeable (signed, single-resource,
+  expiry-enforced) with no cross-tenant read and no SSRF.
 - **`rbac.permissionsFor` fails closed on prototype-named roles** (#448). A
   role string matching an `Object.prototype` key (`__proto__`,
   `constructor`, `toString`) resolved `PERMISSIONS[role]` to an inherited
