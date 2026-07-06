@@ -215,6 +215,20 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         expect(Array.isArray(rows)).toBe(true);
     });
 
+    test('ApprovalChain table exists with a company include (#443)', async () => {
+        if (!connected) return;
+        const rows = await db.ApprovalChain.findAll({
+            attributes: ['apchId', 'apchCompId', 'apchName', 'apchLevels', 'apchActive'],
+            limit: 1,
+        });
+        expect(Array.isArray(rows)).toBe(true);
+        const withCompany = await db.ApprovalChain.findAll({
+            limit: 1,
+            include: [{ model: db.Company, as: 'company', required: false }],
+        });
+        expect(Array.isArray(withCompany)).toBe(true);
+    });
+
     test('ReportSchedule table exists with a company include (#57)', async () => {
         if (!connected) return;
         const rows = await db.ReportSchedule.findAll({
