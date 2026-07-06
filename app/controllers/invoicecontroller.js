@@ -645,7 +645,7 @@ exports.pdf = async (req, res) => {
             description: (l.job && l.job.jobDesc) || `Job #${l.injbJobId}`,
             amount: l.injbAmount == null ? null : Number(l.injbAmount),
         })),
-        totals: { subtotal: invoice.invSubtotal, tax: invoice.invTax, total: invoice.invTotal },
+        totals: { subtotal: invoice.invSubtotal, discount: invoice.invDiscount, tax: invoice.invTax, total: invoice.invTotal },
         payment: billing,
         format: req.query.format, // 'summary' | 'detailed' (default) — #424
         currency: invoice.invCurrency, // #427
