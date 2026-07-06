@@ -19,6 +19,11 @@ const Customer = db.Customer;
 const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
 const GetCustomerCompanyId = auth.getCompanyIdByCustomerId;
+// #374: prefer attachAuth's resolved context in the handlers below; the
+// raw IsMaster / GetCompanyId above are retained only for the _helpers
+// test seam.
+const MasterFromReq = auth.masterFromReq;
+const CompanyIdFromReq = auth.companyIdFromReq;
 
 /**
  * Escape the three SQL LIKE/ILIKE metacharacters in a substring so
@@ -64,7 +69,7 @@ exports.getCustomerById = async (req, res) => {
 
     let isAuthKeyMasterKey;
     try {
-        isAuthKeyMasterKey = await IsMaster(authKey);
+        isAuthKeyMasterKey = await MasterFromReq(req, authKey);
     } catch (error) {
         log.error({ err: error }, 'IsMaster failed');
         return res.status(500).json({ message: "Error!" });
@@ -77,7 +82,7 @@ exports.getCustomerById = async (req, res) => {
     let custCompanyId, authKeyCompanyId;
     try {
         custCompanyId = await GetCustomerCompanyId(customerId);
-        authKeyCompanyId = await GetCompanyId(authKey);
+        authKeyCompanyId = await CompanyIdFromReq(req, authKey);
     } catch (error) {
         log.error({ err: error }, 'Company lookup failed');
         return res.status(500).json({ message: "Error!" });
@@ -127,7 +132,7 @@ exports.createCustomer = async (req, res) => {
 
     let isAuthKeyMasterKey;
     try {
-        isAuthKeyMasterKey = await IsMaster(authKey);
+        isAuthKeyMasterKey = await MasterFromReq(req, authKey);
     } catch (error) {
         log.error({ err: error }, 'IsMaster failed');
         return res.status(500).json({ message: "Error!" });
@@ -155,7 +160,7 @@ exports.createCustomer = async (req, res) => {
     if (!isAuthKeyMasterKey) {
         let authKeyCompanyId;
         try {
-            authKeyCompanyId = await GetCompanyId(authKey);
+            authKeyCompanyId = await CompanyIdFromReq(req, authKey);
         } catch (error) {
             log.error({ err: error }, 'GetCompanyId failed');
             return res.status(500).json({ message: "Error!" });
@@ -214,7 +219,7 @@ exports.getAllByCompanyId = async (req, res) => {
 
     let isAuthKeyMasterKey;
     try {
-        isAuthKeyMasterKey = await IsMaster(authKey);
+        isAuthKeyMasterKey = await MasterFromReq(req, authKey);
     } catch (error) {
         log.error({ err: error }, 'IsMaster failed');
         return res.status(500).json({ message: "Error!" });
@@ -223,7 +228,7 @@ exports.getAllByCompanyId = async (req, res) => {
     if (!isAuthKeyMasterKey) {
         let authKeyCompanyId;
         try {
-            authKeyCompanyId = await GetCompanyId(authKey);
+            authKeyCompanyId = await CompanyIdFromReq(req, authKey);
         } catch (error) {
             log.error({ err: error }, 'GetCompanyId failed');
             return res.status(500).json({ message: "Error!" });
@@ -300,7 +305,7 @@ exports.exportCsv = async (req, res) => {
 
     let isAuthKeyMasterKey;
     try {
-        isAuthKeyMasterKey = await IsMaster(authKey);
+        isAuthKeyMasterKey = await MasterFromReq(req, authKey);
     } catch (error) {
         log.error({ err: error }, 'IsMaster failed');
         return res.status(500).json({ message: "Error!" });
@@ -318,7 +323,7 @@ exports.exportCsv = async (req, res) => {
     } else {
         let authKeyCompanyId;
         try {
-            authKeyCompanyId = await GetCompanyId(authKey);
+            authKeyCompanyId = await CompanyIdFromReq(req, authKey);
         } catch (error) {
             log.error({ err: error }, 'GetCompanyId failed');
             return res.status(500).json({ message: "Error!" });
@@ -446,7 +451,7 @@ exports.search = async (req, res) => {
 
     let isAuthKeyMasterKey;
     try {
-        isAuthKeyMasterKey = await IsMaster(authKey);
+        isAuthKeyMasterKey = await MasterFromReq(req, authKey);
     } catch (error) {
         log.error({ err: error }, 'IsMaster failed');
         return res.status(500).json({ message: "Error!" });
@@ -465,7 +470,7 @@ exports.search = async (req, res) => {
     } else {
         let authKeyCompanyId;
         try {
-            authKeyCompanyId = await GetCompanyId(authKey);
+            authKeyCompanyId = await CompanyIdFromReq(req, authKey);
         } catch (error) {
             log.error({ err: error }, 'GetCompanyId failed');
             return res.status(500).json({ message: "Error!" });
