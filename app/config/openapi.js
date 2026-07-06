@@ -1694,6 +1694,53 @@ const spec = {
                 },
             },
         },
+        '/v1/customfield': {
+            post: {
+                summary: 'Declare a typed custom field for an entity (#409)',
+                security: [{ authKey: [] }],
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { cfdEntity: { type: 'string', enum: ['customer', 'job', 'timeentry'] }, cfdName: { type: 'string' }, cfdLabel: { type: 'string' }, cfdType: { type: 'string', enum: ['text', 'number', 'date', 'boolean'] }, cfdRequired: { type: 'boolean' }, cfdCompId: { type: 'integer' } }, required: ['cfdEntity', 'cfdName', 'cfdType'] } } } },
+                responses: { 201: { description: 'Created' }, 400: { description: 'Validation error; master keys must specify cfdCompId' }, 403: { description: 'Auth failure' }, 409: { description: 'Duplicate field name for the entity' } },
+            },
+        },
+        '/v1/customfield/validate': {
+            post: {
+                summary: "Validate a values object against a company entity's custom fields (#409)",
+                security: [{ authKey: [] }],
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { entity: { type: 'string', enum: ['customer', 'job', 'timeentry'] }, values: { type: 'object' }, companyId: { type: 'integer' } }, required: ['entity', 'values'] } } } },
+                responses: { 200: { description: 'Valid — coerced { values }' }, 422: { description: 'Invalid — { errors } per field' }, 400: { description: 'Validation error' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/customfield/bycompany/{id}': {
+            get: {
+                summary: "List a company's custom fields (optional ?entity)",
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'entity', in: 'query', schema: { type: 'string', enum: ['customer', 'job', 'timeentry'] } },
+                ],
+                responses: { 200: { description: 'Found (paginated)' }, 403: { description: 'Cross-tenant' } },
+            },
+        },
+        '/v1/customfield/{id}': {
+            get: {
+                summary: 'Fetch a custom field',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found' }, 404: { description: 'Not found' } },
+            },
+            patch: {
+                summary: 'Update a custom field',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Updated' }, 400: { description: 'Validation error' }, 404: { description: 'Not found' } },
+            },
+            delete: {
+                summary: 'Archive a custom field',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
+            },
+        },
         '/v1/capacity/summary': {
             get: {
                 summary: 'Per-worker capacity / utilization for a period (#459)',

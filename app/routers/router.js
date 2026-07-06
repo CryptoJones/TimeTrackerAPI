@@ -49,6 +49,7 @@ const share = require('../controllers/sharecontroller.js');
 const approvalChain = require('../controllers/approvalchaincontroller.js');
 const invitation = require('../controllers/invitationcontroller.js');
 const capacity = require('../controllers/capacitycontroller.js');
+const customField = require('../controllers/customfielddefcontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -88,6 +89,7 @@ const shareSchemas = require('../schemas/share.schema.js');
 const approvalChainSchemas = require('../schemas/approvalchain.schema.js');
 const invitationSchemas = require('../schemas/invitation.schema.js');
 const capacitySchemas = require('../schemas/capacity.schema.js');
+const customFieldSchemas = require('../schemas/customfielddef.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -1034,6 +1036,40 @@ router.get(
     '/v1/capacity/summary',
     v.query(capacitySchemas.capacityQuery),
     capacity.summary,
+);
+
+// v1 custom-field routes (#409): typed field definitions + a validator.
+router.post(
+    '/v1/customfield',
+    v.body(customFieldSchemas.createCustomFieldDefBody),
+    customField.create,
+);
+router.post(
+    '/v1/customfield/validate',
+    v.body(customFieldSchemas.validateBody),
+    customField.validate,
+);
+router.get(
+    '/v1/customfield/bycompany/:id',
+    v.params(customFieldSchemas.intIdParam),
+    v.query(customFieldSchemas.listByCompanyQuery),
+    customField.listByCompany,
+);
+router.get(
+    '/v1/customfield/:id',
+    v.params(customFieldSchemas.intIdParam),
+    customField.getById,
+);
+router.patch(
+    '/v1/customfield/:id',
+    v.params(customFieldSchemas.intIdParam),
+    v.body(customFieldSchemas.updateCustomFieldDefBody),
+    customField.update,
+);
+router.delete(
+    '/v1/customfield/:id',
+    v.params(customFieldSchemas.intIdParam),
+    customField.remove,
 );
 
 // v1 rate-schedule routes (effective-dated rates, #414).
