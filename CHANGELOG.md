@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Security
+- **GDPR export streams instead of buffering (#589).** `GET
+  /v1/gdpr/customer/:id/export` previously ran seven un-`limit`ed parallel
+  `findAll`s and held the entire result set in memory — an OOM/DoS vector for
+  a customer with a large history. It now streams the same JSON object,
+  keyset-paginating each relation (`pk > lastId` batches of 500) so peak
+  memory is bounded regardless of total rows. No truncation — GDPR
+  completeness is preserved. Resolves review-log item 3.
 - **Idempotency now prevents concurrent double-execution (#588).** The
   `Idempotency-Key` middleware previously wrote its cache row *after* the
   handler, so two simultaneous same-key requests both executed the side
