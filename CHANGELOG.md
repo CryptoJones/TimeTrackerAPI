@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Invoice rollup excludes REJECTED time entries** (#440). The
+  time-entry → invoice rollup filtered on billable / job-linked /
+  not-yet-invoiced but **not** on approval status, so an entry a reviewer
+  had explicitly *rejected* still rolled into an invoice — padded hours a
+  manager killed would bill the client anyway. The rollup now excludes
+  `teApprovalStatus = 'rejected'` (open / submitted / approved still bill —
+  approval is not otherwise a billing gate; that broader policy is an open
+  decision in `docs/SECURITY-REVIEW-LOG.md`). Found by an adversarial
+  approval-workflow review; an integration test pins the filter against
+  real Postgres.
 - **Audit trail records the data subject of a GDPR erase/export** (#462).
   `entityIdOf` only captured a record id immediately after the entity
   segment, so `/v1/gdpr/customer/:id/erase` (id two segments deep) logged

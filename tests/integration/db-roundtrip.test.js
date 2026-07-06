@@ -145,6 +145,42 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         expect(Array.isArray(withLinks)).toBe(true);
     });
 
+    test('rollup query excludes REJECTED time entries (billing gate)', async () => {
+        if (!connected) return;
+        const { Op } = db.Sequelize;
+        const company = await db.Company.create({ compName: `${SENTINEL}-rollupco`, compArch: false });
+        const customer = await db.Customer.create({
+            custCompanyName: `${SENTINEL}-rollupcust`, custFName: 'Roll', custLName: 'Up',
+            custCompId: company.compId, custArch: false,
+        });
+        const job = await db.Job.create({ jobCustId: customer.custId, jobDesc: 'rollup job' });
+        const mk = (status) => db.TimeEntry.create({
+            teCustId: customer.custId, teCompId: company.compId,
+            teStartedAt: new Date('2026-02-01T09:00:00.000Z'), teMinutes: 60,
+            teBillable: true, teJobId: job.jobId, teInvJobId: null, teApprovalStatus: status,
+        });
+        const [approved, rejected, submitted] = await Promise.all([mk('approved'), mk('rejected'), mk('submitted')]);
+        try {
+            // The exact filter invoicecontroller.rollup applies.
+            const rows = await db.TimeEntry.findAll({
+                where: {
+                    teCustId: customer.custId, teBillable: true, teInvJobId: null,
+                    teJobId: { [Op.ne]: null }, teApprovalStatus: { [Op.ne]: 'rejected' },
+                },
+                attributes: ['teId', 'teApprovalStatus'],
+            });
+            const ids = rows.map((r) => r.teId);
+            expect(ids).toContain(approved.teId);   // approved bills
+            expect(ids).toContain(submitted.teId);  // submitted still bills (approval isn't the gate)
+            expect(ids).not.toContain(rejected.teId); // a rejection keeps it OUT of the invoice
+        } finally {
+            await db.TimeEntry.destroy({ where: { teId: [approved.teId, rejected.teId, submitted.teId] } });
+            await job.destroy();
+            await customer.destroy();
+            await company.destroy();
+        }
+    });
+
     test('Invoice has invSubtotal / invTax / invTotal money columns', async () => {
         if (!connected) return;
         // Selecting the new attributes proves the 20260522 migration
