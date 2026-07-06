@@ -11,6 +11,7 @@ import { describe, test, expect } from 'vitest';
 const { createBillingTypeBody } = require('../../app/schemas/billingtype.schema.js');
 const { createRoleBody } = require('../../app/schemas/role.schema.js');
 const { createJobBody } = require('../../app/schemas/job.schema.js');
+const { createExpenseBody } = require('../../app/schemas/expense.schema.js');
 
 const OVER = 1e13; // > NUMERIC(14,2) max (999,999,999,999.99)
 
@@ -30,5 +31,12 @@ describe('rate/amount fields reject out-of-range values (NUMERIC(14,2) overflow 
         expect(createJobBody.safeParse({ jobCustId: 1, jobDesc: 'x', jobFlatRate: 5000 }).success).toBe(true);
         expect(createJobBody.safeParse({ jobCustId: 1, jobDesc: 'x', jobFlatRate: OVER }).success).toBe(false);
         expect(createJobBody.safeParse({ jobCustId: 1, jobDesc: 'x', jobBudgetAmount: OVER }).success).toBe(false);
+    });
+
+    test('expense expMarkupPct: a fraction incl. >100% accepted; DECIMAL(6,4) overflow rejected', () => {
+        const base = { expDate: '2026-01-01', expAmount: 100 };
+        expect(createExpenseBody.safeParse({ ...base, expMarkupPct: 0.15 }).success).toBe(true); // 15%
+        expect(createExpenseBody.safeParse({ ...base, expMarkupPct: 1.5 }).success).toBe(true);  // 150% intentional
+        expect(createExpenseBody.safeParse({ ...base, expMarkupPct: 100 }).success).toBe(false); // > 99.9999 → 400, not a 500
     });
 });
