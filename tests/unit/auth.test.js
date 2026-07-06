@@ -31,6 +31,7 @@ beforeEach(async () => {
         PurchaseOrderHeader: { findByPk: vi.fn() },
         Job: { findByPk: vi.fn() },
         InventoryItem: { findByPk: vi.fn() },
+        Invoice: { findByPk: vi.fn() },
     };
     auth._setDbForTesting(stub);
 });
@@ -222,6 +223,38 @@ describe('auth.inventoryFkBelongsTo (secondary-FK tenant guard)', () => {
     test('missing / dangling item id is rejected', async () => {
         stub.InventoryItem.findByPk.mockResolvedValueOnce(null);
         expect(await auth.inventoryFkBelongsTo(999999999, 7)).toBe(false);
+    });
+});
+
+describe('auth.getCompanyIdByInvId', () => {
+    test('resolves an invoice to its company via the customer', async () => {
+        stub.Invoice.findByPk.mockResolvedValueOnce({ invId: 1, customer: { custCompId: 8 } });
+        expect(await auth.getCompanyIdByInvId(1)).toBe(8);
+    });
+    test('missing invoice / no customer → -1', async () => {
+        stub.Invoice.findByPk.mockResolvedValueOnce(null);
+        expect(await auth.getCompanyIdByInvId(1)).toBe(-1);
+        stub.Invoice.findByPk.mockResolvedValueOnce({ invId: 1, customer: null });
+        expect(await auth.getCompanyIdByInvId(1)).toBe(-1);
+    });
+    test('non-positive id → -1 without a query', async () => {
+        expect(await auth.getCompanyIdByInvId(0)).toBe(-1);
+        expect(stub.Invoice.findByPk).not.toHaveBeenCalled();
+    });
+});
+
+describe('auth.invoiceFkBelongsTo (InvoiceJob injbInvId guard)', () => {
+    test('absent FK allowed with no query', async () => {
+        expect(await auth.invoiceFkBelongsTo(null, 8)).toBe(true);
+        expect(stub.Invoice.findByPk).not.toHaveBeenCalled();
+    });
+    test('same-company invoice allowed; cross-tenant / missing rejected', async () => {
+        stub.Invoice.findByPk.mockResolvedValueOnce({ customer: { custCompId: 8 } });
+        expect(await auth.invoiceFkBelongsTo(5, 8)).toBe(true);
+        stub.Invoice.findByPk.mockResolvedValueOnce({ customer: { custCompId: 9 } });
+        expect(await auth.invoiceFkBelongsTo(5, 8)).toBe(false);
+        stub.Invoice.findByPk.mockResolvedValueOnce(null);
+        expect(await auth.invoiceFkBelongsTo(999, 8)).toBe(false);
     });
 });
 

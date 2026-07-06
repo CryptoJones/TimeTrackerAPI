@@ -50,6 +50,13 @@ exports.create = async (req, res) => {
                 message: "Cannot create an invoice line for a job in a company you do not belong to.",
             });
         }
+        // The secondary FK — the invoice the line attaches to — must ALSO
+        // belong to the caller's company. It was previously unchecked, so a
+        // scoped caller could attach a line (and its amount) to another
+        // tenant's invoice. Generic 400 so it can't probe foreign invoice ids.
+        if (!(await auth.invoiceFkBelongsTo(payload.injbInvId, authCompanyId))) {
+            return res.status(400).json({ message: "Invalid invoice." });
+        }
     }
 
     payload.injbArch = false;
@@ -250,6 +257,7 @@ exports.bulkCreate = makeBulkCreateIndirect({
     archField: 'injbArch',
     bodyKey: 'invoiceJobs',
     createdKey: 'invoiceJobs',
+    secondaryFk: { field: 'injbInvId', belongsTo: auth.invoiceFkBelongsTo },
 });
 
 exports._internals = { IsMaster, GetCompanyId, GetCompanyIdByJobId };

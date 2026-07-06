@@ -202,6 +202,30 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         }
     });
 
+    test('getCompanyIdByInvId / invoiceFkBelongsTo resolve against the real Invoice→Customer schema', async () => {
+        if (!connected) return;
+        const auth = require('../../app/middleware/auth.js');
+        const company = await db.Company.create({ compName: `${SENTINEL}-invco`, compArch: false });
+        const customer = await db.Customer.create({
+            custCompanyName: `${SENTINEL}-invcust`, custFName: 'In', custLName: 'Voice',
+            custCompId: company.compId, custArch: false,
+        });
+        const invoice = await db.Invoice.create({
+            invCustId: customer.custId, invDate: '2026-02-01', invDueDate: '2026-03-01',
+        });
+        try {
+            // Catches a wrong association alias / column that a stub can't.
+            expect(await auth.getCompanyIdByInvId(invoice.invId)).toBe(company.compId);
+            expect(await auth.invoiceFkBelongsTo(invoice.invId, company.compId)).toBe(true);
+            expect(await auth.invoiceFkBelongsTo(invoice.invId, company.compId + 99999)).toBe(false);
+            expect(await auth.getCompanyIdByInvId(999999999)).toBe(-1);
+        } finally {
+            await invoice.destroy();
+            await customer.destroy();
+            await company.destroy();
+        }
+    });
+
     test('Invoice has invSubtotal / invTax / invTotal money columns', async () => {
         if (!connected) return;
         // Selecting the new attributes proves the 20260522 migration

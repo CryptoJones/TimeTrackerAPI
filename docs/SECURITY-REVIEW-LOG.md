@@ -23,6 +23,8 @@ plausible-but-unproven finding as not-a-finding.
 | Subsystem | Finding | Severity | PR |
 |---|---|---|---|
 | Webhooks (SSRF) | Tenant `whkUrl` fetched with only a structural check → **SSRF** to cloud metadata / loopback / private hosts (redirect-following bypass; `ping` status oracle); added a resolved-IP denylist + scheme pin + per-hop redirect re-validation (`ssrf-guard.js`) | **High** | #573 |
+| Invoice lines (cross-tenant) | `injbInvId` unchecked on InvoiceJob create/bulk → a scoped caller attaches a line + amount to **another tenant's invoice** (renders on their PDF; victim can't delete it); added `getCompanyIdByInvId` / `invoiceFkBelongsTo` (secondary-FK class, cf. inventory #571) | **High** | #578 |
+| Payment / line amounts (DoS) | Unbounded `cpayAmount` / `injbAmount` → a finite-huge value overflows `money.toCents()` to **Infinity** → uncaught throw → 500 across a company's whole AR aging; magnitude-bounded (negatives still allowed) | Med | #578 |
 | Idempotency | Unbounded `canonicalJson` → **pre-auth process-crash DoS** (the author's fix `580109b` had never been merged to `main`); depth-bounded → 400, async mount hardened | **High** | #558 |
 | Invoice PDF | Unbounded line count × long unbroken `jobDesc` → pdfkit superlinear word-fit **froze the event loop** (~6 s/req) — one authed request stalled the whole server; descriptions/notes clipped, line count capped | **High** | #568 |
 | Report PDF | Same pdfkit **event-loop-stall DoS** in `report-pdf.js` `drawTable` (uncapped rows × caller-controlled `custName`, ~9 s/req); cells clipped, rows capped | **High** | #569 |

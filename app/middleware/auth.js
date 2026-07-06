@@ -339,6 +339,50 @@ async function inventoryFkBelongsTo(invitIdValue, companyId) {
 }
 
 /**
+ * Resolve an invoice id to its owning company id (via invCustId →
+ * Customer.custCompId). Used to tenant-check the SECONDARY `injbInvId` FK on
+ * an InvoiceJob line: the line already scopes on its parent `injbJobId`, but
+ * `injbInvId` (the invoice the line attaches to) was unchecked, so a scoped
+ * caller could attach a line to another tenant's invoice. Returns -1 for
+ * missing/archived (defaultScope filters archived customers).
+ */
+async function getCompanyIdByInvId(invId) {
+    const idStr = invId == null ? '' : String(invId);
+    if (idStr.length === 0 || idStr === '0') return -1;
+    try {
+        const row = await getDb().Invoice.findByPk(invId, {
+            attributes: ['invId'],
+            include: [{
+                model: getDb().Customer,
+                as: 'customer',
+                attributes: ['custCompId'],
+                required: true,
+            }],
+        });
+        if (!row) return -1;
+        const customer = row.customer;
+        if (!customer) return -1;
+        const cid = customer.custCompId;
+        return typeof cid === 'number' && cid > 0 ? cid : -1;
+    } catch (error) {
+        log.error({ err: error }, 'auth.getCompanyIdByInvId query failed');
+        return -1;
+    }
+}
+
+/**
+ * Companion to inventoryFkBelongsTo for the InvoiceJob `injbInvId` FK: for a
+ * scoped caller the referenced invoice must belong to their company. True
+ * when the FK is absent/null or same-company; false for missing/cross-tenant
+ * (one boolean → a single generic 400, no invoice-id enumeration oracle).
+ */
+async function invoiceFkBelongsTo(invIdValue, companyId) {
+    if (invIdValue == null) return true;
+    const owner = await getCompanyIdByInvId(invIdValue);
+    return owner === companyId;
+}
+
+/**
  * Express middleware: ensures the authKey header is present and
  * stashes it on req.authKey. Does NOT validate the key against the
  * database — leaves that to controllers that may have different
@@ -434,6 +478,8 @@ module.exports = {
     getCompanyIdByPohId,
     getCompanyIdByInvitId,
     inventoryFkBelongsTo,
+    getCompanyIdByInvId,
+    invoiceFkBelongsTo,
     requireAuthKey,
     attachAuth,
     requireAuth,

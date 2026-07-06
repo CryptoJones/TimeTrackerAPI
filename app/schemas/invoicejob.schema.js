@@ -16,9 +16,13 @@ const intIdParam = z.object({
 // numbers at the boundary. Zero and negative values still pass (a
 // $0 reference line and a credit/discount line are both real
 // accounting uses).
+// Bound the magnitude (negatives allowed — a credit/discount line): an
+// unbounded but finite value (e.g. 1e308) survives `.finite()` and later
+// overflows money.toCents() to Infinity, throwing uncaught in the invoice
+// total / aging / PDF consumers (a 500).
 const injbAmountField = z.coerce.number().finite({
     message: 'injbAmount must be a finite number.',
-});
+}).min(-999999999.99).max(999999999.99);
 
 const createInvoiceJobBody = z.object({
     injbInvId: z.coerce.number().int().positive(),
