@@ -181,6 +181,15 @@ async function createOneEntry(companyId, body) {
     payload.teArch = false;
     payload.teMinutes = computeMinutes(payload.teStartedAt, payload.teEndedAt);
 
+    // Multi-tenant scope (#373): the customer MUST belong to the effective
+    // company — otherwise a scoped key could book time against another
+    // tenant's customer. (Archived customers read as not-found via
+    // defaultScope → 400.)
+    const customer = await db.Customer.findByPk(Number(payload.teCustId), { attributes: ['custCompId'] });
+    if (!customer || customer.custCompId !== companyId) {
+        return { error: { status: 400, message: "teCustId must reference a customer in your company." } };
+    }
+
     const linkError = await checkEntryLinks(payload, companyId, payload.teCustId);
     if (linkError) {
         return { error: { status: linkError.status, message: linkError.message } };
