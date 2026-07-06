@@ -44,7 +44,7 @@ const createCustomerBody = z.object({
     custPhone: z.string().max(64).optional(),
     custEmail: z.string().email().max(255).optional(),
     custCompId: z.coerce.number().int().positive().optional(),
-    custDefaultRate: z.coerce.number().positive().optional(),
+    custDefaultRate: z.coerce.number().positive().max(999999999.99).optional(),
 }).strict({
     message: 'Unexpected field in body. Whitelist: custCompanyName, custFName, custLName, custAddress1, custAddress2, custCity, custState, custZip, custPhone, custEmail, custCompId, custDefaultRate.',
 });

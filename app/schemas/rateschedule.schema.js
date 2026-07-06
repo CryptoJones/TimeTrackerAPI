@@ -22,7 +22,7 @@ const TO_BEFORE_FROM = { message: 'rschEffectiveTo must be on or after rschEffec
  */
 const createRateScheduleBody = z.object({
     rschName: z.string().min(1).max(255),
-    rschRate: z.coerce.number().positive(),
+    rschRate: z.coerce.number().positive().max(999999999.99),
     rschEffectiveFrom: isoDate,
     rschEffectiveTo: isoDate.optional(),
     rschCompId: z.coerce.number().int().positive().optional(),
@@ -33,7 +33,7 @@ const createRateScheduleBody = z.object({
 /** PATCH /v1/rateschedule/:id — rschCompId is not patchable. */
 const updateRateScheduleBody = z.object({
     rschName: z.string().min(1).max(255).optional(),
-    rschRate: z.coerce.number().positive().optional(),
+    rschRate: z.coerce.number().positive().max(999999999.99).optional(),
     rschEffectiveFrom: isoDate.optional(),
     rschEffectiveTo: isoDate.nullable().optional(),
 }).strict({

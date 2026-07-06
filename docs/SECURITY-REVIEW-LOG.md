@@ -124,6 +124,25 @@ deliberately **not** implemented autonomously.
    call site catches), so this is defense-in-depth — but whether an escaped
    rejection should crash-and-restart or log-and-continue is a deliberate
    operational policy choice, so no global handler was added autonomously.
+10. **No rate snapshot; effective-dating is unwired from billing** (rate
+    review, MED-HIGH). `resolveHourlyRate` reads the *current* rate sources
+    at invoice/report time — nothing is captured on the `TimeEntry` at entry
+    time, and `rate.js` never calls `rate-schedule.js`, so the shipped
+    effective-dating feature influences **no** invoice line and editing a
+    rate retroactively re-prices a not-yet-invoiced backlog. Fixing it is a
+    product+schema decision: snapshot the resolved rate onto the entry at
+    creation, and/or drive resolution through `rateOnDate(entryDate)`. The
+    arithmetic and precedence themselves were verified sound.
+11. **Archiving a rate source silently re-rates entries to a lower tier**
+    (rate review, MED). Soft-deleting a referenced rate source (e.g. a
+    per-entry `BillingType` override) makes the `required:false` +
+    `defaultScope` join return `null`, so `resolveHourlyRate` falls through
+    to the next tier instead of flagging — a silent under-bill. The right
+    behavior (fall through vs. flag `unresolvedRate` vs. block the archive)
+    is a billing-policy choice, so it was not changed autonomously. (Minor,
+    same review: `btHourlyRate` is a `DOUBLE` while every other rate column
+    is `NUMERIC(14,2)` — a consistency migration; and `$0` is only settable
+    at the BillingType tier — a validation-symmetry choice.)
 
 ---
 

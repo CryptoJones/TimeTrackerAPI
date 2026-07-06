@@ -14,7 +14,7 @@ const intIdParam = z.object({
  */
 const createRoleBody = z.object({
     roleName: z.string().min(1).max(255),
-    roleRate: z.coerce.number().positive().optional(),
+    roleRate: z.coerce.number().positive().max(999999999.99).optional(),
     roleCompId: z.coerce.number().int().positive().optional(),
 }).strict({
     message: 'Unexpected field in body. Whitelist: roleName, roleRate, roleCompId.',
@@ -23,7 +23,7 @@ const createRoleBody = z.object({
 /** PATCH /v1/role/:id — roleCompId is not patchable. */
 const updateRoleBody = z.object({
     roleName: z.string().min(1).max(255).optional(),
-    roleRate: z.coerce.number().positive().nullable().optional(),
+    roleRate: z.coerce.number().positive().max(999999999.99).nullable().optional(),
 }).strict({
     message: 'Unexpected field in body. Whitelist: roleName, roleRate.',
 });
