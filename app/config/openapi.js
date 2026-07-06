@@ -1743,6 +1743,54 @@ const spec = {
                 },
             },
         },
+        '/v1/approvalchain': {
+            post: {
+                summary: 'Define a multi-level approval chain (#443)',
+                security: [{ authKey: [] }],
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { apchName: { type: 'string' }, apchLevels: { type: 'array', items: { type: 'object', properties: { approverRole: { type: 'string', enum: ['owner', 'admin', 'manager', 'member', 'viewer'] } } } }, apchCompId: { type: 'integer' } }, required: ['apchName', 'apchLevels'] } } } },
+                responses: { 201: { description: 'Created' }, 400: { description: 'Validation error; master keys must specify apchCompId' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/approvalchain/bycompany/{id}': {
+            get: {
+                summary: "List a company's approval chains",
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found (paginated)' }, 403: { description: 'Cross-tenant' } },
+            },
+        },
+        '/v1/approvalchain/{id}/next': {
+            get: {
+                summary: 'Resolve the next required approval level/role (#443)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'approvals', in: 'query', required: true, schema: { type: 'integer' }, description: 'Approvals recorded so far.' },
+                    { name: 'actorRole', in: 'query', schema: { type: 'string' }, description: 'If given, adds canApprove.' },
+                ],
+                responses: { 200: { description: '{ done, nextLevel, requiredRole, totalLevels, canApprove? }' }, 404: { description: 'Not found' } },
+            },
+        },
+        '/v1/approvalchain/{id}': {
+            get: {
+                summary: 'Fetch an approval chain',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found' }, 404: { description: 'Not found' } },
+            },
+            patch: {
+                summary: 'Update an approval chain',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Updated' }, 400: { description: 'Validation error' }, 404: { description: 'Not found' } },
+            },
+            delete: {
+                summary: 'Archive an approval chain',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
+            },
+        },
         '/v1/rateschedule': {
             post: {
                 summary: 'Create an effective-dated rate (#414)',

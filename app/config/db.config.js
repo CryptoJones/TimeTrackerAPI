@@ -78,6 +78,7 @@ db.RateSchedule = require('../models/rateschedule.model.js')(sequelize, Sequeliz
 db.User = require('../models/user.model.js')(sequelize, Sequelize);
 db.Receipt = require('../models/receipt.model.js')(sequelize, Sequelize);
 db.ReportSchedule = require('../models/reportschedule.model.js')(sequelize, Sequelize);
+db.ApprovalChain = require('../models/approvalchain.model.js')(sequelize, Sequelize);
 
 // ----------------------------------------------------------------------
 // Associations — centralized so the relationship graph is visible
@@ -243,5 +244,9 @@ db.Receipt.belongsTo(db.Expense, { foreignKey: 'rcptExpId', as: 'expense' });
 // ReportSchedule → Company (rptschCompId): scheduled report delivery (#57).
 db.Company.hasMany(db.ReportSchedule,   { foreignKey: 'rptschCompId', as: 'reportSchedules' });
 db.ReportSchedule.belongsTo(db.Company, { foreignKey: 'rptschCompId', as: 'company' });
+
+// ApprovalChain → Company (apchCompId): multi-level approval routing (#443).
+db.Company.hasMany(db.ApprovalChain,   { foreignKey: 'apchCompId', as: 'approvalChains' });
+db.ApprovalChain.belongsTo(db.Company, { foreignKey: 'apchCompId', as: 'company' });
 
 module.exports = db;

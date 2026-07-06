@@ -38,6 +38,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Multi-level approval chains** (#443). A new company-scoped
+  `ApprovalChain` entity (ordered approver levels, each requiring an RBAC
+  role), migration `20260626000000`. Full REST on `/v1/approvalchain`
+  (create / `bycompany` list / get / patch / delete) plus
+  `GET /{id}/next?approvals=n` which resolves the next required level +
+  role (and, with `actorRole`, whether that actor may approve — more
+  privileged roles may approve for less). Pure `approval-chain.js`
+  (validate/renumber levels, next-step, can-approve) building on the RBAC
+  model (#448) and extending the single-step approval machine (#440).
 - **Shareable client-facing invoice links** (#438). `POST /v1/share/invoice/{id}`
   mints a **signed, expiring** link (HS256 JWT via `jwt.js`, keyed by the
   `SHARE_SECRET` env var; default 7-day, max 90-day lifetime) for one of
