@@ -45,6 +45,7 @@ const receipt = require('../controllers/receiptcontroller.js');
 const reportSchedule = require('../controllers/reportschedulecontroller.js');
 const gdpr = require('../controllers/gdprcontroller.js');
 const payroll = require('../controllers/payrollcontroller.js');
+const share = require('../controllers/sharecontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -80,6 +81,7 @@ const receiptSchemas = require('../schemas/receipt.schema.js');
 const reportScheduleSchemas = require('../schemas/reportschedule.schema.js');
 const gdprSchemas = require('../schemas/gdpr.schema.js');
 const payrollSchemas = require('../schemas/payroll.schema.js');
+const shareSchemas = require('../schemas/share.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -944,6 +946,21 @@ router.get(
     '/v1/payroll/export',
     v.query(payrollSchemas.payrollQuery),
     payroll.exportCsv,
+);
+
+// v1 shareable-link routes (#438): mint a signed invoice link (tenant-
+// scoped); the view is PUBLIC (no authKey) and authorized by the signed
+// token alone.
+router.post(
+    '/v1/share/invoice/:id',
+    v.params(shareSchemas.intIdParam),
+    v.body(shareSchemas.shareCreateBody),
+    share.createInvoiceShare,
+);
+router.get(
+    '/v1/share/invoice',
+    v.query(shareSchemas.shareViewQuery),
+    share.viewInvoice,
 );
 
 // v1 rate-schedule routes (effective-dated rates, #414).

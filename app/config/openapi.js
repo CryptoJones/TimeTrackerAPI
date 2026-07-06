@@ -1717,6 +1717,32 @@ const spec = {
                 },
             },
         },
+        '/v1/share/invoice/{id}': {
+            post: {
+                summary: 'Mint a signed, expiring shareable link for an invoice (#438)',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { expiresInSec: { type: 'integer', description: 'Link lifetime (default 7 days, max 90 days).' } } } } } },
+                responses: {
+                    201: { description: 'Link created — {token, path, expiresIn}' },
+                    403: { description: 'Auth failure' },
+                    404: { description: 'Not found / cross-tenant' },
+                    503: { description: 'SHARE_SECRET not configured' },
+                },
+            },
+        },
+        '/v1/share/invoice': {
+            get: {
+                summary: 'View an invoice via a signed link — PUBLIC, no API key (#438)',
+                parameters: [{ name: 'token', in: 'query', required: true, schema: { type: 'string' } }],
+                responses: {
+                    200: { description: 'Read-only invoice projection (totals, balance, customer name)' },
+                    401: { description: 'Invalid or expired link' },
+                    404: { description: 'Invoice not found' },
+                    503: { description: 'SHARE_SECRET not configured' },
+                },
+            },
+        },
         '/v1/rateschedule': {
             post: {
                 summary: 'Create an effective-dated rate (#414)',
