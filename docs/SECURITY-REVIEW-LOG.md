@@ -111,10 +111,12 @@ plausible-but-unproven finding as not-a-finding.
   buckets don't double-count, and all 11 report endpoints are company-scoped
   with `from`/`to` required where capacity depends on them.
 
-## Open — needs a design decision (not a bug fix)
+## Design decisions (was: Open — needs a design decision)
 
-These are real gaps whose remedy is a product/architecture choice; each was
-deliberately **not** implemented autonomously.
+These were real gaps whose remedy was a product/architecture choice. **All are
+now resolved** — items 1–4, 6–10 were implemented (see the `#PR` on each), and
+items 5, 11, 12 were decided and documented in place (keep the current
+behavior, with the rationale recorded). Nothing in this list remains open.
 
 1. **RBAC enforcement — WIRED (#583).** The actor role now comes from the
    **Bearer-JWT sign-in path**: a new `attachUser` middleware resolves the
@@ -158,9 +160,15 @@ deliberately **not** implemented autonomously.
    public view rejects a deny-listed jti with the same 401 as an invalid token
    (no revocation-status leak). Revoke is idempotent; legacy pre-`jti` tokens
    aren't individually revocable (400) — rotate the secret for those.
-5. **Master actions in the tenant audit trail** (informational). A master
-   key's mutations set `alogCompId = null`, so they don't appear in the
-   affected company's audit view — a completeness gap, not a leak.
+5. **Master actions in the tenant audit trail — DECIDED (keep).** A master
+   key's mutations log with `alogCompId = null` (the platform scope),
+   deliberately not attributed to a tenant's `compId`: master keys are
+   cross-tenant platform-admin credentials, so surfacing their activity inside
+   a single tenant's audit view would both expose platform-admin operations to
+   that tenant and misattribute cross-tenant actions to one company. Master
+   actions ARE audited (at the platform scope); a per-tenant "changes by
+   platform admin" view is a possible future enhancement, not a correctness
+   gap.
 6. **Multi-level approval chain — ENFORCED (#591).** A new
    `TimeEntry.teApprovalLevel` counter tracks how many of the company's
    active chain's levels an entry has cleared. For a signed-in (JWT) actor,
@@ -207,28 +215,33 @@ deliberately **not** implemented autonomously.
     falls through to live. **Follow-up still open**: full effective-dating
     driven through `rate-schedule.js#rateOnDate(entryDate)` — the snapshot
     covers the retroactive-re-pricing risk without the schedule wiring.
-11. **Archiving a rate source silently re-rates entries to a lower tier**
-    (rate review, MED). Soft-deleting a referenced rate source (e.g. a
-    per-entry `BillingType` override) makes the `required:false` +
-    `defaultScope` join return `null`, so `resolveHourlyRate` falls through
-    to the next tier instead of flagging — a silent under-bill. The right
-    behavior (fall through vs. flag `unresolvedRate` vs. block the archive)
-    is a billing-policy choice, so it was not changed autonomously. (The
+11. **Archiving a rate source re-rates entries — MITIGATED (#593) + DECIDED.**
+    Soft-deleting a referenced rate source (e.g. a per-entry `BillingType`
+    override) makes the `required:false` + `defaultScope` join return `null`,
+    so `resolveHourlyRate` used to fall through to the next tier. The rate
+    snapshot (#593) now freezes an entry's rate at creation, so archiving a
+    referenced source afterwards no longer re-rates a snapshotted entry — it
+    prices from the frozen rate. Decision for the residual (entries with a null
+    snapshot — created before the feature, or with no rate resolvable at
+    creation): keep the precedence fallthrough as intended graceful
+    degradation (a rate still resolves if any tier applies), and an entry with
+    NO resolvable tier is reported in `skipped.unresolvedRate` at rollup, never
+    silently dropped. (The
     `DOUBLE`-vs-`NUMERIC` storage inconsistency — `btHourlyRate`, `cpayAmount`,
     `injbAmount` — was **resolved in #587**: all three are now `NUMERIC(14,2)`
     with a Number getter, so every money column is exact-decimal at rest.
     Remaining minor: `$0` is only settable at the BillingType tier — a
     validation-symmetry choice.)
-12. **Team utilization mixes numerator/denominator populations** (reporting
-    review, LOW / by-design). Team `utilizationPct = teamBillable /
-    teamCapacity`, but the numerator sums **all** workers' billable minutes
-    while the denominator only adds capacity for workers **with** a
-    `targetMinsPerWeek` — so an untargeted worker inflates the team figure,
-    which can exceed 100% and every per-worker row. This is currently
-    **intended** (asserted in `capacity.test.js`), but whether a team metric
-    should be able to exceed 100% is a reporting-semantics decision (exclude
-    untargeted workers from the numerator, or assume a default capacity).
-    The rest of the reporting layer was verified sound (above).
+12. **Team utilization can exceed 100% — DECIDED (keep, by design).** Team
+    `utilizationPct = teamBillable / teamCapacity` sums **all** workers'
+    billable minutes over the capacity of workers **with** a
+    `targetMinsPerWeek`, so it measures total team output against targeted
+    capacity and can exceed 100% — which meaningfully flags over-capacity /
+    overtime rather than hiding it behind a clamp. This is the intended
+    semantic (pinned in `capacity.test.js`). A same-population "true
+    utilization" (billable and capacity over only targeted workers) is a
+    distinct metric that can be added alongside if wanted; it is not a fix to
+    this one. The rest of the reporting layer was verified sound (above).
 
 ---
 
