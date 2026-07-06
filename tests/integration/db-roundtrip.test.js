@@ -288,6 +288,38 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         }
     });
 
+    test('streamRelationArray keyset-paginates a real relation in PK order (GDPR export)', async () => {
+        if (!connected) return;
+        const { streamRelationArray } = require('../../app/services/gdpr.js');
+        const company = await db.Company.create({ compName: `${SENTINEL}-gdpr`, compArch: false });
+        const customer = await db.Customer.create({
+            custCompanyName: `${SENTINEL}-cust`, custFName: 'Ex', custLName: 'Port',
+            custCompId: company.compId, custArch: false,
+        });
+        const made = [];
+        for (let i = 0; i < 5; i++) {
+            made.push(await db.Invoice.create({
+                invCustId: customer.custId, invDate: '2026-01-01', invDueDate: '2026-02-01',
+            }));
+        }
+        try {
+            const chunks = [];
+            // batchSize 2 → forces multiple keyset pages against real Postgres.
+            const total = await streamRelationArray(
+                db.Invoice, { invCustId: customer.custId }, db.Sequelize.Op, (c) => chunks.push(c), 2,
+            );
+            expect(total).toBe(5);
+            const parsed = JSON.parse('[' + chunks.join('') + ']');
+            const ids = parsed.map((r) => r.invId);
+            expect(ids).toEqual([...ids].sort((a, b) => a - b)); // ascending PK order
+            expect(new Set(ids).size).toBe(5);                    // no dup / skip across pages
+        } finally {
+            for (const inv of made) await inv.destroy({ force: true });
+            await customer.destroy({ force: true });
+            await company.destroy({ force: true });
+        }
+    });
+
     test('IdempotencyKey pending-claim protocol works against the real schema', async () => {
         if (!connected) return;
         const scope = `${SENTINEL}-ik-scope`;

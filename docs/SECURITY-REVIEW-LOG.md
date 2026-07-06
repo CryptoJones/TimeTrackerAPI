@@ -142,10 +142,13 @@ deliberately **not** implemented autonomously.
    replays once it completes, or `409 idempotency_key_reused` on a body
    mismatch. Nullable `ikResponseStatus`/`ikResponseBody` migration backs the
    pending state.
-3. **Streamed GDPR export.** `exportCustomer` issues un-`limit`ed
-   `findAll`s — an OOM/DoS vector for a very large customer. A cap conflicts
-   with GDPR's completeness requirement, so it wants a **streamed** export
-   rather than a truncating limit.
+3. **Streamed GDPR export — RESOLVED (#589).** `exportCustomer` previously
+   issued seven un-`limit`ed parallel `findAll`s and buffered the lot — an
+   OOM/DoS vector for a very large customer. It now **streams** the same JSON
+   object, keyset-paginating each relation (`pk > lastId` batches of 500 via
+   `gdpr.streamRelationArray`) so peak memory is O(batch), not O(total rows) —
+   no truncation, so GDPR completeness is preserved. A mid-stream DB error
+   truncates the (already-started) response, which the client detects.
 4. **Per-link share revocation.** Share links are stateless JWTs, so an
    individual link can't be revoked before its `exp` (≤90 days); the only
    levers are archiving the invoice or rotating `SHARE_SECRET`. Add a
