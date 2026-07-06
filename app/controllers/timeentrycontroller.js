@@ -6,7 +6,7 @@ const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
-const { escapeCsvCell } = require('./_csv-escape.js');
+const { buildCsv } = require('./_csv-escape.js');
 const rate = require('../services/rate.js');
 const { applyAction } = require('../services/approval.js');
 const { lockReason } = require('../services/time-lock.js');
@@ -1170,16 +1170,10 @@ exports.exportCsv = async (req, res) => {
     // (timeentry + customer) call into it, so the OWASP mitigation
     // stays in lockstep across the API; future export endpoints
     // get the same guardrail by default.
-    const escape = escapeCsvCell;
-    const lines = [];
-    lines.push(FIELDS.join(','));
-    for (const r of rows) {
-        lines.push(FIELDS.map((f) => escape(r[f])).join(','));
-    }
-    if (truncated) {
-        lines.push(`# truncated at ${limit} rows; re-call with offset=${offset + limit} to continue`);
-    }
-    const body = lines.join('\r\n') + '\r\n';
+    const note = truncated
+        ? `# truncated at ${limit} rows; re-call with offset=${offset + limit} to continue`
+        : null;
+    const body = buildCsv(FIELDS, rows, note);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition',
         `attachment; filename="timeentries-company-${effectiveCompanyId}.csv"`);

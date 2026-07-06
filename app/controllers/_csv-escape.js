@@ -48,4 +48,29 @@ function escapeCsvCell(val) {
     return '"' + s.replace(/"/g, '""') + '"';
 }
 
-module.exports = { escapeCsvCell };
+/**
+ * Assemble a complete CSV body from a fixed column list and a set of
+ * records, shared by the export controllers so the row-assembly seam is
+ * uniform and unit-testable (rather than duplicated inline per endpoint).
+ *
+ * Every DATA cell is run through escapeCsvCell (formula-injection safe).
+ * The `fields` are the column KEYS and double as the header row — they are
+ * trusted constants (hardcoded model column names), so the header is
+ * emitted as-is; likewise the optional `trailingNote` (e.g. a truncation
+ * marker) must be trusted constant text, never user input. Lines are
+ * CRLF-joined with a trailing CRLF (RFC-4180).
+ *
+ * @param {string[]} fields   column keys / header names
+ * @param {object[]} records  rows; each cell read as record[field]
+ * @param {string} [trailingNote]  optional trusted line appended last
+ */
+function buildCsv(fields, records, trailingNote) {
+    const lines = [fields.join(',')];
+    for (const r of (records || [])) {
+        lines.push(fields.map((f) => escapeCsvCell(r[f])).join(','));
+    }
+    if (trailingNote) lines.push(trailingNote);
+    return lines.join('\r\n') + '\r\n';
+}
+
+module.exports = { escapeCsvCell, buildCsv };
