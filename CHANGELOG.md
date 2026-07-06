@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **`buildLinkHeader` floors `limit` / `offset` / `count` to integers.** A
+  fractional value would otherwise leak into the generated RFC-5988
+  pagination links (e.g. `offset=94.5`). Latent today — controllers pass
+  integer-parsed values — but the helper is now robust to a float; `NaN` /
+  negative inputs still return `null`. Found by an adversarial review of
+  the request-integrity middleware.
 - **`report-timesheet.weekKey` no longer throws on a calendar-invalid
   date** (#68). `isoDatePart` validates format only, so a value like
   `2026-13-45` parsed to Invalid Date and `weekKey`'s `toISOString()` threw

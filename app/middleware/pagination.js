@@ -24,9 +24,14 @@
  */
 
 function buildLinkHeader({ req, limit, offset, count }) {
-    const lim = Number(limit);
-    const off = Number(offset);
-    const total = Number(count);
+    // Coerce to INTEGERS. Flooring guards a caller that passes a fractional
+    // value — otherwise `offset=94.5` / `limit=10.5` would leak into the
+    // generated next/prev/first/last links. `Math.floor(NaN)` stays NaN and
+    // a negative floors to a negative, so the finite/range guards below
+    // still reject bad input rather than silently coercing it to 0.
+    const lim = Math.floor(Number(limit));
+    const off = Math.floor(Number(offset));
+    const total = Math.floor(Number(count));
     if (!Number.isFinite(lim) || lim <= 0) return null;
     if (!Number.isFinite(off) || off < 0) return null;
     if (!Number.isFinite(total) || total < 0) return null;

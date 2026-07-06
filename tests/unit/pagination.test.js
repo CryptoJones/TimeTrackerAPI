@@ -74,6 +74,16 @@ describe('buildLinkHeader', () => {
         expect(link).toContain('offset=90'); // last page anchor
     });
 
+    test('fractional limit/offset are floored to integers in the generated links', () => {
+        const link = buildLinkHeader({ req: fakeReq(), limit: 10.5, offset: 10.5, count: 100 });
+        // No fractional query params leak into the Link header.
+        expect(link).not.toMatch(/(limit|offset)=\d+\.\d+/);
+        // limit floors to 10; prev floors to 0; next to 20.
+        expect(link).toContain('limit=10');
+        expect(link).toContain('offset=0');  // prev/first
+        expect(link).toContain('offset=20'); // next (10 + 10)
+    });
+
     describe('PUBLIC_BASE_URL pins the Link header base', () => {
         // Save + restore env so we don't leak into sibling tests.
         const ORIG = process.env.PUBLIC_BASE_URL;
