@@ -9,8 +9,10 @@ const { buildLinkHeader } = require('../middleware/pagination.js');
 const { normalizeLevels, nextStep, canApproveAt } = require('../services/approval-chain.js');
 const ApprovalChain = db.ApprovalChain;
 
-const IsMaster = auth.isMaster;
-const GetCompanyId = auth.getCompanyId;
+// #374: reuse attachAuth's resolved context (req.isMaster / req.companyId)
+// instead of a second DB lookup; falls back to a live lookup if absent.
+const MasterFromReq = auth.masterFromReq;
+const CompanyIdFromReq = auth.companyIdFromReq;
 
 /** Load a chain and enforce the secure-404 company scope. */
 async function findScoped(req, res) {
@@ -26,9 +28,9 @@ async function findScoped(req, res) {
         res.status(404).json({ message: "Not found." });
         return null;
     }
-    const isMaster = await IsMaster(req.get('authKey'));
+    const isMaster = await MasterFromReq(req, req.get('authKey'));
     if (!isMaster) {
-        const companyId = await GetCompanyId(req.get('authKey'));
+        const companyId = await CompanyIdFromReq(req, req.get('authKey'));
         if (companyId === -1 || chain.apchCompId !== companyId) {
             res.status(404).json({ message: "Not found." });
             return null;
@@ -46,7 +48,7 @@ exports.create = async (req, res) => {
 
     let isMaster;
     try {
-        isMaster = await IsMaster(authKey);
+        isMaster = await MasterFromReq(req, authKey);
     } catch (error) {
         log.error({ err: error }, 'IsMaster failed');
         return res.status(500).json({ message: "Error!" });
@@ -56,7 +58,7 @@ exports.create = async (req, res) => {
     let companyId;
     if (!isMaster) {
         try {
-            companyId = await GetCompanyId(authKey);
+            companyId = await CompanyIdFromReq(req, authKey);
         } catch (error) {
             log.error({ err: error }, 'GetCompanyId failed');
             return res.status(500).json({ message: "Error!" });
@@ -116,9 +118,9 @@ exports.listByCompany = async (req, res) => {
         return res.status(400).json({ message: "Invalid company id." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1 || companyId !== targetCompanyId) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
         }
