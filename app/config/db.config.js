@@ -72,6 +72,7 @@ db.Task = require('../models/task.model.js')(sequelize, Sequelize);
 db.Retainer = require('../models/retainer.model.js')(sequelize, Sequelize);
 db.Phase = require('../models/phase.model.js')(sequelize, Sequelize);
 db.Role = require('../models/role.model.js')(sequelize, Sequelize);
+db.RecurringInvoice = require('../models/recurringinvoice.model.js')(sequelize, Sequelize);
 
 // ----------------------------------------------------------------------
 // Associations — centralized so the relationship graph is visible
@@ -213,5 +214,9 @@ db.Company.hasMany(db.Role,  { foreignKey: 'roleCompId', as: 'roles' });
 db.Role.belongsTo(db.Company, { foreignKey: 'roleCompId', as: 'company' });
 db.Role.hasMany(db.Worker,   { foreignKey: 'workerRoleId', as: 'workers' });
 db.Worker.belongsTo(db.Role, { foreignKey: 'workerRoleId', as: 'role' });
+
+// RecurringInvoice → Customer (recinvCustId): a recurring billing schedule (#425).
+db.Customer.hasMany(db.RecurringInvoice,   { foreignKey: 'recinvCustId', as: 'recurringInvoices' });
+db.RecurringInvoice.belongsTo(db.Customer, { foreignKey: 'recinvCustId', as: 'customer' });
 
 module.exports = db;

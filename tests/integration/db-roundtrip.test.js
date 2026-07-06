@@ -215,6 +215,20 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         expect(Array.isArray(rows)).toBe(true);
     });
 
+    test('RecurringInvoice table exists with a customer include (#425)', async () => {
+        if (!connected) return;
+        const rows = await db.RecurringInvoice.findAll({
+            attributes: ['recinvId', 'recinvCustId', 'recinvCadence', 'recinvNextRun', 'recinvLastRun', 'recinvActive'],
+            limit: 1,
+        });
+        expect(Array.isArray(rows)).toBe(true);
+        const withCustomer = await db.RecurringInvoice.findAll({
+            limit: 1,
+            include: [{ model: db.Customer, as: 'customer', required: false }],
+        });
+        expect(Array.isArray(withCustomer)).toBe(true);
+    });
+
     test('Retainer table exists with a customer include (#426)', async () => {
         if (!connected) return;
         const rows = await db.Retainer.findAll({

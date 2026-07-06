@@ -38,6 +38,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Recurring invoice schedules** (#425). A new customer-scoped
+  `RecurringInvoice` entity (cadence, next-run date, active flag),
+  migration `20260617000000`. Full REST on `/v1/recurringinvoice` (create,
+  `bycustomer` list, get/patch/delete) plus `GET /due` (active schedules
+  whose next run is ≤ today, company-scoped) and `POST /{id}/run` which
+  stamps `recinvLastRun` and advances `recinvNextRun` by the cadence via a
+  pure, unit-tested date helper (weekly/monthly/quarterly/yearly, with
+  end-of-month clamping). Secure-404 scoped; soft-delete via `recinvArch`.
+  Generating the invoice document itself reuses the roll-up (follow-up).
 - **Role-based rates** (#412). A new company-scoped `Role` entity
   (`roleName` + `roleRate`) and a `Worker.workerRoleId` link (migration
   `20260616000000`). The role rate slots into `rate.js` between the client
