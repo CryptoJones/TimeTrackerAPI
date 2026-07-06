@@ -197,6 +197,12 @@ router.post(
     v.body(timeEntrySchemas.createTimeEntryBody),
     timeEntry.create,
 );
+// Bulk import (#379): create many entries in one call, per-row results.
+router.post(
+    '/v1/timeentry/bulk',
+    v.body(timeEntrySchemas.bulkTimeEntryBody),
+    timeEntry.bulk,
+);
 // Timer capture (#396): start begins an in-flight entry, stop closes it.
 router.post(
     '/v1/timeentry/start',

@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Bulk time-entry import** (#379). `POST /v1/timeentry/bulk`
+  `{ entries: [...] }` creates up to 200 entries in one call. Each row is
+  validated and created **independently** — a bad row fails on its own and
+  the rest still import — with a per-row `results[]` (`ok`/`teId` or
+  `status`/`message`) and counts. Status is **201** all-ok, **207**
+  partial, **400** all-failed. Single-create and bulk now share a
+  `createOneEntry` helper, so both apply identical validation, worker/job
+  link checks, and the locked-period guard.
 - **Billable-classification rules** (#415). A new company-scoped
   `BillableRule` entity, migration `20260630000000`, mapping a match on a
   time entry's **job / task / category** to a default billable /

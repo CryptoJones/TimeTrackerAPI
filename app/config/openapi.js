@@ -880,6 +880,19 @@ const spec = {
                 },
             },
         },
+        '/v1/timeentry/bulk': {
+            post: {
+                summary: 'Bulk-import time entries — per-row results (#379)',
+                security: [{ authKey: [] }],
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { teCompId: { type: 'integer', description: 'Required for master keys.' }, entries: { type: 'array', items: { $ref: '#/components/schemas/TimeEntry' }, minItems: 1, maxItems: 200 } }, required: ['entries'] } } } },
+                responses: {
+                    201: { description: 'All rows created — { requested, created, failed, results[] }' },
+                    207: { description: 'Partial — some rows failed; see results[]' },
+                    400: { description: 'Validation error or all rows failed' },
+                    403: { description: 'Auth failure' },
+                },
+            },
+        },
         '/v1/timeentry': {
             post: {
                 summary: 'Create a time entry',
