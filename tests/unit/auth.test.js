@@ -30,6 +30,7 @@ beforeEach(async () => {
         PurchaseOrderVendor: { findByPk: vi.fn() },
         PurchaseOrderHeader: { findByPk: vi.fn() },
         Job: { findByPk: vi.fn() },
+        InventoryItem: { findByPk: vi.fn() },
     };
     auth._setDbForTesting(stub);
 });
@@ -185,6 +186,42 @@ describe('auth.getCompanyIdByJobId', () => {
     test('returns -1 if the job has no customer linkage', async () => {
         stub.Job.findByPk.mockResolvedValueOnce({ jobId: 1, customer: null });
         expect(await auth.getCompanyIdByJobId(1)).toBe(-1);
+    });
+});
+
+describe('auth.getCompanyIdByInvitId', () => {
+    test('resolves an inventory item to its owning company', async () => {
+        stub.InventoryItem.findByPk.mockResolvedValueOnce({ invitCompId: 7 });
+        expect(await auth.getCompanyIdByInvitId(1)).toBe(7);
+    });
+    test('missing item → -1', async () => {
+        stub.InventoryItem.findByPk.mockResolvedValueOnce(null);
+        expect(await auth.getCompanyIdByInvitId(1)).toBe(-1);
+    });
+    test('non-positive / absent id → -1 without a query', async () => {
+        expect(await auth.getCompanyIdByInvitId(0)).toBe(-1);
+        expect(await auth.getCompanyIdByInvitId(null)).toBe(-1);
+        expect(stub.InventoryItem.findByPk).not.toHaveBeenCalled();
+    });
+});
+
+describe('auth.inventoryFkBelongsTo (secondary-FK tenant guard)', () => {
+    test('absent / null FK is allowed with no query (the FK is optional)', async () => {
+        expect(await auth.inventoryFkBelongsTo(null, 7)).toBe(true);
+        expect(await auth.inventoryFkBelongsTo(undefined, 7)).toBe(true);
+        expect(stub.InventoryItem.findByPk).not.toHaveBeenCalled();
+    });
+    test('same-company item is allowed', async () => {
+        stub.InventoryItem.findByPk.mockResolvedValueOnce({ invitCompId: 7 });
+        expect(await auth.inventoryFkBelongsTo(5, 7)).toBe(true);
+    });
+    test('cross-tenant item is rejected', async () => {
+        stub.InventoryItem.findByPk.mockResolvedValueOnce({ invitCompId: 8 });
+        expect(await auth.inventoryFkBelongsTo(5, 7)).toBe(false);
+    });
+    test('missing / dangling item id is rejected', async () => {
+        stub.InventoryItem.findByPk.mockResolvedValueOnce(null);
+        expect(await auth.inventoryFkBelongsTo(999999999, 7)).toBe(false);
     });
 });
 

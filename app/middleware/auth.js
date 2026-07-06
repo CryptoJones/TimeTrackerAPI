@@ -300,6 +300,45 @@ async function getCompanyIdByJobId(jobId) {
 }
 
 /**
+ * Resolve an inventory-item id to its owning company id (invitCompId).
+ * Used to tenant-check the SECONDARY inventory FK carried by a
+ * PurchaseOrderLine (polInvtId), InventoryTransaction (invtInitId), and
+ * ProductEntry (pentInvtId): each already scopes on its PARENT FK, but the
+ * item FK was unchecked, so a scoped caller could point it at another
+ * tenant's item (or a dangling id). Returns -1 for missing/archived.
+ */
+async function getCompanyIdByInvitId(invitId) {
+    const idStr = invitId == null ? '' : String(invitId);
+    if (idStr.length === 0 || idStr === '0') return -1;
+    try {
+        const row = await getDb().InventoryItem.findByPk(invitId, {
+            attributes: ['invitCompId'],
+        });
+        if (!row) return -1;
+        const cid = row.invitCompId;
+        return typeof cid === 'number' && cid > 0 ? cid : -1;
+    } catch (error) {
+        log.error({ err: error }, 'auth.getCompanyIdByInvitId query failed');
+        return -1;
+    }
+}
+
+/**
+ * For a scoped (non-master) caller, an OPTIONAL secondary inventory-item
+ * FK must resolve to the caller's own company. Returns true when it is safe
+ * to proceed (the FK is absent/null, or the item belongs to `companyId`),
+ * false when it must be rejected (missing item OR cross-tenant). One boolean
+ * for both reject cases so callers surface a single generic 400 and the
+ * endpoint can't be used to probe another tenant's item ids. Master callers
+ * are trusted and should skip this check (as they do the parent-FK check).
+ */
+async function inventoryFkBelongsTo(invitIdValue, companyId) {
+    if (invitIdValue == null) return true;
+    const owner = await getCompanyIdByInvitId(invitIdValue);
+    return owner === companyId;
+}
+
+/**
  * Express middleware: ensures the authKey header is present and
  * stashes it on req.authKey. Does NOT validate the key against the
  * database — leaves that to controllers that may have different
@@ -393,6 +432,8 @@ module.exports = {
     getCompanyIdByJobId,
     getCompanyIdByPovId,
     getCompanyIdByPohId,
+    getCompanyIdByInvitId,
+    inventoryFkBelongsTo,
     requireAuthKey,
     attachAuth,
     requireAuth,

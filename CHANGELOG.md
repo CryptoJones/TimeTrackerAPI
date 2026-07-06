@@ -153,6 +153,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sentinel), and `attachAuth` maps them to **503 Service Unavailable**.
 
 ### Security
+- **Tenant-check the inventory-item FK on PO lines, inventory transactions,
+  and product entries.** Each of these entities validated its *parent* FK's
+  company (PO header / company / job) but left the secondary inventory FK
+  (`polInvtId` / `invtInitId` / `pentInvtId` → `InventoryItem`) **unchecked**,
+  so a company-scoped caller could attach a line / transaction / product to
+  **another tenant's** inventory item (or a dangling id — two of the three
+  have no DB FK constraint). New `auth.getCompanyIdByInvitId` +
+  `inventoryFkBelongsTo` reject a cross-tenant or missing inventory FK with a
+  generic `400` (one message for both, so the endpoint can't probe another
+  tenant's item ids) on create, update, **and** the bulk paths. Found by the
+  previously-unreviewed inventory / purchase-order subsystem review.
 - **Bound report-PDF rendering — the same event-loop-stall DoS.**
   `report-pdf.js` `drawTable` rendered every row's cells with no cap and no
   clip, and the customer name (`custName`) is caller-controlled — 100 rows

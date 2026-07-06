@@ -41,6 +41,9 @@ function makeBulkCreate({
     archField,
     bodyKey,
     createdKey,
+    // Optional: an inventory-item FK carried on each entry that must
+    // belong to the caller's company. { field, belongsTo(value, compId) }.
+    secondaryFk,
 }) {
     return async function bulkCreate(req, res) {
         const authKey = req.get('authKey');
@@ -98,6 +101,12 @@ function makeBulkCreate({
                     });
                 }
                 p[compIdField] = authKeyCompanyId;
+                if (secondaryFk && p[secondaryFk.field] != null
+                    && !(await secondaryFk.belongsTo(p[secondaryFk.field], authKeyCompanyId))) {
+                    return res.status(400).json({
+                        message: `${bodyKey}[${i}]: invalid inventory item.`,
+                    });
+                }
             }
             // archField intentionally defaulted to false here so
             // partially-archived bulk inserts can't be smuggled in.
@@ -173,6 +182,9 @@ function makeBulkCreateIndirect({
     archField,
     bodyKey,
     createdKey,
+    // Optional: an inventory-item FK carried on each entry that must
+    // belong to the caller's company. { field, belongsTo(value, compId) }.
+    secondaryFk,
 }) {
     return async function bulkCreate(req, res) {
         const authKey = req.get('authKey');
@@ -239,6 +251,13 @@ function makeBulkCreateIndirect({
             if (!isAuthKeyMasterKey && parentCompId !== authKeyCompanyId) {
                 return res.status(403).json({
                     message: `${bodyKey}[${i}]: cannot create for a company you do not belong to.`,
+                });
+            }
+
+            if (!isAuthKeyMasterKey && secondaryFk && p[secondaryFk.field] != null
+                && !(await secondaryFk.belongsTo(p[secondaryFk.field], authKeyCompanyId))) {
+                return res.status(400).json({
+                    message: `${bodyKey}[${i}]: invalid inventory item.`,
                 });
             }
 
