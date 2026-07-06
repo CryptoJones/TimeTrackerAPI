@@ -9,9 +9,23 @@
  * the before/after field changes a DCAA trail must retain.
  */
 
-/** The numeric record id in a /v1/<entity>/<id>[/...] path, or null. */
+/**
+ * The numeric record id in a /v1/<entity>/<id>[/...] path, or null. Also
+ * matches ONE nested segment — /v1/<entity>/<sub>/<id>[/...] — so the
+ * subject id of a nested action such as /v1/gdpr/customer/<id>/erase is
+ * captured for the audit trail. Previously that path logged
+ * `alogEntityId = null`, so the DCAA trail lost which data subject a
+ * right-to-erasure (or export) request affected — the most sensitive
+ * action, recorded without its target. The intermediate segment is
+ * optional and single, so normal `/v1/<entity>/<id>` paths are unchanged.
+ */
 function entityIdOf(path) {
-    const m = /^\/v1\/[a-zA-Z-]+\/(\d+)(?:\/|$|\?)/.exec(path || '');
+    // The optional intermediate segment excludes `by*` list qualifiers
+    // (bycompany / byjob / bycustomer / …) so a list path like
+    // /v1/timeentry/bycompany/3 still yields null (3 is a company id, not the
+    // record id) — only a genuine sub-resource such as gdpr/customer/<id>
+    // is matched.
+    const m = /^\/v1\/[a-zA-Z-]+\/(?:(?!by)[a-zA-Z-]+\/)?(\d+)(?:\/|$|\?)/.exec(path || '');
     return m ? Number(m[1]) : null;
 }
 

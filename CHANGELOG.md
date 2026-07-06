@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Audit trail records the data subject of a GDPR erase/export** (#462).
+  `entityIdOf` only captured a record id immediately after the entity
+  segment, so `/v1/gdpr/customer/:id/erase` (id two segments deep) logged
+  `alogEntityId = null` — the DCAA trail lost *which* customer a
+  right-to-erasure / export request affected, i.e. the single most
+  sensitive action recorded without its target. The matcher now also
+  handles one nested sub-resource segment, while still excluding `by*` list
+  qualifiers (a `bycompany/5` id stays `null`). Found by an adversarial
+  data-handling review that otherwise confirmed the compliance path sound
+  (export is tenant-scoped, the PII scrub is column-complete, and **no
+  secret can reach the audit log** — it stores metadata only).
 - **`buildLinkHeader` floors `limit` / `offset` / `count` to integers.** A
   fractional value would otherwise leak into the generated RFC-5988
   pagination links (e.g. `offset=94.5`). Latent today — controllers pass
