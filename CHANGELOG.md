@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Capacity & resource planning** (#459). `GET /v1/capacity/summary`
+  reports, per worker over a `from`/`to` period, **target hours** (each
+  worker's `workerTargetMinsPerWeek` × weeks in the period) vs. **logged
+  hours**, with **utilization %** and **remaining capacity** — plus
+  company totals. Every worker is listed (a zero-logged worker shows full
+  remaining capacity). Pure `capacity.js` aggregator; company-scoped; no
+  new tables.
 - **Teammate invitations** (#458). A new company-scoped `Invitation`
   entity, migration `20260627000000`. `POST /v1/invitation` invites an
   email to join a workspace with a chosen RBAC role — storing only the
