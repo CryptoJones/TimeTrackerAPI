@@ -81,6 +81,19 @@ plausible-but-unproven finding as not-a-finding.
   a Postgres `bytea` (no disk write → no path traversal); the upload is
   triple-bounded (100kb body → 10M-char schema → 5MB decoded); content-type
   is an enum served as an `attachment` with `nosniff` (SVG/HTML rejected).
+- **Route guarding (systematic audit)** — all **225** route registrations in
+  `router.js` audited: `attachAuth` is on `/v1` (and nothing is registered
+  outside `router.js`), every scoped handler self-enforces the `authKey` +
+  company scope (inline or via `findScoped` / `resolveCompany` / the bulk
+  factories), every `:id` route carries `v.params(intIdParam)` (no NaN id
+  reaches `findByPk`), every create/update/bulk a `.strict()` `v.body` (or
+  reads no body), and every list/report a `v.query`. The deliberately-public
+  routes (health / metrics / openapi, `whoami`, `login` / password-reset /
+  invite-accept / signed share-link read) leak nothing sensitive
+  (`safeUser` / `safeView` projections, anti-enumeration 401/200). No
+  unauthenticated path, missing/wrong validation, or wrong-schema wiring.
+  (`user.setRole` being company-scoped rather than master-only ties to the
+  RBAC-enforcement decision, open item 1.)
 - **Cross-tenant FK scoping (systematic audit)** — every controller's
   create/update/bulk FKs were audited: each foreign key is either the
   scoping parent or validated against the caller's company (or same-customer,
