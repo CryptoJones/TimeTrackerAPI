@@ -47,6 +47,7 @@ const gdpr = require('../controllers/gdprcontroller.js');
 const payroll = require('../controllers/payrollcontroller.js');
 const share = require('../controllers/sharecontroller.js');
 const approvalChain = require('../controllers/approvalchaincontroller.js');
+const invitation = require('../controllers/invitationcontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -84,6 +85,7 @@ const gdprSchemas = require('../schemas/gdpr.schema.js');
 const payrollSchemas = require('../schemas/payroll.schema.js');
 const shareSchemas = require('../schemas/share.schema.js');
 const approvalChainSchemas = require('../schemas/approvalchain.schema.js');
+const invitationSchemas = require('../schemas/invitation.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -999,6 +1001,30 @@ router.delete(
     '/v1/approvalchain/:id',
     v.params(approvalChainSchemas.intIdParam),
     approvalChain.remove,
+);
+
+// v1 invitation routes (#458): invite a teammate (scoped); accept is
+// PUBLIC and provisions a user from the emailed token.
+router.post(
+    '/v1/invitation',
+    v.body(invitationSchemas.createInvitationBody),
+    invitation.create,
+);
+router.post(
+    '/v1/invitation/accept',
+    v.body(invitationSchemas.acceptInvitationBody),
+    invitation.accept,
+);
+router.get(
+    '/v1/invitation/bycompany/:id',
+    v.params(invitationSchemas.intIdParam),
+    v.query(invitationSchemas.listByCompanyQuery),
+    invitation.listByCompany,
+);
+router.delete(
+    '/v1/invitation/:id',
+    v.params(invitationSchemas.intIdParam),
+    invitation.remove,
 );
 
 // v1 rate-schedule routes (effective-dated rates, #414).

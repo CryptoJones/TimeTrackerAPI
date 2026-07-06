@@ -1743,6 +1743,37 @@ const spec = {
                 },
             },
         },
+        '/v1/invitation': {
+            post: {
+                summary: 'Invite a teammate to a company workspace (#458)',
+                security: [{ authKey: [] }],
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { invtEmail: { type: 'string', format: 'email' }, invtRole: { type: 'string', enum: ['owner', 'admin', 'manager', 'member', 'viewer'] }, invtCompId: { type: 'integer' } }, required: ['invtEmail', 'invtRole'] } } } },
+                responses: { 201: { description: 'Invitation sent (token emailed)' }, 400: { description: 'Validation error; master keys must specify invtCompId' }, 403: { description: 'Auth failure' }, 409: { description: 'A user with that email already exists' } },
+            },
+        },
+        '/v1/invitation/accept': {
+            post: {
+                summary: 'Accept an invitation — PUBLIC; provisions a user (#458)',
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { token: { type: 'string' }, userName: { type: 'string' }, password: { type: 'string' } }, required: ['token', 'password'] } } } },
+                responses: { 201: { description: 'User provisioned with the invited role' }, 400: { description: 'Invalid or expired invitation / validation error' }, 409: { description: 'A user with that email already exists' } },
+            },
+        },
+        '/v1/invitation/bycompany/{id}': {
+            get: {
+                summary: "List a company's invitations (no token hash)",
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found (paginated)' }, 403: { description: 'Cross-tenant' } },
+            },
+        },
+        '/v1/invitation/{id}': {
+            delete: {
+                summary: 'Revoke an invitation',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Revoked' }, 404: { description: 'Not found' } },
+            },
+        },
         '/v1/approvalchain': {
             post: {
                 summary: 'Define a multi-level approval chain (#443)',

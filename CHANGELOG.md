@@ -38,6 +38,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Teammate invitations** (#458). A new company-scoped `Invitation`
+  entity, migration `20260627000000`. `POST /v1/invitation` invites an
+  email to join a workspace with a chosen RBAC role — storing only the
+  token's SHA-256 and emailing the token via the mailer (#68).
+  `POST /v1/invitation/accept` is **public**: it validates the token
+  (pure `invitation.js`), provisions a `User` (#444) with the invited role
+  and the caller's password, and consumes the invite.
+  `GET /v1/invitation/bycompany/{id}` lists invitations (token hash
+  withheld); `DELETE` revokes. Duplicate-email guarded (409).
 - **Multi-level approval chains** (#443). A new company-scoped
   `ApprovalChain` entity (ordered approver levels, each requiring an RBAC
   role), migration `20260626000000`. Full REST on `/v1/approvalchain`
