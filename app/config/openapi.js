@@ -1426,6 +1426,18 @@ const spec = {
                 responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
             },
         },
+        '/v1/notification/test': {
+            post: {
+                summary: 'Send a test email to verify the mail transport (master only)',
+                security: [{ authKey: [] }],
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { to: { type: 'string', format: 'email' }, subject: { type: 'string' }, text: { type: 'string' } }, required: ['to'] } } } },
+                responses: {
+                    200: { description: 'Sent (or captured) — returns the active transport name' },
+                    400: { description: 'Invalid recipient / body' },
+                    403: { description: 'Not a master key' },
+                },
+            },
+        },
         '/v1/webhook': {
             post: {
                 summary: 'Register an outbound webhook',

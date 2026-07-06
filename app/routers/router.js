@@ -37,6 +37,7 @@ const role = require('../controllers/rolecontroller.js');
 const recurringInvoice = require('../controllers/recurringinvoicecontroller.js');
 const apikey = require('../controllers/apikeycontroller.js');
 const webhook = require('../controllers/webhookcontroller.js');
+const notification = require('../controllers/notificationcontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -64,6 +65,7 @@ const roleSchemas = require('../schemas/role.schema.js');
 const recurringInvoiceSchemas = require('../schemas/recurringinvoice.schema.js');
 const apiKeySchemas = require('../schemas/apikey.schema.js');
 const webhookSchemas = require('../schemas/webhook.schema.js');
+const notificationSchemas = require('../schemas/notification.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -750,6 +752,13 @@ router.delete(
     '/v1/retainer/:id',
     v.params(retainerSchemas.intIdParam),
     retainer.remove,
+);
+
+// v1 notification route (email service test send, master-only, #68).
+router.post(
+    '/v1/notification/test',
+    v.body(notificationSchemas.testNotificationBody),
+    notification.test,
 );
 
 // v1 webhook routes (outbound event subscriptions, #69).
