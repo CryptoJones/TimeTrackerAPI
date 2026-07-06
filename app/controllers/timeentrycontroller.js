@@ -533,7 +533,7 @@ exports.approval = async (req, res) => {
         // the entry by a single level, and it only becomes 'approved' once the
         // final level is cleared. An API key keeps full authority (one approve
         // → approved, marking the chain fully cleared).
-        let chain = null;
+        let chain;
         try {
             chain = await db.ApprovalChain.findOne({
                 where: { apchCompId: entry.teCompId, apchActive: true },

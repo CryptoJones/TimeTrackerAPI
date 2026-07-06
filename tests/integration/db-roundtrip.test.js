@@ -355,7 +355,7 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
             let dup = false;
             try {
                 await db.RevokedShareLink.create({ rslJti: jti, rslCompId: company.compId, rslExpiresAt: new Date(Date.now() + 60000) });
-            } catch (e) { dup = true; }
+            } catch (_e) { dup = true; }
             expect(dup).toBe(true);
         } finally {
             await db.RevokedShareLink.destroy({ where: { rslJti: jti } });
