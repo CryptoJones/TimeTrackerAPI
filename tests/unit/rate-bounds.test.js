@@ -14,6 +14,7 @@ const { createJobBody } = require('../../app/schemas/job.schema.js');
 const { createExpenseBody } = require('../../app/schemas/expense.schema.js');
 const { createCustomerPaymentBody } = require('../../app/schemas/customerpayment.schema.js');
 const { createInvoiceJobBody } = require('../../app/schemas/invoicejob.schema.js');
+const { createPhaseBody } = require('../../app/schemas/phase.schema.js');
 
 const OVER = 1e13; // > NUMERIC(14,2) max (999,999,999,999.99)
 const HUGE = 1e308; // finite but overflows money.toCents() → Infinity
@@ -41,6 +42,13 @@ describe('rate/amount fields reject out-of-range values (NUMERIC(14,2) overflow 
         expect(createExpenseBody.safeParse({ ...base, expMarkupPct: 0.15 }).success).toBe(true); // 15%
         expect(createExpenseBody.safeParse({ ...base, expMarkupPct: 1.5 }).success).toBe(true);  // 150% intentional
         expect(createExpenseBody.safeParse({ ...base, expMarkupPct: 100 }).success).toBe(false); // > 99.9999 → 400, not a 500
+    });
+
+    test('expAmount / phaseBudgetAmount: out-of-range rejected (money.toCents overflow guard)', () => {
+        expect(createExpenseBody.safeParse({ expDate: '2026-01-01', expAmount: 250.5 }).success).toBe(true);
+        expect(createExpenseBody.safeParse({ expDate: '2026-01-01', expAmount: OVER }).success).toBe(false);
+        expect(createPhaseBody.safeParse({ phaseJobId: 1, phaseName: 'P', phaseBudgetAmount: 5000 }).success).toBe(true);
+        expect(createPhaseBody.safeParse({ phaseJobId: 1, phaseName: 'P', phaseBudgetAmount: OVER }).success).toBe(false);
     });
 
     test('cpayAmount / injbAmount: negatives allowed but a money.toCents-overflowing magnitude is rejected', () => {

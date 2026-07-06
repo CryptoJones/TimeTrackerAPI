@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **`expAmount` and `phaseBudgetAmount` reject out-of-range values (400, not
+  500).** The last two money fields lacking an upper bound — `expAmount`
+  (overflows `money.toCents()` → `Infinity` → a 500 in the expense billing
+  view / rollup) and `phaseBudgetAmount` (DB overflow) — now cap at
+  `999,999,999.99`, completing `.max()` coverage across **every** money
+  field. Found by the systematic FK audit (the remaining unchecked FK, a
+  BillableRule match-id, is inert — never dereferenced, company-scoped
+  evaluation — so left as-is).
 - **Dunning no longer over-dunns.** Two bugs in the payment-reminder digest
   made it email customers wrong "overdue" amounts, both from diverging from
   the authoritative `invoice-status` engine: (1) a **write-off was ignored**,

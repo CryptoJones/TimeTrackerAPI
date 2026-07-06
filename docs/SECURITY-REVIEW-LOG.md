@@ -81,6 +81,14 @@ plausible-but-unproven finding as not-a-finding.
   a Postgres `bytea` (no disk write → no path traversal); the upload is
   triple-bounded (100kb body → 10M-char schema → 5MB decoded); content-type
   is an enum served as an `attachment` with `nosniff` (SVG/HTML rejected).
+- **Cross-tenant FK scoping (systematic audit)** — every controller's
+  create/update/bulk FKs were audited: each foreign key is either the
+  scoping parent or validated against the caller's company (or same-customer,
+  for payment→invoice). The three secondary-FK gaps found are fixed
+  (inventory #571, invoice-line #578, worker rate-source #579) plus the
+  CustomerPayment-bulk same-customer gap (#580); the one remaining unchecked
+  FK — a BillableRule match-id — is **inert** (never dereferenced; rules are
+  evaluated company-scoped), and every money field now carries a `.max()`.
 - **Reporting aggregations** — profitability / utilization / budget / hours /
   unbilled / timesheet / targets / capacity / revenue all sum through
   `money.js`, derive hours from **exact minutes** (never pre-rounded display

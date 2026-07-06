@@ -17,7 +17,7 @@ const createPhaseBody = z.object({
     phaseName: z.string().min(1).max(255),
     phaseStartDate: isoDate.optional(),
     phaseEndDate: isoDate.optional(),
-    phaseBudgetAmount: z.coerce.number().positive().optional(),
+    phaseBudgetAmount: z.coerce.number().positive().max(999999999.99).optional(),
 }).strict({
     message: 'Unexpected field in body. Whitelist: phaseJobId, phaseName, phaseStartDate, phaseEndDate, phaseBudgetAmount.',
 }).refine(
@@ -30,7 +30,7 @@ const updatePhaseBody = z.object({
     phaseName: z.string().min(1).max(255).optional(),
     phaseStartDate: isoDate.nullable().optional(),
     phaseEndDate: isoDate.nullable().optional(),
-    phaseBudgetAmount: z.coerce.number().positive().nullable().optional(),
+    phaseBudgetAmount: z.coerce.number().positive().max(999999999.99).nullable().optional(),
 }).strict({
     message: 'Unexpected field in body. Whitelist: phaseName, phaseStartDate, phaseEndDate, phaseBudgetAmount.',
 }).refine(
