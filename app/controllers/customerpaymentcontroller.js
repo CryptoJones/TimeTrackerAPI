@@ -11,6 +11,11 @@ const CustomerPayment = db.CustomerPayment;
 
 const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
+// #374: prefer attachAuth's resolved context in the handlers below; the
+// raw IsMaster / GetCompanyId above are retained only for the _internals
+// test seam.
+const MasterFromReq = auth.masterFromReq;
+const CompanyIdFromReq = auth.companyIdFromReq;
 const GetCompanyIdByCustomerId = auth.getCompanyIdByCustomerId;
 
 const ALLOWED_FIELDS_CREATE = ['cpayCustId', 'cpayInvId', 'cpayDescription', 'cpayDate', 'cpayAmount'];
@@ -53,9 +58,9 @@ exports.create = async (req, res) => {
         return res.status(400).json({ message: "cpayCustId is required." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const authCompanyId = await GetCompanyId(authKey);
+        const authCompanyId = await CompanyIdFromReq(req, authKey);
         if (authCompanyId === -1) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
         }
@@ -106,9 +111,9 @@ exports.getById = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const authCompanyId = await GetCompanyId(authKey);
+        const authCompanyId = await CompanyIdFromReq(req, authKey);
         const cpCompanyId = await GetCompanyIdByCustomerId(payment.cpayCustId);
         // Cross-tenant access is reported as 404, not 403 — otherwise
         // a scoped caller can enumerate which CustomerPayment ids are
@@ -134,9 +139,9 @@ exports.listByCustomer = async (req, res) => {
         return res.status(400).json({ message: "Invalid customer id." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const authCompanyId = await GetCompanyId(authKey);
+        const authCompanyId = await CompanyIdFromReq(req, authKey);
         const custCompanyId = await GetCompanyIdByCustomerId(targetCustomerId);
         if (authCompanyId === -1 || custCompanyId === -1 || authCompanyId !== custCompanyId) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
@@ -187,9 +192,9 @@ exports.update = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const authCompanyId = await GetCompanyId(authKey);
+        const authCompanyId = await CompanyIdFromReq(req, authKey);
         const cpCompanyId = await GetCompanyIdByCustomerId(payment.cpayCustId);
         // Secure-404 on PATCH for the same reason as GET.
         if (authCompanyId === -1 || cpCompanyId === -1 || authCompanyId !== cpCompanyId) {
@@ -243,9 +248,9 @@ exports.remove = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const authCompanyId = await GetCompanyId(authKey);
+        const authCompanyId = await CompanyIdFromReq(req, authKey);
         const cpCompanyId = await GetCompanyIdByCustomerId(payment.cpayCustId);
         // Secure-404 on DELETE for the same reason as GET / PATCH.
         if (authCompanyId === -1 || cpCompanyId === -1 || authCompanyId !== cpCompanyId) {

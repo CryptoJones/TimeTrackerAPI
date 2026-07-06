@@ -22,6 +22,11 @@ const Company = db.Company;
 
 const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
+// #374: prefer attachAuth's resolved context in the handlers below; the
+// raw IsMaster / GetCompanyId above are retained only for the _internals
+// test seam.
+const MasterFromReq = auth.masterFromReq;
+const CompanyIdFromReq = auth.companyIdFromReq;
 
 const ALLOWED_FIELDS_CREATE = [
     'compName', 'compAddress1', 'compAddress2', 'compCity',
@@ -35,7 +40,7 @@ exports.create = async (req, res) => {
     if (!authKey) {
         return res.status(403).json({ message: "Authorization key not sent." });
     }
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
         return res.status(403).json({ message: "Only master keys may create companies." });
     }
@@ -73,9 +78,9 @@ exports.getById = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         // Cross-tenant access (caller's company doesn't match the
         // looked-up company) is reported as 404, not 403. Returning
         // 403 here would let a non-master caller enumerate which
@@ -95,7 +100,7 @@ exports.list = async (req, res) => {
     if (!authKey) {
         return res.status(403).json({ message: "Authorization key not sent." });
     }
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
         return res.status(403).json({ message: "Only master keys may list all companies." });
     }
@@ -147,9 +152,9 @@ exports.update = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         // Same secure-404 pattern as getById: don't let a non-master
         // caller distinguish "this company exists but isn't yours"
         // from "this id doesn't exist" by status code.
@@ -181,7 +186,7 @@ exports.remove = async (req, res) => {
     if (!authKey) {
         return res.status(403).json({ message: "Authorization key not sent." });
     }
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
         return res.status(403).json({ message: "Only master keys may archive companies." });
     }
