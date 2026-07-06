@@ -1077,6 +1077,12 @@ router.post(
     v.body(notificationSchemas.testNotificationBody),
     notification.test,
 );
+// v1 Slack/Teams notification dispatch (#454); capture transport default.
+router.post(
+    '/v1/notification/dispatch',
+    v.body(notificationSchemas.notifyBody),
+    notification.dispatch,
+);
 
 // v1 webhook routes (outbound event subscriptions, #69).
 router.post(
