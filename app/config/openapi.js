@@ -299,11 +299,20 @@ const timeEntrySchema = {
         teId: { type: 'integer', readOnly: true },
         teCustId: { type: 'integer' },
         teCompId: { type: 'integer', readOnly: true },
+        // Billing links (#372: these were accepted by the create/update
+        // schema and stored by the model, but missing from this component).
+        teWorkerId: { type: 'integer', nullable: true, description: 'Worker who logged the time (#385).' },
+        teJobId: { type: 'integer', nullable: true, description: 'Job the time rolls up to (#386).' },
+        teBillTypeId: { type: 'integer', nullable: true, description: 'Per-entry billing-type rate override.' },
+        teTaskId: { type: 'integer', nullable: true, description: 'Task under the job (#407).' },
         teDescription: { type: 'string', maxLength: 10000 },
         teStartedAt: { type: 'string', format: 'date-time' },
         teEndedAt: { type: 'string', format: 'date-time', nullable: true },
         teMinutes: { type: 'integer', nullable: true, readOnly: true },
         teBillable: { type: 'boolean', default: true },
+        teTags: { type: 'array', items: { type: 'string' }, nullable: true, description: 'Free-form tags (#397).' },
+        teApprovalStatus: { type: 'string', enum: ['open', 'submitted', 'approved', 'rejected'], readOnly: true, description: 'Timesheet approval state (#440).' },
+        teInvJobId: { type: 'integer', nullable: true, readOnly: true, description: 'Set when the entry is rolled into an invoice.' },
         teArch: { type: 'boolean', readOnly: true },
     },
 };
