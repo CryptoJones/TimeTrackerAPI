@@ -80,6 +80,7 @@ db.Receipt = require('../models/receipt.model.js')(sequelize, Sequelize);
 db.ReportSchedule = require('../models/reportschedule.model.js')(sequelize, Sequelize);
 db.ApprovalChain = require('../models/approvalchain.model.js')(sequelize, Sequelize);
 db.Invitation = require('../models/invitation.model.js')(sequelize, Sequelize);
+db.CustomFieldDef = require('../models/customfielddef.model.js')(sequelize, Sequelize);
 
 // ----------------------------------------------------------------------
 // Associations — centralized so the relationship graph is visible
@@ -253,5 +254,9 @@ db.ApprovalChain.belongsTo(db.Company, { foreignKey: 'apchCompId', as: 'company'
 // Invitation → Company (invtCompId): teammate invitations (#458).
 db.Company.hasMany(db.Invitation,   { foreignKey: 'invtCompId', as: 'invitations' });
 db.Invitation.belongsTo(db.Company, { foreignKey: 'invtCompId', as: 'company' });
+
+// CustomFieldDef → Company (cfdCompId): custom-field definitions (#409).
+db.Company.hasMany(db.CustomFieldDef,   { foreignKey: 'cfdCompId', as: 'customFieldDefs' });
+db.CustomFieldDef.belongsTo(db.Company, { foreignKey: 'cfdCompId', as: 'company' });
 
 module.exports = db;

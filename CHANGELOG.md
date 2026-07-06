@@ -38,6 +38,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Custom fields** (#409). A new company-scoped `CustomFieldDef` entity,
+  migration `20260629000000`, declaring **typed** custom fields
+  (text/number/date/boolean) for a target entity (`customer` / `job` /
+  `timeentry`). Full REST on `/v1/customfield` (create — name-unique per
+  entity, `bycompany` list with `?entity`, get/patch/delete) plus
+  `POST /v1/customfield/validate` which coerces + checks a values object
+  against the company's defs (**422** with per-field errors on failure).
+  Pure `custom-field.js` (`coerceValue`, `validateAgainstDefs`); attaching
+  values to records is a follow-up.
 - **SOC 2 & security-posture roadmap** (#463). New
   [`docs/SECURITY-POSTURE.md`](docs/SECURITY-POSTURE.md) inventories the
   implemented technical controls (auth tiers, secure-404 tenant isolation,
