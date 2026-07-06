@@ -269,10 +269,21 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
     test('Worker has the workerTargetMinsPerWeek column (#400)', async () => {
         if (!connected) return;
         const rows = await db.Worker.findAll({
-            attributes: ['workerId', 'workerTargetMinsPerWeek', 'workerCostRate'],
+            attributes: ['workerId', 'workerTargetMinsPerWeek', 'workerCostRate', 'workerRoleId'],
             limit: 1,
         });
         expect(Array.isArray(rows)).toBe(true);
+    });
+
+    test('Role table exists with a company include + worker role link (#412)', async () => {
+        if (!connected) return;
+        const roles = await db.Role.findAll({ attributes: ['roleId', 'roleCompId', 'roleName', 'roleRate'], limit: 1 });
+        expect(Array.isArray(roles)).toBe(true);
+        const withRole = await db.Worker.findAll({
+            limit: 1,
+            include: [{ model: db.Role, as: 'role', required: false }],
+        });
+        expect(Array.isArray(withRole)).toBe(true);
     });
 
     test('/healthz reports a non-null migration name (dbo-qualified read)', async () => {

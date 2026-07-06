@@ -57,6 +57,18 @@ describe('rate.resolveHourlyRate — precedence', () => {
         expect(rate.resolveHourlyRate(entry)).toBe(100);
     });
 
+    test('client rate wins over the role rate', () => {
+        expect(rate.resolveHourlyRate({ customer: { custDefaultRate: 175 }, worker: { role: { roleRate: 150 } } })).toBe(175);
+    });
+
+    test('role rate wins over the worker default', () => {
+        expect(rate.resolveHourlyRate({ worker: { role: { roleRate: 150 }, defaultBillingType: bt(100) } })).toBe(150);
+    });
+
+    test('falls through a null role rate to the worker default', () => {
+        expect(rate.resolveHourlyRate({ worker: { role: { roleRate: null }, defaultBillingType: bt(100) } })).toBe(100);
+    });
+
     test('falls through a null project flat rate to the worker default', () => {
         const entry = { billingType: null, job: { jobFlatRate: null }, worker: { defaultBillingType: bt(100) } };
         expect(rate.resolveHourlyRate(entry)).toBe(100);

@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Role-based rates** (#412). A new company-scoped `Role` entity
+  (`roleName` + `roleRate`) and a `Worker.workerRoleId` link (migration
+  `20260616000000`). The role rate slots into `rate.js` between the client
+  rate and the worker default: entry → task → project → client → **role**
+  → worker. Full REST on `/v1/role` (create, `bycompany` list,
+  get/patch/delete) with secure-404; `workerRoleId` settable on worker
+  create/update. It rides the already-eager-loaded worker association, so
+  every billing path resolves it.
 - **Project phases / billing stages** (#408). A new `Phase` model under a
   Job (`phaseName`, `phaseStartDate`, `phaseEndDate`, `phaseBudgetAmount`),
   migration `20260615000000` — a date-bounded, budgeted stage, the unit of

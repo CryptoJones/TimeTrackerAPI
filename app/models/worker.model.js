@@ -67,6 +67,12 @@ module.exports = (sequelize, Sequelize) => {
                 return v == null ? null : Number(v);
             },
         },
+        workerRoleId: {
+            field: 'workerRoleId',
+            // Nullable link to a Role (#412); its roleRate is a rate tier
+            // between the client rate and the worker's own default.
+            type: Sequelize.INTEGER,
+        },
     }, {
         tableName: 'Worker',
         timestamps: true,
