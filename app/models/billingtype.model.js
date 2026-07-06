@@ -22,8 +22,14 @@ module.exports = (sequelize, Sequelize) => {
         },
         btHourlyRate: {
             field: 'btHourlyRate',
-            type: Sequelize.DOUBLE,
+            // NUMERIC(14,2) with a Number getter (pg NUMERIC→string), matching
+            // every other money column — exact-decimal at rest.
+            type: Sequelize.DECIMAL(14, 2),
             allowNull: false,
+            get() {
+                const v = this.getDataValue('btHourlyRate');
+                return v == null ? null : Number(v);
+            },
         },
         btArch: {
             field: 'btArch',

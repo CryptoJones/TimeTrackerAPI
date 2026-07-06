@@ -116,6 +116,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the default.
 
 ### Changed
+- **All money columns are now `NUMERIC(14,2)`.** `btHourlyRate`, `cpayAmount`,
+  and `injbAmount` — the last three money columns stored as `DOUBLE` — are
+  converted to `NUMERIC(14,2)` with a Number getter, matching every other
+  money column (exact-decimal at rest). Behaviour-preserving: `money.js`
+  already rounds to cents and the schemas bound the magnitude, so the cast
+  only pins existing values to 2 dp. Closes the storage-consistency note in
+  `docs/SECURITY-REVIEW-LOG.md` (items 3 / 11).
 - **Consolidate CSV export assembly into a shared `buildCsv` helper.** The
   customer and time-entry `export.csv` builders duplicated the same inline
   header + escaped-rows loop; both now call `buildCsv(fields, records,

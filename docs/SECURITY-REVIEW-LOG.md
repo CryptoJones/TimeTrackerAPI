@@ -190,10 +190,12 @@ deliberately **not** implemented autonomously.
     `defaultScope` join return `null`, so `resolveHourlyRate` falls through
     to the next tier instead of flagging — a silent under-bill. The right
     behavior (fall through vs. flag `unresolvedRate` vs. block the archive)
-    is a billing-policy choice, so it was not changed autonomously. (Minor,
-    same review: `btHourlyRate` is a `DOUBLE` while every other rate column
-    is `NUMERIC(14,2)` — a consistency migration; and `$0` is only settable
-    at the BillingType tier — a validation-symmetry choice.)
+    is a billing-policy choice, so it was not changed autonomously. (The
+    `DOUBLE`-vs-`NUMERIC` storage inconsistency — `btHourlyRate`, `cpayAmount`,
+    `injbAmount` — was **resolved in #587**: all three are now `NUMERIC(14,2)`
+    with a Number getter, so every money column is exact-decimal at rest.
+    Remaining minor: `$0` is only settable at the BillingType tier — a
+    validation-symmetry choice.)
 12. **Team utilization mixes numerator/denominator populations** (reporting
     review, LOW / by-design). Team `utilizationPct = teamBillable /
     teamCapacity`, but the numerator sums **all** workers' billable minutes

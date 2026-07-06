@@ -31,8 +31,14 @@ module.exports = (sequelize, Sequelize) => {
         },
         injbAmount: {
             field: 'injbAmount',
-            type: Sequelize.DOUBLE,
+            // NUMERIC(14,2) with a Number getter (pg NUMERIC→string), matching
+            // every other money column — exact-decimal at rest.
+            type: Sequelize.DECIMAL(14, 2),
             allowNull: false,
+            get() {
+                const v = this.getDataValue('injbAmount');
+                return v == null ? null : Number(v);
+            },
         },
         injbArch: {
             field: 'injbArch',
