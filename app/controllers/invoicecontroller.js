@@ -15,6 +15,8 @@ const { renderInvoicePdf } = require('../services/invoice-pdf.js');
 const { buildAging } = require('../services/invoice-aging.js');
 const invoiceTax = require('../services/invoice-tax.js');
 const { buildExpenseRollup } = require('../services/expense-rollup.js');
+const { buildDunningDigest } = require('../services/payment-reminders.js');
+const { sendMail } = require('../services/mailer.js');
 const Invoice = db.Invoice;
 
 /** Today as an ISO date (YYYY-MM-DD), UTC. */
@@ -648,6 +650,87 @@ exports.pdf = async (req, res) => {
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="invoice-${safeName}.pdf"`);
     return res.status(200).send(pdf);
+};
+
+/**
+ * POST /v1/invoice/payment-reminders — email a dunning digest of overdue
+ * invoices with a balance outstanding to `to` (#10). Company-scoped
+ * (master keys pass companyId). Bridges AR to the mail service (#68).
+ */
+exports.paymentReminders = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+
+    const body = req.body || {};
+    const isMaster = await IsMaster(authKey);
+    let companyId;
+    if (isMaster) {
+        companyId = Number(body.companyId);
+        if (!Number.isInteger(companyId) || companyId <= 0) {
+            return res.status(400).json({ message: "Master-key requests must specify companyId." });
+        }
+    } else {
+        companyId = await GetCompanyId(authKey);
+        if (companyId === -1) {
+            return res.status(403).json({ message: "Invalid Authorization Key." });
+        }
+    }
+
+    const olderThanDays = Number.isInteger(body.olderThanDays) && body.olderThanDays >= 0 ? body.olderThanDays : 0;
+
+    let invoices;
+    try {
+        invoices = await db.Invoice.findAll({
+            where: { invArch: false },
+            include: [
+                {
+                    model: db.Customer, as: 'customer', required: true,
+                    where: { custCompId: companyId },
+                    attributes: ['custId', 'custCompanyName', 'custFName', 'custLName'],
+                },
+                { model: db.CustomerPayment, as: 'payments', required: false },
+            ],
+            order: [['invDueDate', 'ASC']],
+        });
+    } catch (error) {
+        log.error({ err: error }, 'payment reminders: Invoice.findAll failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+
+    const items = invoices.map((inv) => {
+        const c = inv.customer;
+        return {
+            invId: inv.invId,
+            invNumber: inv.invNumber || null,
+            custName: c ? (c.custCompanyName || [c.custFName, c.custLName].filter(Boolean).join(' ') || null) : null,
+            date: inv.invDate ? String(inv.invDate).slice(0, 10) : null,
+            dueDate: inv.invDueDate ? String(inv.invDueDate).slice(0, 10) : null,
+            total: inv.invTotal,
+            collected: money.sum((inv.payments || []).map((p) => p.cpayAmount)),
+        };
+    });
+
+    const digest = buildDunningDigest(items, { today: todayISO(), olderThanDays });
+    let reminded = false;
+    if (digest.count > 0) {
+        try {
+            await sendMail({ to: body.to, subject: digest.subject, text: digest.text });
+            reminded = true;
+        } catch (error) {
+            log.error({ err: error }, 'payment reminders: sendMail failed');
+            return res.status(500).json({ message: "Error!" });
+        }
+    }
+    return res.status(200).json({
+        message: reminded ? "Payment reminder sent." : "No overdue invoices over the threshold.",
+        companyId,
+        overdue: digest.count,
+        totalOutstanding: digest.totalOutstanding,
+        reminded,
+        to: body.to,
+    });
 };
 
 exports.bulkCreate = makeBulkCreateIndirect({

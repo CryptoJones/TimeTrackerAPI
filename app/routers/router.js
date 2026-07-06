@@ -424,6 +424,12 @@ router.post(
     v.body(invoiceSchemas.rollupInvoiceBody),
     invoice.rollup,
 );
+// Payment reminders / dunning (#10): email a digest of overdue invoices.
+router.post(
+    '/v1/invoice/payment-reminders',
+    v.body(invoiceSchemas.paymentRemindersBody),
+    invoice.paymentReminders,
+);
 router.get(
     '/v1/invoice/aging',
     v.query(invoiceSchemas.agingQuery),

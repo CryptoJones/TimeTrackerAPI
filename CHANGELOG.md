@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Payment reminders / dunning** (#10). `POST
+  /v1/invoice/payment-reminders` finds invoices that are overdue (past
+  their due date, or invoice date when none, shifted by `olderThanDays`)
+  **and** carry a balance outstanding (`total − collected`, exact-cent),
+  and emails a dunning digest to `to` — the AR companion to the approval
+  reminders (#442), on the same mail service (#68). Pure
+  `payment-reminders.js` builds the digest; company-scoped (master keys
+  pass `companyId`). No migration.
 - **Approval reminders** (#442). `POST /v1/timeentry/approval-reminders`
   finds time entries stuck in `submitted` past a threshold
   (`olderThanDays`, default 7) and emails an approver (`to`) a digest —
