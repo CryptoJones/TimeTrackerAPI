@@ -320,6 +320,38 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         }
     });
 
+    test('a rate snapshot freezes billing against a later rate-source edit (#10)', async () => {
+        if (!connected) return;
+        const rate = require('../../app/services/rate.js');
+        const { rateSourceInclude } = require('../../app/services/rate-source-include.js');
+        const company = await db.Company.create({ compName: `${SENTINEL}-rate`, compArch: false });
+        const customer = await db.Customer.create({
+            custCompanyName: `${SENTINEL}-rc`, custFName: 'R', custLName: 'S',
+            custCompId: company.compId, custDefaultRate: 100, custArch: false,
+        });
+        const entry = await db.TimeEntry.create({
+            teCompId: company.compId, teCustId: customer.custId, teStartedAt: new Date(),
+            teMinutes: 60, teBillable: true, teArch: false,
+        });
+        try {
+            // Simulate the controller's create-time snapshot: resolve live (client
+            // rate 100), then freeze it onto the entry.
+            const withAssoc = await db.TimeEntry.findByPk(entry.teId, { include: rateSourceInclude(db) });
+            expect(rate.resolveHourlyRate(withAssoc)).toBe(100);
+            await entry.update({ teRateSnapshot: rate.resolveHourlyRate(withAssoc) });
+            // The client rate later changes...
+            await customer.update({ custDefaultRate: 200 });
+            // ...but the entry re-prices from the FROZEN 100, not the live 200.
+            const reloaded = await db.TimeEntry.findByPk(entry.teId, { include: rateSourceInclude(db) });
+            expect(reloaded.teRateSnapshot).toBe(100);
+            expect(rate.resolveHourlyRate(reloaded)).toBe(100);
+        } finally {
+            await entry.destroy({ force: true });
+            await customer.destroy({ force: true });
+            await company.destroy({ force: true });
+        }
+    });
+
     test('TimeEntry.teApprovalLevel column exists with default 0 (approval-chain enforcement)', async () => {
         if (!connected) return;
         const rows = await db.sequelize.query(

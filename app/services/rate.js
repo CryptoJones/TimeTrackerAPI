@@ -63,6 +63,10 @@ function roleRateOf(worker) {
  */
 function resolveHourlyRate(entry) {
     if (!entry) return null;
+    // A rate frozen at creation (#10) wins over live resolution, so editing a
+    // rate source later cannot retroactively re-price this entry.
+    const snapshot = numOrNull(entry.teRateSnapshot);
+    if (snapshot != null) return snapshot;
     const own = rateOf(entry.billingType);
     if (own != null) return own;
     const taskR = taskRateOf(entry.task);

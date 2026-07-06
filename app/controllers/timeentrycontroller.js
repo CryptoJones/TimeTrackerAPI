@@ -8,6 +8,7 @@ const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
 const { buildCsv } = require('./_csv-escape.js');
 const rate = require('../services/rate.js');
+const { rateSourceInclude } = require('../services/rate-source-include.js');
 const { applyAction } = require('../services/approval.js');
 const { lockReason } = require('../services/time-lock.js');
 const rbac = require('../services/rbac.js');
@@ -174,6 +175,26 @@ async function checkEntryLinks({ teWorkerId, teJobId, teBillTypeId, teTaskId }, 
  * Shared by the single-create handler and the bulk importer so both apply
  * identical validation, link checks, and the locked-period guard.
  */
+/**
+ * Best-effort: freeze the entry's resolved hourly rate onto teRateSnapshot
+ * (#10) so a later rate-source edit can't retroactively re-price it. Reloads
+ * the entry with its rate associations, resolves live (the fresh row has a
+ * null snapshot, so no chicken-and-egg), and stores the rate when non-null.
+ * Never throws into the create path — on any failure the entry simply falls
+ * through to live resolution later.
+ */
+async function snapshotEntryRate(entry) {
+    if (!entry) return;
+    try {
+        const withAssoc = await db.TimeEntry.findByPk(entry.teId, { include: rateSourceInclude(db) });
+        if (!withAssoc) return;
+        const resolved = rate.resolveHourlyRate(withAssoc);
+        if (resolved != null) await entry.update({ teRateSnapshot: resolved });
+    } catch (error) {
+        log.warn({ err: error }, 'timeentry: rate snapshot failed');
+    }
+}
+
 async function createOneEntry(companyId, body) {
     const src = body || {};
     const payload = {};
@@ -212,6 +233,7 @@ async function createOneEntry(companyId, body) {
     }
 
     const created = await TimeEntry.create(payload);
+    await snapshotEntryRate(created);
     return { created };
 }
 
@@ -410,6 +432,7 @@ exports.start = async (req, res) => {
 
     try {
         const created = await TimeEntry.create(payload);
+        await snapshotEntryRate(created); // freeze the rate when the timer starts (#10)
         return res.status(201).json({ message: "Timer started.", timeEntry: created });
     } catch (error) {
         log.error({ err: error }, 'timer start: TimeEntry.create failed');
@@ -640,6 +663,7 @@ exports.copy = async (req, res) => {
     };
     try {
         const created = await TimeEntry.create(payload);
+        await snapshotEntryRate(created); // freeze the copy's rate at copy time (#10)
         return res.status(201).json({ message: "Time entry copied.", timeEntry: created });
     } catch (error) {
         log.error({ err: error }, 'copy: TimeEntry.create failed');
