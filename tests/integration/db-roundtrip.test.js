@@ -352,6 +352,19 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         }
     });
 
+    test('Company.compRequireApproval column exists, boolean default false (billing gate #7)', async () => {
+        if (!connected) return;
+        const rows = await db.sequelize.query(
+            `SELECT data_type, column_default
+               FROM information_schema.columns
+              WHERE table_schema = 'dbo' AND table_name = 'Company' AND column_name = 'compRequireApproval'`,
+            { type: db.Sequelize.QueryTypes.SELECT },
+        );
+        expect(rows.length).toBe(1);
+        expect(rows[0].data_type).toBe('boolean');
+        expect(String(rows[0].column_default)).toContain('false');
+    });
+
     test('TimeEntry.teApprovalLevel column exists with default 0 (approval-chain enforcement)', async () => {
         if (!connected) return;
         const rows = await db.sequelize.query(

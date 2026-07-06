@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Opt-in approval billing gate (#595).** A new company flag
+  `compRequireApproval` (default `false`) makes the invoice rollup bill **only
+  `approved` time** — `open`/`submitted`/`rejected` billable time is reported
+  back in `skipped.notApproved` instead of billed. Off by default, so the
+  approval-less flow is unchanged; settable via `PATCH /v1/company/:id`.
+  Resolves review-log item 7.
 - **Process-level safety net for escaped async errors (#594).** `server.js`
   installs global handlers: an `unhandledRejection` is logged and the process
   continues (a stray missed `.catch` shouldn't drop in-flight connections),

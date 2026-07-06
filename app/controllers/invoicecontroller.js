@@ -351,11 +351,23 @@ exports.rollup = async (req, res) => {
         return res.status(500).json({ message: "Error!" });
     }
 
-    const { lines, subtotal: timeSubtotal, skipped } = buildRollup(entries);
+    // Opt-in billing gate (#7): when the customer's company requires approval,
+    // only approved time bills — the rest is reported back in skipped.notApproved.
+    let requireApproval;
+    try {
+        const comp = await db.Company.findByPk(custCompanyId, { attributes: ['compRequireApproval'] });
+        requireApproval = !!(comp && comp.compRequireApproval);
+    } catch (error) {
+        log.error({ err: error }, 'rollup: company config load failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+
+    const { lines, subtotal: timeSubtotal, skipped } = buildRollup(entries, { requireApproval });
     const skippedCounts = {
         nonBillable: skipped.nonBillable.length,
         noJob: skipped.noJob.length,
         unresolvedRate: skipped.unresolvedRate.length,
+        notApproved: skipped.notApproved.length,
     };
 
     // Optionally roll the customer's billable, un-invoiced expenses in too

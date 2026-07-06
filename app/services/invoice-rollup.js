@@ -22,17 +22,23 @@ const rate = require('./rate.js');
 
 /**
  * @param {Array} entries time-entry rows with { teId, teBillable,
- *   teJobId, teMinutes } and eager-loaded rate associations.
+ *   teJobId, teMinutes, teApprovalStatus } and eager-loaded rate associations.
+ * @param {{ requireApproval?: boolean }} [opts] when `requireApproval` is set
+ *   (the company's opt-in billing gate, #7), a billable entry that is not
+ *   `approved` is reported as `skipped.notApproved` instead of being billed.
  * @returns {{ lines: Array<{jobId:number, amount:number, entryIds:number[]}>,
- *   subtotal:number, skipped:{ nonBillable:number[], noJob:number[], unresolvedRate:number[] } }}
+ *   subtotal:number, skipped:{ nonBillable:number[], noJob:number[], unresolvedRate:number[], notApproved:number[] } }}
  */
-function buildRollup(entries) {
+function buildRollup(entries, opts = {}) {
+    const requireApproval = !!(opts && opts.requireApproval);
     const byJob = new Map(); // jobId -> { amounts:[], entryIds:[] }
-    const skipped = { nonBillable: [], noJob: [], unresolvedRate: [] };
+    const skipped = { nonBillable: [], noJob: [], unresolvedRate: [], notApproved: [] };
 
     for (const e of entries || []) {
         if (!e.teBillable) { skipped.nonBillable.push(e.teId); continue; }
         if (e.teJobId == null) { skipped.noJob.push(e.teId); continue; }
+        // Opt-in billing gate: only approved time bills when it's enabled.
+        if (requireApproval && e.teApprovalStatus !== 'approved') { skipped.notApproved.push(e.teId); continue; }
         const amount = rate.billableAmount(e);
         if (amount == null) { skipped.unresolvedRate.push(e.teId); continue; }
         const group = byJob.get(e.teJobId) || { amounts: [], entryIds: [] };

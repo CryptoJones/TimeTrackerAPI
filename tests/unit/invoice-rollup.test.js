@@ -59,7 +59,20 @@ describe('invoice-rollup.buildRollup', () => {
     test('empty / all-skipped input yields no lines and a zero subtotal', () => {
         expect(buildRollup([])).toEqual({
             lines: [], subtotal: 0,
-            skipped: { nonBillable: [], noJob: [], unresolvedRate: [] },
+            skipped: { nonBillable: [], noJob: [], unresolvedRate: [], notApproved: [] },
         });
+    });
+
+    test('requireApproval gate: only approved time bills; the rest is notApproved (#7)', () => {
+        const e = (id, status) => ({ teId: id, teBillable: true, teJobId: 1, teMinutes: 60, teApprovalStatus: status, billingType: { btHourlyRate: 100 } });
+        const entries = [e(1, 'approved'), e(2, 'submitted'), e(3, 'open'), e(4, 'rejected')];
+        // Gate OFF (default): approval status is ignored → all four bill.
+        const off = buildRollup(entries);
+        expect(off.lines[0].entryIds.sort()).toEqual([1, 2, 3, 4]);
+        expect(off.skipped.notApproved).toEqual([]);
+        // Gate ON: only the approved entry bills; the other three are notApproved.
+        const on = buildRollup(entries, { requireApproval: true });
+        expect(on.lines[0].entryIds).toEqual([1]);
+        expect(on.skipped.notApproved.sort()).toEqual([2, 3, 4]);
     });
 });

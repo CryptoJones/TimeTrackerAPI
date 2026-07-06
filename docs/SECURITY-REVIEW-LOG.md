@@ -171,12 +171,13 @@ deliberately **not** implemented autonomously.
    authority (one approve → approved, chain marked cleared); a company with
    no active chain is unchanged. The company's active chain (lowest `apchId`
    if several) governs.
-7. **Should approval gate billing?** After the rejected-exclusion fix,
-   `open` / `submitted` time still rolls into invoices — correct for
-   companies that don't use the approval feature, but a company that
-   *requires* approval before billing has no such gate. Requiring
-   `approved` would break the default (approval-less) flow, so which
-   policy applies is a per-tenant product decision.
+7. **Approval billing gate — RESOLVED (#595).** The per-tenant decision is
+   now an **opt-in** company flag, `compRequireApproval` (default **false**,
+   so the approval-less flow is unchanged). When a company sets it, the invoice
+   rollup bills only `approved` time — `open` / `submitted` / `rejected`
+   billable time is reported back in `skipped.notApproved` rather than billed.
+   Implemented in the pure `buildRollup(entries, { requireApproval })` so it's
+   exhaustively unit-tested, and surfaced on `PATCH /v1/company/:id`.
 8. **Approver authorization — RESOLVED (#585, #586).** The approval action
    enforces a `time:approve` permission (granted to **manager and up**) for a
    signed-in-user (JWT) actor, scoped to the actor's own company (secure-404),
