@@ -1689,6 +1689,18 @@ const spec = {
                 },
             },
         },
+        '/v1/capacity/summary': {
+            get: {
+                summary: 'Per-worker capacity / utilization for a period (#459)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'from', in: 'query', required: true, schema: { type: 'string', format: 'date' } },
+                    { name: 'to', in: 'query', required: true, schema: { type: 'string', format: 'date' } },
+                    { name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys.' },
+                ],
+                responses: { 200: { description: 'Rows (target/logged/remaining hours + utilization %) + weeks + totals' }, 400: { description: 'Missing from/to; master keys must specify companyId' }, 403: { description: 'Auth failure' } },
+            },
+        },
         '/v1/payroll/summary': {
             get: {
                 summary: 'Per-worker payroll totals for a pay period, as JSON (#456)',

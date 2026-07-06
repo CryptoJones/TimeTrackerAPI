@@ -48,6 +48,7 @@ const payroll = require('../controllers/payrollcontroller.js');
 const share = require('../controllers/sharecontroller.js');
 const approvalChain = require('../controllers/approvalchaincontroller.js');
 const invitation = require('../controllers/invitationcontroller.js');
+const capacity = require('../controllers/capacitycontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -86,6 +87,7 @@ const payrollSchemas = require('../schemas/payroll.schema.js');
 const shareSchemas = require('../schemas/share.schema.js');
 const approvalChainSchemas = require('../schemas/approvalchain.schema.js');
 const invitationSchemas = require('../schemas/invitation.schema.js');
+const capacitySchemas = require('../schemas/capacity.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -1025,6 +1027,13 @@ router.delete(
     '/v1/invitation/:id',
     v.params(invitationSchemas.intIdParam),
     invitation.remove,
+);
+
+// v1 capacity route (#459): per-worker target vs logged hours + utilization.
+router.get(
+    '/v1/capacity/summary',
+    v.query(capacitySchemas.capacityQuery),
+    capacity.summary,
 );
 
 // v1 rate-schedule routes (effective-dated rates, #414).
