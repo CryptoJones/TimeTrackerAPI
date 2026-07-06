@@ -86,10 +86,26 @@ not `403 Forbidden` — when a non-master key references a row in a
 different company's scope. The two outcomes look identical from the
 client's side so a scoped caller can't probe sequential IDs to
 enumerate the size of another tenant's table by status code. Master
-keys still see all rows. The same pattern applies across all 16
-single-row entity endpoints; the auth-scope check that produces it
-is the same `getCompanyId(...) !== row.<entity>CompId` comparison
-the controllers use for the 403 paths on other surfaces.
+keys still see all rows.
+
+**When each status is used.** The 404-vs-403 choice is deliberate and
+consistent across the API:
+
+| Situation | Status | Why |
+|---|---|---|
+| Missing / malformed `authKey` | **403** | No identity to scope by; nothing about any tenant is revealed. |
+| Key doesn't resolve to a company | **403** | The credential itself is rejected. |
+| Single-row `:id` belongs to another tenant | **404** | Anti-enumeration — indistinguishable from "no such id". |
+| `…/bycompany/:id` list for a company that isn't yours | **403** | The company id is the *named* resource, not a hidden row; a 404 would be misleading and no per-row existence leaks. |
+| Request body / params fail validation | **400** | A shape error, decided before the scope check. |
+| Create body references another tenant's row (e.g. a foreign `teCustId`, #373) | **400** | Treated as a bad foreign key, not a scope probe. |
+
+In short: **a 404 hides the existence of a specific row you don't own; a
+403 rejects a credential or a company-scope you named explicitly.** The
+check behind both is the same `getCompanyId(...) !== row.<entity>CompId`
+comparison — only the response code differs by whether you asked for a
+specific hidden id (404) or a named scope / credential (403). This applies
+across all single-row entity endpoints.
 
 ![example image](https://github.com/CryptoJones/TimeTrackerAPI/blob/master/setup/postman_example.PNG?raw=true)
 

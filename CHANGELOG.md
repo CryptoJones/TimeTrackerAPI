@@ -37,6 +37,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`pg` bumped 8.20.0 → 8.21.0** (#122). Patch-level dep refresh
   in the `minor-and-patch` Dependabot group.
 
+### Documentation
+- **Cross-tenant response-code policy** (#375). The README's "Secure-404 on
+  cross-tenant access" section now spells out, in a table, exactly when the
+  API returns **404** (a specific row you don't own — anti-enumeration)
+  versus **403** (a rejected credential or a `bycompany` scope you named
+  explicitly) versus **400** (validation / a bad cross-tenant foreign key),
+  so the distinction reads as deliberate rather than incidental.
+
 ### Security
 - **Tenant-scope `teCustId` on time-entry create** (#373). Creating a time
   entry (single or bulk) now verifies the customer belongs to the
