@@ -1463,6 +1463,50 @@ const spec = {
                 responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
             },
         },
+        '/v1/user': {
+            post: {
+                summary: 'Create a user account (#444)',
+                security: [{ authKey: [] }],
+                responses: {
+                    201: { description: 'Created (password hash never returned)' },
+                    400: { description: 'Validation error; master keys must specify userCompId' },
+                    403: { description: 'Auth failure' },
+                    409: { description: 'Email already in use' },
+                },
+            },
+        },
+        '/v1/user/bycompany/{id}': {
+            get: {
+                summary: "List a company's users — metadata only",
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer' } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer' } },
+                ],
+                responses: { 200: { description: 'Found (paginated; never returns the password hash)' }, 403: { description: 'Cross-tenant' } },
+            },
+        },
+        '/v1/user/{id}': {
+            get: {
+                summary: 'Fetch a user (metadata only)',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found' }, 404: { description: 'Not found' } },
+            },
+            patch: {
+                summary: 'Update a user (email / name / password)',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Updated' }, 400: { description: 'Validation error' }, 404: { description: 'Not found' } },
+            },
+            delete: {
+                summary: 'Archive a user',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
+            },
+        },
         '/v1/rateschedule': {
             post: {
                 summary: 'Create an effective-dated rate (#414)',
