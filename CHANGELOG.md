@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **User login (JWT)** (#445). `POST /v1/login` verifies a user's email +
+  password within a company and issues a short-lived (12h) **HS256 JWT**;
+  `GET /v1/me` returns the signed-in user for a `Bearer` token. Tokens are
+  signed with Node's built-in crypto HMAC (**no dependency**; constant-time
+  verify, `exp` enforced — pure `jwt.js`), keyed by the `JWT_SECRET` env
+  var (sign-in returns **503** when unset). Invalid credentials return a
+  **generic 401** (no email enumeration). This is a second, optional auth
+  path — the existing API-key auth is unchanged. No migration.
 - **User accounts** (#444). A new company-scoped `User` entity (email,
   name, scrypt-hashed password), migration `20260621000000`, with full
   admin-provisioned REST on `/v1/user` (create, `bycompany` list,

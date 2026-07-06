@@ -1463,6 +1463,29 @@ const spec = {
                 responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
             },
         },
+        '/v1/login': {
+            post: {
+                summary: 'Sign in a user — returns a JWT (#445)',
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { userEmail: { type: 'string', format: 'email' }, password: { type: 'string' }, companyId: { type: 'integer' } }, required: ['userEmail', 'password', 'companyId'] } } } },
+                responses: {
+                    200: { description: 'Signed in — {token, tokenType, expiresIn, user}' },
+                    400: { description: 'Validation error' },
+                    401: { description: 'Invalid credentials' },
+                    503: { description: 'Sign-in not configured (JWT_SECRET unset)' },
+                },
+            },
+        },
+        '/v1/me': {
+            get: {
+                summary: 'Return the signed-in user for a Bearer token (#445)',
+                parameters: [{ name: 'Authorization', in: 'header', schema: { type: 'string' }, description: 'Bearer <jwt>' }],
+                responses: {
+                    200: { description: 'The signed-in user' },
+                    401: { description: 'Missing / invalid / expired token' },
+                    503: { description: 'Sign-in not configured' },
+                },
+            },
+        },
         '/v1/user': {
             post: {
                 summary: 'Create a user account (#444)',
