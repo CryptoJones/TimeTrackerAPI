@@ -38,6 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Worker utilization report** (#53). `GET /v1/report/utilization`:
+  per worker, **billable hours vs capacity** (`workerTargetMinsPerWeek` ×
+  weeks in the range) → utilization %, plus the billable ratio
+  (billable / total logged), with team-wide totals. Company-scoped,
+  `from`/`to` required, optional `workerId`. Pure
+  `report-utilization.js` service.
 - **Project profitability & margin** (#436). A new `Worker.workerCostRate`
   (internal cost/hour, migration `20260614000000`) plus
   `GET /v1/report/profitability`: per job, **revenue** (billable time

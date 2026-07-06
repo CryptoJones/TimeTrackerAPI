@@ -835,6 +835,11 @@ router.get(
     report.profitability,
 );
 router.get(
+    '/v1/report/utilization',
+    v.query(reportSchemas.utilizationQuery),
+    report.utilization,
+);
+router.get(
     '/v1/report/timesheet',
     v.query(reportSchemas.timesheetQuery),
     report.timesheet,

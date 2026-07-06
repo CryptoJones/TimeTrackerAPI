@@ -20,6 +20,7 @@ const { buildTimesheet } = require('../services/report-timesheet.js');
 const { buildBudget } = require('../services/report-budget.js');
 const { buildTargets, weeksBetween } = require('../services/report-targets.js');
 const { buildProfitability } = require('../services/report-profitability.js');
+const { buildUtilization } = require('../services/report-utilization.js');
 const rate = require('../services/rate.js');
 
 const IsMaster = auth.isMaster;
@@ -592,6 +593,86 @@ exports.targets = async (req, res) => {
 
     const report = buildTargets(rows, weeksBetween(fromISO, toISO));
     return res.status(200).json({ message: "Targets vs actuals.", companyId, ...report });
+};
+
+/**
+ * GET /v1/report/utilization — worker utilization (#53): billable hours
+ * vs capacity (workerTargetMinsPerWeek × weeks) and billable ratio, per
+ * worker + team totals. Company-scoped; from/to required, optional
+ * workerId.
+ */
+exports.utilization = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+    req.authKey = authKey;
+
+    const scope = await resolveCompany(req);
+    if (scope.error) {
+        return res.status(scope.error.status).json({ message: scope.error.message });
+    }
+    const { companyId } = scope;
+
+    const fromISO = req.query.from;
+    const toISO = req.query.to;
+    const from = parseDate(fromISO, false);
+    const to = parseDate(toISO, true);
+    const Op = db.Sequelize && db.Sequelize.Op;
+
+    const workerWhere = { workerCompId: companyId };
+    const workerFilter = Number(req.query.workerId);
+    if (Number.isInteger(workerFilter) && workerFilter > 0) workerWhere.workerId = workerFilter;
+
+    let workers;
+    try {
+        workers = await db.Worker.findAll({
+            where: workerWhere,
+            attributes: ['workerId', 'workerFName', 'workerLName', 'workerTargetMinsPerWeek'],
+        });
+    } catch (error) {
+        log.error({ err: error }, 'utilization: Worker.findAll failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (workers.length === 0) {
+        return res.status(200).json({
+            message: "Worker utilization.", companyId,
+            weeks: weeksBetween(fromISO, toISO), workers: [], count: 0,
+            totals: { capacityMinutes: 0, billableMinutes: 0, totalMinutes: 0, utilizationPct: null, billableRatioPct: null },
+        });
+    }
+
+    const workerIds = workers.map((w) => w.workerId);
+    let entries;
+    try {
+        const where = { teCompId: companyId, teWorkerId: { [Op.in]: workerIds } };
+        if (Op && from) where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.gte]: from });
+        if (Op && to) where.teStartedAt = Object.assign(where.teStartedAt || {}, { [Op.lte]: to });
+        entries = await db.TimeEntry.findAll({ where, attributes: ['teWorkerId', 'teMinutes', 'teBillable'] });
+    } catch (error) {
+        log.error({ err: error }, 'utilization: TimeEntry.findAll failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+
+    const billable = new Map();
+    const total = new Map();
+    for (const e of entries) {
+        if (e.teWorkerId == null || e.teMinutes == null) continue;
+        const m = Number(e.teMinutes) || 0;
+        total.set(e.teWorkerId, (total.get(e.teWorkerId) || 0) + m);
+        if (e.teBillable) billable.set(e.teWorkerId, (billable.get(e.teWorkerId) || 0) + m);
+    }
+
+    const rows = workers.map((w) => ({
+        workerId: w.workerId,
+        workerName: [w.workerFName, w.workerLName].filter(Boolean).join(' ') || null,
+        targetMinsPerWeek: w.workerTargetMinsPerWeek,
+        billableMins: billable.get(w.workerId) || 0,
+        totalMins: total.get(w.workerId) || 0,
+    }));
+
+    const report = buildUtilization(rows, weeksBetween(fromISO, toISO));
+    return res.status(200).json({ message: "Worker utilization.", companyId, ...report });
 };
 
 exports._internals = { resolveCompany, parseDate };
