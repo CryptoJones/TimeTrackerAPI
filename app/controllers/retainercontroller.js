@@ -9,8 +9,10 @@ const money = require('../services/money.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
 const Retainer = db.Retainer;
 
-const IsMaster = auth.isMaster;
-const GetCompanyId = auth.getCompanyId;
+// #374: reuse attachAuth's resolved context (req.isMaster / req.companyId)
+// instead of a second DB lookup; falls back to a live lookup if absent.
+const MasterFromReq = auth.masterFromReq;
+const CompanyIdFromReq = auth.companyIdFromReq;
 const GetCompanyIdByCustomerId = auth.getCompanyIdByCustomerId;
 
 /**
@@ -30,9 +32,9 @@ async function findScoped(req, res) {
         res.status(404).json({ message: "Not found." });
         return null;
     }
-    const isMaster = await IsMaster(req.get('authKey'));
+    const isMaster = await MasterFromReq(req, req.get('authKey'));
     if (!isMaster) {
-        const companyId = await GetCompanyId(req.get('authKey'));
+        const companyId = await CompanyIdFromReq(req, req.get('authKey'));
         let retCompanyId;
         try {
             retCompanyId = await GetCompanyIdByCustomerId(ret.retCustId);
@@ -77,9 +79,9 @@ exports.create = async (req, res) => {
         return res.status(400).json({ message: "retCustId must reference a customer." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1 || companyId !== custCompanyId) {
             return res.status(403).json({ message: "Cannot open a retainer for a customer in a company you do not belong to." });
         }
@@ -135,9 +137,9 @@ exports.listByCustomer = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1 || companyId !== custCompanyId) {
             return res.status(404).json({ message: "Not found." });
         }

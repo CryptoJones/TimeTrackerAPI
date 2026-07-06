@@ -9,8 +9,10 @@ const { buildLinkHeader } = require('../middleware/pagination.js');
 const { advanceDate } = require('../services/recurring-schedule.js');
 const RecurringInvoice = db.RecurringInvoice;
 
-const IsMaster = auth.isMaster;
-const GetCompanyId = auth.getCompanyId;
+// #374: reuse attachAuth's resolved context (req.isMaster / req.companyId)
+// instead of a second DB lookup; falls back to a live lookup if absent.
+const MasterFromReq = auth.masterFromReq;
+const CompanyIdFromReq = auth.companyIdFromReq;
 const GetCompanyIdByCustomerId = auth.getCompanyIdByCustomerId;
 
 const ALLOWED_FIELDS_UPDATE = ['recinvCadence', 'recinvNextRun', 'recinvActive', 'recinvNote'];
@@ -34,9 +36,9 @@ async function findScoped(req, res) {
         res.status(404).json({ message: "Not found." });
         return null;
     }
-    const isMaster = await IsMaster(req.get('authKey'));
+    const isMaster = await MasterFromReq(req, req.get('authKey'));
     if (!isMaster) {
-        const companyId = await GetCompanyId(req.get('authKey'));
+        const companyId = await CompanyIdFromReq(req, req.get('authKey'));
         let schedCompanyId;
         try {
             schedCompanyId = await GetCompanyIdByCustomerId(sched.recinvCustId);
@@ -80,9 +82,9 @@ exports.create = async (req, res) => {
         return res.status(400).json({ message: "recinvCustId must reference a customer." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1 || companyId !== custCompanyId) {
             return res.status(403).json({ message: "Cannot schedule invoices for a customer in a company you do not belong to." });
         }
@@ -138,9 +140,9 @@ exports.listByCustomer = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1 || companyId !== custCompanyId) {
             return res.status(404).json({ message: "Not found." });
         }
@@ -177,7 +179,7 @@ exports.listDue = async (req, res) => {
         return res.status(403).json({ message: "Authorization key not sent." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     let companyId;
     if (isMaster) {
         companyId = Number(req.query.companyId);
@@ -185,7 +187,7 @@ exports.listDue = async (req, res) => {
             return res.status(400).json({ message: "Master-key requests must specify companyId." });
         }
     } else {
-        companyId = await GetCompanyId(authKey);
+        companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
         }

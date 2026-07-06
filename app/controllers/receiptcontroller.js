@@ -9,8 +9,10 @@ const { buildLinkHeader } = require('../middleware/pagination.js');
 const { CONTENT_TYPES } = require('../schemas/receipt.schema.js');
 const Receipt = db.Receipt;
 
-const IsMaster = auth.isMaster;
-const GetCompanyId = auth.getCompanyId;
+// #374: reuse attachAuth's resolved context (req.isMaster / req.companyId)
+// instead of a second DB lookup; falls back to a live lookup if absent.
+const MasterFromReq = auth.masterFromReq;
+const CompanyIdFromReq = auth.companyIdFromReq;
 
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB decoded
 // Metadata only — rcptData (the bytes) is deliberately excluded.
@@ -18,9 +20,9 @@ const SAFE_ATTRS = ['rcptId', 'rcptExpId', 'rcptCompId', 'rcptFilename', 'rcptCo
 
 /** Resolve the caller's company id (or null after responding). Master → null (any). */
 async function callerCompany(req, res) {
-    const isMaster = await IsMaster(req.get('authKey'));
+    const isMaster = await MasterFromReq(req, req.get('authKey'));
     if (isMaster) return { isMaster: true, companyId: null };
-    const companyId = await GetCompanyId(req.get('authKey'));
+    const companyId = await CompanyIdFromReq(req, req.get('authKey'));
     if (companyId === -1) {
         res.status(403).json({ message: "Invalid Authorization Key." });
         return null;
@@ -75,9 +77,9 @@ exports.create = async (req, res) => {
         return res.status(400).json({ message: "expId must reference an expense." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1 || companyId !== expense.expCompId) {
             return res.status(403).json({ message: "Cannot attach a receipt to an expense in a company you do not belong to." });
         }
@@ -164,9 +166,9 @@ exports.listByExpense = async (req, res) => {
     if (!expense) {
         return res.status(404).json({ message: "Not found." });
     }
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1 || companyId !== expense.expCompId) {
             return res.status(404).json({ message: "Not found." });
         }
