@@ -1426,6 +1426,61 @@ const spec = {
                 responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
             },
         },
+        '/v1/recurringinvoice': {
+            post: {
+                summary: 'Create a recurring invoice schedule',
+                security: [{ authKey: [] }],
+                responses: { 201: { description: 'Created' }, 400: { description: 'Validation error or bad customer' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/recurringinvoice/due': {
+            get: {
+                summary: 'List schedules due for invoicing (next run ≤ today)',
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'companyId', in: 'query', schema: { type: 'integer' }, description: 'Required for master keys.' },
+                    { name: 'limit', in: 'query', schema: { type: 'integer' } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer' } },
+                ],
+                responses: { 200: { description: 'Found (paginated)' }, 400: { description: 'Master keys must specify companyId' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/recurringinvoice/bycustomer/{id}': {
+            get: {
+                summary: "List a customer's schedules",
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found (paginated)' }, 404: { description: 'Customer not found / cross-tenant' } },
+            },
+        },
+        '/v1/recurringinvoice/{id}/run': {
+            post: {
+                summary: 'Advance a schedule by its cadence',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Advanced (returns previousRun + nextRun)' }, 404: { description: 'Not found' }, 409: { description: 'Schedule is not active' } },
+            },
+        },
+        '/v1/recurringinvoice/{id}': {
+            get: {
+                summary: 'Fetch a schedule',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found' }, 404: { description: 'Not found' } },
+            },
+            patch: {
+                summary: 'Update a schedule (cadence / next run / active / note)',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Updated' }, 400: { description: 'Validation error' }, 404: { description: 'Not found' } },
+            },
+            delete: {
+                summary: 'Archive a schedule',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
+            },
+        },
         '/v1/role': {
             post: {
                 summary: 'Create a billing role (name + rate)',

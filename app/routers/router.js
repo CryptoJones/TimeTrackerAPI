@@ -34,6 +34,7 @@ const task = require('../controllers/taskcontroller.js');
 const retainer = require('../controllers/retainercontroller.js');
 const phase = require('../controllers/phasecontroller.js');
 const role = require('../controllers/rolecontroller.js');
+const recurringInvoice = require('../controllers/recurringinvoicecontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -58,6 +59,7 @@ const taskSchemas = require('../schemas/task.schema.js');
 const retainerSchemas = require('../schemas/retainer.schema.js');
 const phaseSchemas = require('../schemas/phase.schema.js');
 const roleSchemas = require('../schemas/role.schema.js');
+const recurringInvoiceSchemas = require('../schemas/recurringinvoice.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -744,6 +746,46 @@ router.delete(
     '/v1/retainer/:id',
     v.params(retainerSchemas.intIdParam),
     retainer.remove,
+);
+
+// v1 recurring-invoice routes (billing schedules, #425).
+// GET /due is declared before GET /:id so "due" isn't parsed as an id.
+router.post(
+    '/v1/recurringinvoice',
+    v.body(recurringInvoiceSchemas.createRecurringInvoiceBody),
+    recurringInvoice.create,
+);
+router.get(
+    '/v1/recurringinvoice/due',
+    v.query(recurringInvoiceSchemas.dueQuery),
+    recurringInvoice.listDue,
+);
+router.get(
+    '/v1/recurringinvoice/bycustomer/:id',
+    v.params(recurringInvoiceSchemas.intIdParam),
+    v.query(recurringInvoiceSchemas.listByCustomerQuery),
+    recurringInvoice.listByCustomer,
+);
+router.post(
+    '/v1/recurringinvoice/:id/run',
+    v.params(recurringInvoiceSchemas.intIdParam),
+    recurringInvoice.run,
+);
+router.get(
+    '/v1/recurringinvoice/:id',
+    v.params(recurringInvoiceSchemas.intIdParam),
+    recurringInvoice.getById,
+);
+router.patch(
+    '/v1/recurringinvoice/:id',
+    v.params(recurringInvoiceSchemas.intIdParam),
+    v.body(recurringInvoiceSchemas.updateRecurringInvoiceBody),
+    recurringInvoice.update,
+);
+router.delete(
+    '/v1/recurringinvoice/:id',
+    v.params(recurringInvoiceSchemas.intIdParam),
+    recurringInvoice.remove,
 );
 
 // v1 role routes (role rate cards, #412).
