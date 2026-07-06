@@ -38,6 +38,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Email / notification service** (#68). A transport-abstracted mailer
+  (`mailer.js`) — the foundation approval/payment reminders and scheduled
+  report delivery build on: features call `sendMail({to, subject, text})`
+  and stay decoupled from the transport. The default is a **no-network
+  capture transport** (validates + records; dev/CI/unconfigured-prod
+  safe), with `setTransport()` to drop in a real SMTP adapter behind the
+  same interface (a config follow-up that adds no coupling and no
+  dependency here). Master-only `POST /v1/notification/test` verifies
+  delivery and reports the active transport. No migration.
 - **Outbound webhooks** (#69). A new company-scoped `Webhook` registry
   (URL, event, optional signing secret, active flag), migration
   `20260618000000`. Full REST on `/v1/webhook` (create, `bycompany` list,
