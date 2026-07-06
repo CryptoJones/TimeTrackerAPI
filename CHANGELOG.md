@@ -53,6 +53,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   so the distinction reads as deliberate rather than incidental.
 
 ### Changed
+- **Reuse attachAuth's context to avoid duplicate auth lookups** (#374).
+  New `auth.masterFromReq(req, authKey)` / `companyIdFromReq(req, authKey)`
+  return the `req.isMaster` / `req.companyId` that `attachAuth` already
+  resolved on every `/v1` request, instead of each controller issuing a
+  second identical DB lookup — a **pure optimization** (identical result,
+  minus the round-trip; falls back to a live lookup when the context is
+  absent, e.g. direct calls in unit tests). `billablerulecontroller` is
+  converted as the reference implementation; rolling the pattern out to the
+  remaining controllers (~35, hundreds of call sites) is a mechanical
+  follow-up best done in reviewable batches.
 - **Consolidate the customer→company lookup** (#378). `customercontroller`
   dropped its hand-rolled raw-SQL `GetCustomerCompanyId` and now aliases
   the shared `auth.getCompanyIdByCustomerId` (same semantics — empty/zero

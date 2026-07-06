@@ -163,6 +163,26 @@ async function getCompanyId(authKey) {
 }
 
 /**
+ * Reuse the auth context attachAuth already resolved onto the request
+ * (req.isMaster / req.companyId) instead of issuing a second identical DB
+ * lookup per handler (#374). Falls back to a fresh lookup when the context
+ * is absent — e.g. a handler invoked directly, outside the /v1 middleware
+ * chain (as some unit tests do). PURE optimization: with the context
+ * present the result is identical to calling isMaster / getCompanyId, just
+ * without the extra round-trip. Controllers pass both `req` and the raw
+ * `authKey` so the fallback has what it needs.
+ */
+async function masterFromReq(req, authKey) {
+    if (req && typeof req.isMaster === 'boolean') return req.isMaster;
+    return isMaster(authKey);
+}
+
+async function companyIdFromReq(req, authKey) {
+    if (req && typeof req.companyId === 'number') return req.companyId;
+    return getCompanyId(authKey);
+}
+
+/**
  * Resolve a customer id to its owning company id.
  *
  * Used by entities that don't have their own *CompId column and instead
@@ -379,6 +399,8 @@ module.exports = {
     resolveAuth,
     hashKey,
     isDbUnavailable,
+    masterFromReq,
+    companyIdFromReq,
     // Test-only seam: call with a stub db to drive auth functions
     // through caller-controlled fixtures; call with no args (or null)
     // to restore the production lookup. Production code MUST NOT call
