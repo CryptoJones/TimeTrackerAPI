@@ -192,6 +192,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sentinel), and `attachAuth` maps them to **503 Service Unavailable**.
 
 ### Security
+- **Tenant-check the invoice FK on invoice lines (cross-tenant injection).**
+  `InvoiceJob` create/bulk tenant-checked only the parent `injbJobId` (the
+  job's company), leaving `injbInvId` — the **invoice** the line attaches to
+  — unchecked. So a company-scoped caller could attach a line, with an
+  arbitrary `injbAmount`, to **another tenant's invoice**: it renders on the
+  victim's customer-facing invoice PDF (leaking the attacker's `jobDesc` +
+  amount) and makes sum-of-lines diverge from the stored total — and because
+  line management scopes via the job, the victim gets a 404 on the injected
+  line and **can't remove it**. New `auth.getCompanyIdByInvId` +
+  `invoiceFkBelongsTo` reject a cross-tenant or missing `injbInvId` with a
+  generic 400 on create **and** bulk (the same secondary-FK class as the
+  inventory fix). Found by the payment-allocation / invoice-line review.
+- **Bound `cpayAmount` / `injbAmount` to stop an AR-report DoS.** Both money
+  fields were `.finite()` but **unbounded**, so a finite-but-huge value
+  (e.g. `1e308`) overflowed `money.toCents()` to `Infinity` and threw
+  uncaught in the invoice / AR-aging / PDF consumers — one poisoned payment
+  500'd the **whole company's aging report** (`summarize` is mapped over
+  every invoice). Both now bound the magnitude (negatives still allowed for
+  reversals / credit lines).
 - **Block SSRF in outbound webhook delivery.** A tenant registers its own
   `whkUrl` and the server POSTs to it, previously with only a **structural**
   URL check — so a webhook (or its `POST /v1/webhook/:id/ping`) pointed at

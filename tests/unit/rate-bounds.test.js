@@ -12,8 +12,11 @@ const { createBillingTypeBody } = require('../../app/schemas/billingtype.schema.
 const { createRoleBody } = require('../../app/schemas/role.schema.js');
 const { createJobBody } = require('../../app/schemas/job.schema.js');
 const { createExpenseBody } = require('../../app/schemas/expense.schema.js');
+const { createCustomerPaymentBody } = require('../../app/schemas/customerpayment.schema.js');
+const { createInvoiceJobBody } = require('../../app/schemas/invoicejob.schema.js');
 
 const OVER = 1e13; // > NUMERIC(14,2) max (999,999,999,999.99)
+const HUGE = 1e308; // finite but overflows money.toCents() → Infinity
 
 describe('rate/amount fields reject out-of-range values (NUMERIC(14,2) overflow guard)', () => {
     test('billingtype btHourlyRate: normal accepted, out-of-range rejected', () => {
@@ -38,5 +41,14 @@ describe('rate/amount fields reject out-of-range values (NUMERIC(14,2) overflow 
         expect(createExpenseBody.safeParse({ ...base, expMarkupPct: 0.15 }).success).toBe(true); // 15%
         expect(createExpenseBody.safeParse({ ...base, expMarkupPct: 1.5 }).success).toBe(true);  // 150% intentional
         expect(createExpenseBody.safeParse({ ...base, expMarkupPct: 100 }).success).toBe(false); // > 99.9999 → 400, not a 500
+    });
+
+    test('cpayAmount / injbAmount: negatives allowed but a money.toCents-overflowing magnitude is rejected', () => {
+        // Negatives are legitimate (payment reversal / credit line) and stay valid.
+        expect(createCustomerPaymentBody.safeParse({ cpayCustId: 1, cpayDate: '2026-01-01', cpayAmount: -250 }).success).toBe(true);
+        expect(createInvoiceJobBody.safeParse({ injbInvId: 1, injbJobId: 1, injbAmount: -100 }).success).toBe(true);
+        // A finite-but-huge value (would overflow money.sum → 500) is rejected with a 400.
+        expect(createCustomerPaymentBody.safeParse({ cpayCustId: 1, cpayDate: '2026-01-01', cpayAmount: HUGE }).success).toBe(false);
+        expect(createInvoiceJobBody.safeParse({ injbInvId: 1, injbJobId: 1, injbAmount: HUGE }).success).toBe(false);
     });
 });

@@ -18,9 +18,13 @@ const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
 // pathological clients — `z.number()` rejects NaN but allows the
 // infinities by default, and a DOUBLE column will happily store them.
 // Negative values pass — some operators model refunds that way.
+// Bound the magnitude (negatives allowed — a reversal/credit): an unbounded
+// but finite value (e.g. 1e308) survives `.finite()` and later overflows
+// money.toCents() to Infinity, which throws uncaught in the AR/status
+// consumers (a 500 that can take down the whole company's aging report).
 const cpayAmountField = z.coerce.number().finite({
     message: 'cpayAmount must be a finite number.',
-}).refine((n) => n !== 0, {
+}).min(-999999999.99).max(999999999.99).refine((n) => n !== 0, {
     message: 'cpayAmount must not be zero.',
 });
 
