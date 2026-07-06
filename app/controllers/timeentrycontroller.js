@@ -12,6 +12,7 @@ const { applyAction } = require('../services/approval.js');
 const { lockReason } = require('../services/time-lock.js');
 const { buildApprovalDigest } = require('../services/approval-reminders.js');
 const { sendMail } = require('../services/mailer.js');
+const { createTimeEntryBody } = require('../schemas/timeentry.schema.js');
 const TimeEntry = db.TimeEntry;
 
 // Auth helpers used to live inline here — they now share a single
@@ -158,6 +159,45 @@ async function checkEntryLinks({ teWorkerId, teJobId, teBillTypeId, teTaskId }, 
 }
 
 /**
+ * Create one time entry for a resolved company (#379). Returns
+ * { created } on success or { error: { status, message } } on a business
+ * validation failure; throws on a DB error (the caller maps to 500).
+ * Shared by the single-create handler and the bulk importer so both apply
+ * identical validation, link checks, and the locked-period guard.
+ */
+async function createOneEntry(companyId, body) {
+    const src = body || {};
+    const payload = {};
+    for (const f of ALLOWED_FIELDS_CREATE) {
+        if (src[f] !== undefined) payload[f] = src[f];
+    }
+    if (!payload.teCustId || !Number.isInteger(Number(payload.teCustId))) {
+        return { error: { status: 400, message: "teCustId is required and must be an integer." } };
+    }
+    if (!payload.teStartedAt) {
+        return { error: { status: 400, message: "teStartedAt is required (ISO 8601)." } };
+    }
+    payload.teCompId = companyId;
+    payload.teArch = false;
+    payload.teMinutes = computeMinutes(payload.teStartedAt, payload.teEndedAt);
+
+    const linkError = await checkEntryLinks(payload, companyId, payload.teCustId);
+    if (linkError) {
+        return { error: { status: linkError.status, message: linkError.message } };
+    }
+
+    // Locked-period guard (#441): can't create time in a closed period.
+    const lockDate = await companyLockDate(companyId);
+    const createLock = lockReason({ approvalStatus: 'open', startedAt: payload.teStartedAt, lockDate });
+    if (createLock) {
+        return { error: { status: 409, message: createLock } };
+    }
+
+    const created = await TimeEntry.create(payload);
+    return { created };
+}
+
+/**
  * POST /v1/timeentry
  *
  * Create a new time entry for a customer in the auth'd company.
@@ -190,52 +230,81 @@ exports.create = async (req, res) => {
         }
     }
 
-    const body = req.body || {};
-    const payload = {};
-    for (const f of ALLOWED_FIELDS_CREATE) {
-        if (body[f] !== undefined) payload[f] = body[f];
-    }
-    if (!payload.teCustId || !Number.isInteger(Number(payload.teCustId))) {
-        return res.status(400).json({ message: "teCustId is required and must be an integer." });
-    }
-    if (!payload.teStartedAt) {
-        return res.status(400).json({ message: "teStartedAt is required (ISO 8601)." });
-    }
-    payload.teCompId = companyId;
-    payload.teArch = false;
-    payload.teMinutes = computeMinutes(payload.teStartedAt, payload.teEndedAt);
-
-    let linkError;
+    let result;
     try {
-        linkError = await checkEntryLinks(payload, companyId, payload.teCustId);
-    } catch (error) {
-        log.error({ err: error }, 'TimeEntry worker/job link validation failed');
-        return res.status(500).json({ message: "Error!" });
-    }
-    if (linkError) {
-        return res.status(linkError.status).json({ message: linkError.message });
-    }
-
-    // Locked-period guard (#441): can't create time in a closed period.
-    let createLock;
-    try {
-        const lockDate = await companyLockDate(companyId);
-        createLock = lockReason({ approvalStatus: 'open', startedAt: payload.teStartedAt, lockDate });
-    } catch (error) {
-        log.error({ err: error }, 'create: lock check failed');
-        return res.status(500).json({ message: "Error!" });
-    }
-    if (createLock) {
-        return res.status(409).json({ message: createLock });
-    }
-
-    try {
-        const created = await TimeEntry.create(payload);
-        return res.status(201).json({ message: "Time entry created.", timeEntry: created });
+        result = await createOneEntry(companyId, req.body || {});
     } catch (error) {
         log.error({ err: error }, 'TimeEntry.create failed');
         return res.status(500).json({ message: "Error!" });
     }
+    if (result.error) {
+        return res.status(result.error.status).json({ message: result.error.message });
+    }
+    return res.status(201).json({ message: "Time entry created.", timeEntry: result.created });
+};
+
+/**
+ * POST /v1/timeentry/bulk — import many entries in one call (#379). Each
+ * row is validated + created independently, so a bad row fails on its own
+ * without aborting the rest. Returns a per-row result array and counts.
+ * Status: 201 all-ok, 207 partial, 400 all-failed.
+ */
+exports.bulk = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+
+    const isMaster = await IsMaster(authKey);
+    let companyId;
+    if (isMaster) {
+        companyId = Number(req.body && req.body.teCompId);
+        if (!Number.isInteger(companyId) || companyId <= 0) {
+            return res.status(400).json({ message: "Master-key requests must specify teCompId." });
+        }
+    } else {
+        companyId = await GetCompanyId(authKey);
+        if (companyId === -1) {
+            return res.status(403).json({ message: "Invalid Authorization Key." });
+        }
+    }
+
+    const entries = (req.body && Array.isArray(req.body.entries)) ? req.body.entries : [];
+    const results = [];
+    let created = 0;
+    let failed = 0;
+
+    for (let i = 0; i < entries.length; i++) {
+        const parsed = createTimeEntryBody.safeParse(entries[i]);
+        if (!parsed.success) {
+            failed += 1;
+            results.push({ index: i, ok: false, status: 400, message: "Validation error." });
+            continue;
+        }
+        if (!isMaster && parsed.data.teCompId !== undefined && Number(parsed.data.teCompId) !== companyId) {
+            failed += 1;
+            results.push({ index: i, ok: false, status: 403, message: "Cannot create a time entry for a company you do not belong to." });
+            continue;
+        }
+
+        let r;
+        try {
+            r = await createOneEntry(companyId, parsed.data);
+        } catch (error) {
+            log.error({ err: error, index: i }, 'bulk: create failed');
+            r = { error: { status: 500, message: "Error!" } };
+        }
+        if (r.error) {
+            failed += 1;
+            results.push({ index: i, ok: false, status: r.error.status, message: r.error.message });
+        } else {
+            created += 1;
+            results.push({ index: i, ok: true, teId: r.created.teId });
+        }
+    }
+
+    const status = failed === 0 ? 201 : (created === 0 ? 400 : 207);
+    return res.status(status).json({ message: "Bulk import processed.", requested: entries.length, created, failed, results });
 };
 
 const START_FIELDS = [

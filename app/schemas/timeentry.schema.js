@@ -171,10 +171,23 @@ const startTimerBody = z.object({
     message: 'Unexpected field in body. Whitelist: teCustId, teCompId, teWorkerId, teJobId, teBillTypeId, teDescription, teBillable, teTags, teTaskId.',
 });
 
+/**
+ * POST /v1/timeentry/bulk body (#379). The outer shape only — each entry
+ * is validated per-row against createTimeEntryBody in the controller so a
+ * bad row reports its own error instead of failing the whole import.
+ */
+const bulkTimeEntryBody = z.object({
+    teCompId: z.coerce.number().int().positive().optional(),
+    entries: z.array(z.object({}).passthrough()).min(1).max(200),
+}).strict({
+    message: 'Unexpected field in body. Whitelist: teCompId, entries.',
+});
+
 module.exports = {
     intIdParam,
     createTimeEntryBody,
     updateTimeEntryBody,
+    bulkTimeEntryBody,
     startTimerBody,
     approvalBody,
     copyTimeEntryBody,
