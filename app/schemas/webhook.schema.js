@@ -9,7 +9,11 @@ const intIdParam = z.object({
     id: z.coerce.number().int().positive(),
 });
 
-const url = z.string().url().max(2048);
+// Pin the scheme to http(s) at registration time (defense-in-depth; the
+// send-time SSRF guard in ssrf-guard.js is the real choke point and also
+// blocks private/loopback/link-local destinations + redirects to them).
+const url = z.string().url().max(2048)
+    .refine((s) => /^https?:\/\//i.test(s), { message: 'whkUrl must be an http(s) URL.' });
 const event = z.enum(WEBHOOK_EVENTS);
 const secret = z.string().min(8).max(255);
 
