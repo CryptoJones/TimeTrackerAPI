@@ -158,9 +158,8 @@ exports.create = async (req, res) => {
 
 /** GET /v1/user/:id — fetch one (metadata only). Secure-404 scoped. */
 exports.getById = async (req, res) => {
-    const authKey = req.get('authKey');
-    if (!authKey) {
-        return res.status(403).json({ message: "Authorization key not sent." });
+    if (!req.user && !req.get('authKey')) {
+        return res.status(403).json({ message: "Authorization required." });
     }
 
     let user;
@@ -173,11 +172,18 @@ exports.getById = async (req, res) => {
     if (!user || user.userArch) {
         return res.status(404).json({ message: "Not found." });
     }
-    const isMaster = await MasterFromReq(req, authKey);
-    if (!isMaster) {
-        const companyId = await CompanyIdFromReq(req, authKey);
-        if (companyId === -1 || user.userCompId !== companyId) {
+    if (req.user) {
+        // Signed-in user: needs read permission + own company (secure-404).
+        if (!rbac.canReadUsers(req.user.userRole) || user.userCompId !== req.user.userCompId) {
             return res.status(404).json({ message: "Not found." });
+        }
+    } else {
+        const isMaster = await MasterFromReq(req, req.get('authKey'));
+        if (!isMaster) {
+            const companyId = await CompanyIdFromReq(req, req.get('authKey'));
+            if (companyId === -1 || user.userCompId !== companyId) {
+                return res.status(404).json({ message: "Not found." });
+            }
         }
     }
     return res.status(200).json({ message: "Found.", user });
@@ -185,9 +191,8 @@ exports.getById = async (req, res) => {
 
 /** GET /v1/user/bycompany/:id — list a company's users (metadata only, paginated). */
 exports.listByCompany = async (req, res) => {
-    const authKey = req.get('authKey');
-    if (!authKey) {
-        return res.status(403).json({ message: "Authorization key not sent." });
+    if (!req.user && !req.get('authKey')) {
+        return res.status(403).json({ message: "Authorization required." });
     }
 
     const targetCompanyId = Number(req.params.id);
@@ -195,11 +200,18 @@ exports.listByCompany = async (req, res) => {
         return res.status(400).json({ message: "Invalid company id." });
     }
 
-    const isMaster = await MasterFromReq(req, authKey);
-    if (!isMaster) {
-        const companyId = await CompanyIdFromReq(req, authKey);
-        if (companyId === -1 || companyId !== targetCompanyId) {
+    if (req.user) {
+        // Signed-in user: needs read permission + can only list its OWN company.
+        if (!rbac.canReadUsers(req.user.userRole) || targetCompanyId !== req.user.userCompId) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
+        }
+    } else {
+        const isMaster = await MasterFromReq(req, req.get('authKey'));
+        if (!isMaster) {
+            const companyId = await CompanyIdFromReq(req, req.get('authKey'));
+            if (companyId === -1 || companyId !== targetCompanyId) {
+                return res.status(403).json({ message: "Invalid Authorization Key." });
+            }
         }
     }
 
@@ -227,11 +239,14 @@ exports.listByCompany = async (req, res) => {
 
 /** PATCH /v1/user/:id — update email / name / password. userCompId not settable here. */
 exports.update = async (req, res) => {
-    if (!req.get('authKey')) {
-        return res.status(403).json({ message: "Authorization key not sent." });
-    }
     const user = await findScoped(req, res);
     if (!user) return undefined;
+
+    // A signed-in user may edit its OWN profile; editing another user needs
+    // the manage-users permission. (An API key keeps full authority.)
+    if (req.user && user.userId !== req.user.userId && !rbac.canManageUsers(req.user.userRole)) {
+        return res.status(403).json({ message: "Insufficient role to update another user." });
+    }
 
     const body = req.body || {};
     const updates = {};
@@ -253,11 +268,12 @@ exports.update = async (req, res) => {
 
 /** DELETE /v1/user/:id — soft-delete (sets userArch = true). */
 exports.remove = async (req, res) => {
-    if (!req.get('authKey')) {
-        return res.status(403).json({ message: "Authorization key not sent." });
-    }
     const user = await findScoped(req, res);
     if (!user) return undefined;
+
+    if (req.user && !rbac.canManageUsers(req.user.userRole)) {
+        return res.status(403).json({ message: "Insufficient role to remove users." });
+    }
 
     try {
         await user.update({ userArch: true });
@@ -298,11 +314,12 @@ exports.setRole = async (req, res) => {
 
 /** GET /v1/user/:id/permissions — a user's role + effective permissions (#448). */
 exports.permissions = async (req, res) => {
-    if (!req.get('authKey')) {
-        return res.status(403).json({ message: "Authorization key not sent." });
-    }
     const user = await findScoped(req, res);
     if (!user) return undefined;
+
+    if (req.user && !rbac.canReadUsers(req.user.userRole)) {
+        return res.status(404).json({ message: "Not found." });
+    }
 
     return res.status(200).json({
         message: "Found.",

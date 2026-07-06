@@ -110,3 +110,60 @@ describe('setRole — RBAC enforced for a JWT actor', () => {
         expect((await patchRole('manager')).status).toBe(404);
     });
 });
+
+// JWT-actor RBAC on the read / update / remove user endpoints.
+describe('user read/update/remove — RBAC for a JWT actor', () => {
+    const jwt = require('../../app/services/jwt.js');
+    const db = require('../../app/config/db.config.js');
+    const SECRET = 'test-secret';
+    const ACTOR = 100; const TARGET = 200;
+
+    function actorToken() {
+        process.env.JWT_SECRET = SECRET;
+        return jwt.sign({ sub: ACTOR, userCompId: 1 }, SECRET, 3600);
+    }
+    function row(id, comp, role) {
+        return { userId: id, userCompId: comp, userRole: role, userArch: false, userEmail: 'x@y.co', userName: 'X', update: vi.fn().mockResolvedValue(undefined) };
+    }
+    // targetComp/targetId let a test point the target at another company or at
+    // the actor itself (self-edit). The ACTOR row always carries update().
+    function mockUsers(actorRole, targetComp = 1, targetId = TARGET) {
+        db.User.findByPk = vi.fn().mockImplementation((id) => {
+            if (Number(id) === ACTOR) return Promise.resolve(row(ACTOR, 1, actorRole));
+            if (Number(id) === targetId) return Promise.resolve(row(targetId, targetComp, 'member'));
+            return Promise.resolve(null);
+        });
+    }
+    afterEach(() => { delete process.env.JWT_SECRET; });
+    const bearer = () => ({ authorization: `Bearer ${actorToken()}` });
+
+    test('GET a user in own company → 200; cross-company → secure-404', async () => {
+        mockUsers('member');
+        expect((await request(app).get(`/v1/user/${TARGET}`).set(bearer())).status).toBe(200);
+        mockUsers('member', 2);
+        expect((await request(app).get(`/v1/user/${TARGET}`).set(bearer())).status).toBe(404);
+    });
+
+    test('listByCompany: own company 200, other company 403', async () => {
+        mockUsers('member');
+        db.User.findAndCountAll = vi.fn().mockResolvedValue({ count: 0, rows: [] });
+        expect((await request(app).get('/v1/user/bycompany/1').set(bearer())).status).toBe(200);
+        expect((await request(app).get('/v1/user/bycompany/2').set(bearer())).status).toBe(403);
+    });
+
+    test('member updates its OWN profile (200) but not another user (403); admin can (200)', async () => {
+        mockUsers('member', 1, ACTOR); // target == actor (self)
+        expect((await request(app).patch(`/v1/user/${ACTOR}`).set(bearer()).send({ userName: 'New' })).status).toBe(200);
+        mockUsers('member'); // another user, member lacks user:write
+        expect((await request(app).patch(`/v1/user/${TARGET}`).set(bearer()).send({ userName: 'New' })).status).toBe(403);
+        mockUsers('admin');
+        expect((await request(app).patch(`/v1/user/${TARGET}`).set(bearer()).send({ userName: 'New' })).status).toBe(200);
+    });
+
+    test('remove: member 403, admin 200', async () => {
+        mockUsers('member');
+        expect((await request(app).delete(`/v1/user/${TARGET}`).set(bearer())).status).toBe(403);
+        mockUsers('admin');
+        expect((await request(app).delete(`/v1/user/${TARGET}`).set(bearer())).status).toBe(200);
+    });
+});
