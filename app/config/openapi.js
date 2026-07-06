@@ -836,6 +836,18 @@ const spec = {
                 },
             },
         },
+        '/v1/timeentry/approval-reminders': {
+            post: {
+                summary: 'Email a digest of stale pending approvals (#442)',
+                security: [{ authKey: [] }],
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { to: { type: 'string', format: 'email' }, olderThanDays: { type: 'integer' }, companyId: { type: 'integer' } }, required: ['to'] } } } },
+                responses: {
+                    200: { description: 'Digest sent (or nothing pending) — {pending, reminded, to}' },
+                    400: { description: 'Master keys must specify companyId / invalid body' },
+                    403: { description: 'Auth failure' },
+                },
+            },
+        },
         '/v1/timeentry/{id}/copy': {
             post: {
                 summary: 'Copy a time entry into a fresh entry',

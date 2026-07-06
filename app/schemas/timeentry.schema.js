@@ -126,6 +126,19 @@ const copyTimeEntryBody = z.object({
     { message: 'teEndedAt must be at or after teStartedAt.', path: ['teEndedAt'] },
 );
 
+/**
+ * POST /v1/timeentry/approval-reminders body (#442). `to` is the approver
+ * to email; olderThanDays bounds staleness; companyId is required for
+ * master keys.
+ */
+const approvalRemindersBody = z.object({
+    to: z.string().email(),
+    olderThanDays: z.coerce.number().int().positive().max(3650).optional(),
+    companyId: z.coerce.number().int().positive().optional(),
+}).strict({
+    message: 'Unexpected field in body. Whitelist: to, olderThanDays, companyId.',
+});
+
 const listByCompanyQuery = z.object({
     customerId: z.coerce.number().int().positive().optional(),
     tag: z.string().min(1).max(64).optional(),
@@ -165,6 +178,7 @@ module.exports = {
     startTimerBody,
     approvalBody,
     copyTimeEntryBody,
+    approvalRemindersBody,
     listByCompanyQuery,
     exportCsvQuery,
 };
