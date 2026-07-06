@@ -27,6 +27,7 @@ plausible-but-unproven finding as not-a-finding.
 | Invoice PDF | Unbounded line count × long unbroken `jobDesc` → pdfkit superlinear word-fit **froze the event loop** (~6 s/req) — one authed request stalled the whole server; descriptions/notes clipped, line count capped | **High** | #568 |
 | Report PDF | Same pdfkit **event-loop-stall DoS** in `report-pdf.js` `drawTable` (uncapped rows × caller-controlled `custName`, ~9 s/req); cells clipped, rows capped | **High** | #569 |
 | Time-lock | Closed-period lock **bypass** via a timezone offset in `teStartedAt` (string bucketed to wall-clock day, `Date` to UTC) | High | #555 |
+| Dunning | Over-dunning: a **write-off** was ignored (forgiven invoice dunned in full) and the default run flagged **due-today** as overdue (a #556 side effect); now settles `total−collected−writeOff` and requires `dueDate < today` | Med | #577 |
 | Billing gate | Invoice rollup ignored approval status → a reviewer-**rejected** entry still billed the client; rollup now excludes `teApprovalStatus = 'rejected'` | Med | #566 |
 | Mailer | `subject` / `from` not CR/LF-checked → **email header injection** once an SMTP transport is wired (defense-in-depth) | Med/latent | #564 |
 | RBAC | `permissionsFor` threw on prototype-named roles (`__proto__`) instead of failing closed to `[]` | Low | #561 |

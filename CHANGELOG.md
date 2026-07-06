@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Dunning no longer over-dunns.** Two bugs in the payment-reminder digest
+  made it email customers wrong "overdue" amounts, both from diverging from
+  the authoritative `invoice-status` engine: (1) a **write-off was ignored**,
+  so a fully-forgiven invoice was dunned for its full balance — the digest
+  now settles `total − collected − writeOff`; and (2) the default
+  (`olderThanDays=0`) run flagged an invoice **due today** as overdue (a #556
+  side effect) — it now requires the reference date to be **strictly** before
+  today (`dueDate < today`, matching `deriveStatus`), while preserving #556's
+  inclusive cutoff for `olderThanDays > 0`. Found by the remaining-services
+  review.
 - **Expense markup is bounded (400, not 500).** `expMarkupPct` (a fraction,
   `0.15` = +15%) had no upper bound, so a value ≥ 100 overflowed its
   `DECIMAL(6,4)` column → a **500** at write (and a fraction-vs-percent typo

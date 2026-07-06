@@ -51,6 +51,31 @@ describe('buildDunningDigest (#10)', () => {
             { today: TODAY, olderThanDays: 30 }).count).toBe(0);
     });
 
+    test('a write-off settles the balance — a fully written-off invoice is not dunned', () => {
+        // Write-offs count as settlement (matching invoice-status.summarize);
+        // otherwise a forgiven invoice would be dunned for its full amount.
+        expect(buildDunningDigest([
+            { invId: 1, dueDate: '2026-02-01', total: 1000, collected: 0, writeOff: 1000 },
+        ], { today: TODAY }).count).toBe(0);
+        // Partial write-off reduces the outstanding shown.
+        const d = buildDunningDigest([
+            { invId: 2, dueDate: '2026-02-01', total: 1000, collected: 100, writeOff: 300 },
+        ], { today: TODAY });
+        expect(d.count).toBe(1);
+        expect(d.invoices[0].outstanding).toBe(600); // 1000 − 100 − 300
+    });
+
+    test('an invoice due TODAY is not overdue — not dunned even at olderThanDays 0', () => {
+        // Matches invoice-status.deriveStatus (`dueDate < today`, strict).
+        expect(buildDunningDigest([
+            { invId: 1, dueDate: TODAY, total: 500, collected: 0 },
+        ], { today: TODAY, olderThanDays: 0 }).count).toBe(0);
+        // Due yesterday IS overdue.
+        expect(buildDunningDigest([
+            { invId: 2, dueDate: '2026-02-28', total: 500, collected: 0 },
+        ], { today: TODAY, olderThanDays: 0 }).count).toBe(1);
+    });
+
     test('falls back to invoice date when no due date', () => {
         const d = buildDunningDigest([
             { invId: 1, date: '2026-01-01', total: 200, collected: 0 },
