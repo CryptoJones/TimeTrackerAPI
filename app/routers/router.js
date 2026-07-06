@@ -40,6 +40,7 @@ const webhook = require('../controllers/webhookcontroller.js');
 const notification = require('../controllers/notificationcontroller.js');
 const rateSchedule = require('../controllers/rateschedulecontroller.js');
 const user = require('../controllers/usercontroller.js');
+const authController = require('../controllers/authcontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -70,6 +71,7 @@ const webhookSchemas = require('../schemas/webhook.schema.js');
 const notificationSchemas = require('../schemas/notification.schema.js');
 const rateScheduleSchemas = require('../schemas/rateschedule.schema.js');
 const userSchemas = require('../schemas/user.schema.js');
+const authSchemas = require('../schemas/auth.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -774,6 +776,18 @@ router.delete(
     '/v1/retainer/:id',
     v.params(retainerSchemas.intIdParam),
     retainer.remove,
+);
+
+// v1 sign-in routes (#445). Public — POST /login issues a JWT for a User;
+// GET /me returns the signed-in user. Separate from the API-key auth.
+router.post(
+    '/v1/login',
+    v.body(authSchemas.loginBody),
+    authController.login,
+);
+router.get(
+    '/v1/me',
+    authController.me,
 );
 
 // v1 user-account routes (#444). Sign-in users, separate from API keys.
