@@ -323,6 +323,13 @@ exports.rollup = async (req, res) => {
         teBillable: true,
         teInvJobId: null,
         teJobId: { [Op.ne]: null },
+        // A reviewer's explicit REJECTION must stop the entry from being
+        // invoiced — otherwise padded hours a manager rejected still bill.
+        // open / submitted / approved all still roll up (approval is not
+        // otherwise a billing gate; see docs/SECURITY-REVIEW-LOG.md for the
+        // open "should approval gate billing?" decision). The column is
+        // NOT NULL (default 'open'), so a plain `!=` is null-safe.
+        teApprovalStatus: { [Op.ne]: 'rejected' },
     };
     const from = req.body.from ? new Date(req.body.from + 'T00:00:00.000Z') : null;
     const to = req.body.to ? new Date(req.body.to + 'T23:59:59.999Z') : null;

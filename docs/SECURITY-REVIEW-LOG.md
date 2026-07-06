@@ -82,6 +82,23 @@ deliberately **not** implemented autonomously.
 5. **Master actions in the tenant audit trail** (informational). A master
    key's mutations set `alogCompId = null`, so they don't appear in the
    affected company's audit view — a completeness gap, not a leak.
+6. **Multi-level approval chain is not enforced.** `ApprovalChain` is a
+   standalone advisory calculator; the time-entry approval action calls
+   only `applyAction` (a single `teApprovalStatus` enum) and marks an entry
+   fully approved on the **first** `approve`, skipping every configured
+   level. Enforcing a chain needs per-level approval tracking on the entry
+   (a new counter/table), not just the enum.
+7. **Should approval gate billing?** After the rejected-exclusion fix,
+   `open` / `submitted` time still rolls into invoices — correct for
+   companies that don't use the approval feature, but a company that
+   *requires* approval before billing has no such gate. Requiring
+   `approved` would break the default (approval-less) flow, so which
+   policy applies is a per-tenant product decision.
+8. **Approver authorization / separation of duties.** The approval action
+   requires only a valid company key (no role check, no "not the logged-time
+   worker" check) — the same root cause as item 1 (RBAC is not enforced;
+   API keys resolve to a company, not a user). Self-approval is currently
+   unpreventable.
 
 ---
 
