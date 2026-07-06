@@ -45,6 +45,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   explicitly) versus **400** (validation / a bad cross-tenant foreign key),
   so the distinction reads as deliberate rather than incidental.
 
+### Changed
+- **Consolidate the customer→company lookup** (#378). `customercontroller`
+  dropped its hand-rolled raw-SQL `GetCustomerCompanyId` and now aliases
+  the shared `auth.getCompanyIdByCustomerId` (same semantics — empty/zero
+  → -1, archived excluded, but fetches only `custCompId` instead of
+  `SELECT *`). Tenant resolution lives in one place; the now-unused
+  `sequelize` import is gone. Behavior-preserving (covered by the existing
+  customer tests).
+
 ### Fixed
 - **Surface a database outage as 503, not 403** (#377). When Postgres is
   unreachable, the auth lookups previously swallowed the connection error
