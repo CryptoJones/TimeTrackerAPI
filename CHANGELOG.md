@@ -38,6 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Documentation
+- **Architecture & conventions guide** (`docs/ARCHITECTURE.md`). A
+  maintainer-facing map of the system design — the request lifecycle, the
+  multi-tenant auth model and `getCompanyId*` resolver family, the
+  increment-layer schema convention, the controller/service split, and the
+  three-tier testing strategy (including the guard-rail meta-tests). Linked
+  from `README.md` (new "Design & internals" section) and `CONTRIBUTING.md`.
 - **Align the OpenAPI `TimeEntry` component with the model + schema** (#372).
   The published component omitted `teWorkerId` / `teJobId` / `teBillTypeId`
   / `teTaskId` (and `teTags`, plus the read-only `teApprovalStatus` /
