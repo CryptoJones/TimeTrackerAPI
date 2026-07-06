@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-07-06
+
+The first feature release on top of the 1.0.0 backend baseline: a complete
+track → bill → get-paid platform (invoicing, payments, expenses, retainers,
+reporting), self-service auth with RBAC, an approval workflow, and a
+sustained security-hardening pass. All changes are backward-compatible — the
+API-key path is unchanged; new behavior is additive or gated on the new
+signed-in-user (JWT) actor.
+
 ### Added
 - **Multi-level approval chains are now enforced (#591).** Previously an
   `ApprovalChain` was advisory — the first `approve` fully approved a
