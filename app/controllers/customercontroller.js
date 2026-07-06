@@ -7,7 +7,7 @@ const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
 const { makeBulkCreate } = require('./_bulk-helpers.js');
-const { escapeCsvCell } = require('./_csv-escape.js');
+const { buildCsv } = require('./_csv-escape.js');
 const Customer = db.Customer;
 
 // IsMaster / GetCompanyId / GetCustomerCompanyId previously lived inline
@@ -380,17 +380,10 @@ exports.exportCsv = async (req, res) => {
         'custCity', 'custState', 'custZip',
         'custPhone', 'custEmail', 'custCompId', 'custDefaultRate',
     ];
-    const escape = escapeCsvCell;
-    const lines = [];
-    lines.push(FIELDS.join(','));
-    for (const r of rows) {
-        lines.push(FIELDS.map((f) => escape(r[f])).join(','));
-    }
-    if (truncated) {
-        lines.push(`# truncated at ${limit} rows; re-call with offset=${offset + limit} to continue`);
-    }
-
-    const body = lines.join('\r\n') + '\r\n';
+    const note = truncated
+        ? `# truncated at ${limit} rows; re-call with offset=${offset + limit} to continue`
+        : null;
+    const body = buildCsv(FIELDS, rows, note);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition',
         `attachment; filename="customers-company-${effectiveCompanyId}.csv"`);

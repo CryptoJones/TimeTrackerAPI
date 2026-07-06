@@ -69,6 +69,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the default.
 
 ### Changed
+- **Consolidate CSV export assembly into a shared `buildCsv` helper.** The
+  customer and time-entry `export.csv` builders duplicated the same inline
+  header + escaped-rows loop; both now call `buildCsv(fields, records,
+  note)` in `_csv-escape.js` (byte-identical output). The assembly is now
+  unit-testable, and a new regression test asserts a hostile user field is
+  formula-escaped in the export **body** — closing a gap flagged by the
+  CSV-export review, which otherwise found every cell already escaped,
+  headers safe, and the download filename validated.
 - **Production hard-fails on empty `DB_PASSWORD`** (#119). Previously
   a missing `DB_PASSWORD` in `NODE_ENV=production` would warn and
   start anyway; `/healthz` reported degraded, but a load balancer
