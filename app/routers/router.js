@@ -789,6 +789,18 @@ router.get(
     '/v1/me',
     authController.me,
 );
+// Password reset (#446): request emails a one-time token; confirm sets a
+// new password. Public.
+router.post(
+    '/v1/password-reset/request',
+    v.body(authSchemas.requestResetBody),
+    authController.requestReset,
+);
+router.post(
+    '/v1/password-reset/confirm',
+    v.body(authSchemas.confirmResetBody),
+    authController.confirmReset,
+);
 
 // v1 user-account routes (#444). Sign-in users, separate from API keys.
 router.post(

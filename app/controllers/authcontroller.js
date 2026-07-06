@@ -9,8 +9,11 @@
 
 const db = require('../config/db.config.js');
 const log = require('../config/logger.js');
+const auth = require('../middleware/auth.js');
 const jwt = require('../services/jwt.js');
-const { verifyPassword } = require('../services/password.js');
+const { verifyPassword, hashPassword } = require('../services/password.js');
+const { sendMail } = require('../services/mailer.js');
+const { generateToken, isValid } = require('../services/password-reset.js');
 
 const TOKEN_TTL_SEC = 12 * 60 * 60; // 12 hours
 
@@ -83,4 +86,73 @@ exports.me = async (req, res) => {
         return res.status(401).json({ message: "Invalid or expired token." });
     }
     return res.status(200).json({ message: "OK.", user: safeUser(user) });
+};
+
+/**
+ * POST /v1/password-reset/request — email a one-time reset token (#446).
+ * ALWAYS returns the same 200 whether or not the account exists
+ * (anti-enumeration). Only the token's SHA-256 is stored; the raw token
+ * is emailed (captured by the mailer until real SMTP is configured).
+ */
+exports.requestReset = async (req, res) => {
+    const body = req.body || {};
+    const companyId = Number(body.companyId);
+
+    let user;
+    try {
+        user = await db.User.findOne({ where: { userEmail: body.userEmail, userCompId: companyId } });
+    } catch (error) {
+        log.error({ err: error }, 'reset request: User.findOne failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+
+    if (user && !user.userArch) {
+        const token = generateToken();
+        const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+        try {
+            await user.update({ userResetTokenHash: auth.hashKey(token), userResetExpires: expires });
+            await sendMail({
+                to: user.userEmail,
+                subject: 'Password reset',
+                text: `Use this token to reset your password (valid for 1 hour):\n\n${token}`,
+            });
+        } catch (error) {
+            // Never leak account existence via an error — log and fall through.
+            log.error({ err: error }, 'reset request: update/mail failed');
+        }
+    }
+
+    return res.status(200).json({ message: "If that account exists, a password-reset email has been sent." });
+};
+
+/**
+ * POST /v1/password-reset/confirm — set a new password using a valid,
+ * unexpired reset token. Consumes the token on success.
+ */
+exports.confirmReset = async (req, res) => {
+    const body = req.body || {};
+    const tokenHash = auth.hashKey(body.token || '');
+
+    let user;
+    try {
+        user = await db.User.findOne({ where: { userResetTokenHash: tokenHash } });
+    } catch (error) {
+        log.error({ err: error }, 'reset confirm: User.findOne failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (!user || user.userArch || !isValid(user, tokenHash, Date.now())) {
+        return res.status(400).json({ message: "Invalid or expired token." });
+    }
+
+    try {
+        await user.update({
+            userPasswordHash: hashPassword(body.newPassword),
+            userResetTokenHash: null,
+            userResetExpires: null,
+        });
+    } catch (error) {
+        log.error({ err: error }, 'reset confirm: User.update failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    return res.status(200).json({ message: "Password updated." });
 };
