@@ -8,8 +8,10 @@ const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
 const Task = db.Task;
 
-const IsMaster = auth.isMaster;
-const GetCompanyId = auth.getCompanyId;
+// #374: reuse attachAuth's resolved context (req.isMaster / req.companyId)
+// instead of a second DB lookup; falls back to a live lookup if absent.
+const MasterFromReq = auth.masterFromReq;
+const CompanyIdFromReq = auth.companyIdFromReq;
 const GetCompanyIdByJobId = auth.getCompanyIdByJobId;
 
 const ALLOWED_FIELDS_CREATE = ['taskJobId', 'taskName', 'taskDesc', 'taskRate'];
@@ -43,9 +45,9 @@ exports.create = async (req, res) => {
         return res.status(400).json({ message: "taskJobId must reference a job." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1 || companyId !== jobCompanyId) {
             return res.status(403).json({ message: "Cannot create a task for a job in a company you do not belong to." });
         }
@@ -87,9 +89,9 @@ exports.getById = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         let taskCompanyId;
         try {
             taskCompanyId = await GetCompanyIdByJobId(task.taskJobId);
@@ -130,9 +132,9 @@ exports.listByJob = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1 || companyId !== jobCompanyId) {
             return res.status(404).json({ message: "Not found." });
         }
@@ -173,9 +175,9 @@ async function findScoped(req, res) {
         res.status(404).json({ message: "Not found." });
         return null;
     }
-    const isMaster = await IsMaster(req.get('authKey'));
+    const isMaster = await MasterFromReq(req, req.get('authKey'));
     if (!isMaster) {
-        const companyId = await GetCompanyId(req.get('authKey'));
+        const companyId = await CompanyIdFromReq(req, req.get('authKey'));
         let taskCompanyId;
         try {
             taskCompanyId = await GetCompanyIdByJobId(task.taskJobId);
