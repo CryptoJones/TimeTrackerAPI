@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Roles & permissions (RBAC)** (#448). Each user (#444) now carries a
+  `userRole` (owner/admin/manager/member/viewer; migration
+  `20260625000000`, defaults to `member`). A pure `rbac.js` defines the
+  cumulative permission matrix + `canAssignRole` (no privilege
+  escalation). `PATCH /v1/user/{id}/role` sets a role;
+  `GET /v1/user/{id}/permissions` returns a user's effective permissions;
+  `GET /v1/me` now includes the caller's role + permissions. The model is
+  surfaced for client/JWT enforcement; the API-key auth path is unchanged.
 - **Scheduled report delivery** (#57). A new company-scoped
   `ReportSchedule` entity (report, recipient, cadence, next-run),
   migration `20260624000000`. Full REST on `/v1/reportschedule` (create,

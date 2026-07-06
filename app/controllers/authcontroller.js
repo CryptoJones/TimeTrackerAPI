@@ -14,6 +14,7 @@ const jwt = require('../services/jwt.js');
 const { verifyPassword, hashPassword } = require('../services/password.js');
 const { sendMail } = require('../services/mailer.js');
 const { generateToken, isValid } = require('../services/password-reset.js');
+const rbac = require('../services/rbac.js');
 
 const TOKEN_TTL_SEC = 12 * 60 * 60; // 12 hours
 
@@ -77,7 +78,7 @@ exports.me = async (req, res) => {
 
     let user;
     try {
-        user = await db.User.findByPk(payload.sub, { attributes: ['userId', 'userCompId', 'userEmail', 'userName', 'userArch'] });
+        user = await db.User.findByPk(payload.sub, { attributes: ['userId', 'userCompId', 'userEmail', 'userName', 'userRole', 'userArch'] });
     } catch (error) {
         log.error({ err: error }, 'me: User.findByPk failed');
         return res.status(500).json({ message: "Error!" });
@@ -85,7 +86,12 @@ exports.me = async (req, res) => {
     if (!user || user.userArch) {
         return res.status(401).json({ message: "Invalid or expired token." });
     }
-    return res.status(200).json({ message: "OK.", user: safeUser(user) });
+    return res.status(200).json({
+        message: "OK.",
+        user: safeUser(user),
+        userRole: user.userRole,
+        permissions: rbac.permissionsFor(user.userRole),
+    });
 };
 
 /**

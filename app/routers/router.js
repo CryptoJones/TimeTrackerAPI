@@ -903,6 +903,18 @@ router.delete(
     v.params(userSchemas.intIdParam),
     user.remove,
 );
+// RBAC (#448): a user's role + effective permissions; set a user's role.
+router.get(
+    '/v1/user/:id/permissions',
+    v.params(userSchemas.intIdParam),
+    user.permissions,
+);
+router.patch(
+    '/v1/user/:id/role',
+    v.params(userSchemas.intIdParam),
+    v.body(userSchemas.setRoleBody),
+    user.setRole,
+);
 
 // v1 rate-schedule routes (effective-dated rates, #414).
 // GET /resolve is declared before GET /:id so "resolve" isn't parsed as an id.

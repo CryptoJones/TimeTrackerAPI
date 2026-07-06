@@ -31,6 +31,13 @@ module.exports = (sequelize, Sequelize) => {
             field: 'userName',
             type: Sequelize.TEXT,
         },
+        userRole: {
+            field: 'userRole',
+            // RBAC role (#448): owner|admin|manager|member|viewer. The
+            // permission matrix lives in app/services/rbac.js.
+            type: Sequelize.TEXT,
+            defaultValue: 'member',
+        },
         userPasswordHash: {
             field: 'userPasswordHash',
             type: Sequelize.TEXT,

@@ -7,13 +7,14 @@ const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
 const { hashPassword } = require('../services/password.js');
+const rbac = require('../services/rbac.js');
 const User = db.User;
 
 const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
 
 // userPasswordHash is deliberately excluded — it is write-only.
-const SAFE_ATTRS = ['userId', 'userCompId', 'userEmail', 'userName', 'userArch', 'createdAt', 'updatedAt'];
+const SAFE_ATTRS = ['userId', 'userCompId', 'userEmail', 'userName', 'userRole', 'userArch', 'createdAt', 'updatedAt'];
 
 /** A response-safe view of a user row (never includes the password hash). */
 function safeView(u) {
@@ -22,6 +23,7 @@ function safeView(u) {
         userCompId: u.userCompId,
         userEmail: u.userEmail,
         userName: u.userName,
+        userRole: u.userRole,
         userArch: u.userArch,
     };
 }
@@ -103,6 +105,7 @@ exports.create = async (req, res) => {
         userCompId: companyId,
         userEmail: body.userEmail,
         userName: body.userName,
+        userRole: rbac.isRole(body.userRole) ? body.userRole : rbac.DEFAULT_ROLE,
         userPasswordHash: hashPassword(body.password),
         userArch: false,
     };
@@ -225,4 +228,41 @@ exports.remove = async (req, res) => {
         log.error({ err: error }, 'User archive failed');
         return res.status(500).json({ message: "Error!" });
     }
+};
+
+/** PATCH /v1/user/:id/role — set a user's RBAC role (#448). Company-scoped. */
+exports.setRole = async (req, res) => {
+    if (!req.get('authKey')) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+    const body = req.body || {};
+    if (!rbac.isRole(body.userRole)) {
+        return res.status(400).json({ message: "Invalid role." });
+    }
+    const user = await findScoped(req, res);
+    if (!user) return undefined;
+
+    try {
+        await user.update({ userRole: body.userRole });
+        return res.status(200).json({ message: "Role updated.", user: safeView(user) });
+    } catch (error) {
+        log.error({ err: error }, 'User.setRole failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+};
+
+/** GET /v1/user/:id/permissions — a user's role + effective permissions (#448). */
+exports.permissions = async (req, res) => {
+    if (!req.get('authKey')) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+    const user = await findScoped(req, res);
+    if (!user) return undefined;
+
+    return res.status(200).json({
+        message: "Found.",
+        userId: user.userId,
+        userRole: user.userRole,
+        permissions: rbac.permissionsFor(user.userRole),
+    });
 };

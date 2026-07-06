@@ -1650,6 +1650,23 @@ const spec = {
                 responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
             },
         },
+        '/v1/user/{id}/role': {
+            patch: {
+                summary: "Set a user's RBAC role (#448)",
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { userRole: { type: 'string', enum: ['owner', 'admin', 'manager', 'member', 'viewer'] } }, required: ['userRole'] } } } },
+                responses: { 200: { description: 'Role updated' }, 400: { description: 'Invalid role' }, 404: { description: 'Not found' } },
+            },
+        },
+        '/v1/user/{id}/permissions': {
+            get: {
+                summary: "A user's role + effective permissions (#448)",
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found — {userId, userRole, permissions[]}' }, 404: { description: 'Not found' } },
+            },
+        },
         '/v1/rateschedule': {
             post: {
                 summary: 'Create an effective-dated rate (#414)',
