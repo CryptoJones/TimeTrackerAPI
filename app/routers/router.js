@@ -43,6 +43,7 @@ const user = require('../controllers/usercontroller.js');
 const authController = require('../controllers/authcontroller.js');
 const receipt = require('../controllers/receiptcontroller.js');
 const reportSchedule = require('../controllers/reportschedulecontroller.js');
+const gdpr = require('../controllers/gdprcontroller.js');
 const openapiSpec = require('../config/openapi.js');
 const v = require('../middleware/validate.js');
 const customerSchemas = require('../schemas/customer.schema.js');
@@ -76,6 +77,7 @@ const userSchemas = require('../schemas/user.schema.js');
 const authSchemas = require('../schemas/auth.schema.js');
 const receiptSchemas = require('../schemas/receipt.schema.js');
 const reportScheduleSchemas = require('../schemas/reportschedule.schema.js');
+const gdprSchemas = require('../schemas/gdpr.schema.js');
 const inventoryTransactionSchemas = require('../schemas/inventorytransaction.schema.js');
 
 // Health / readiness probe. No auth required — only exposes liveness
@@ -914,6 +916,19 @@ router.patch(
     v.params(userSchemas.intIdParam),
     v.body(userSchemas.setRoleBody),
     user.setRole,
+);
+
+// v1 GDPR routes (#461): export a customer's data (portability); erase
+// scrubs personal data (financial records retained) and archives the row.
+router.get(
+    '/v1/gdpr/customer/:id/export',
+    v.params(gdprSchemas.intIdParam),
+    gdpr.exportCustomer,
+);
+router.post(
+    '/v1/gdpr/customer/:id/erase',
+    v.params(gdprSchemas.intIdParam),
+    gdpr.eraseCustomer,
 );
 
 // v1 rate-schedule routes (effective-dated rates, #414).

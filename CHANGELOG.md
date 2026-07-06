@@ -38,6 +38,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **GDPR data export & erasure** (#461). `GET /v1/gdpr/customer/{id}/export`
+  returns a portable JSON bundle of everything held about a customer
+  (record + invoices, jobs, expenses, time entries, payments, retainers,
+  recurring invoices, with counts) for data-portability requests.
+  `POST /v1/gdpr/customer/{id}/erase` performs right-to-erasure —
+  scrubbing the customer's PII (pure `gdpr.js` redaction map; NOT-NULL
+  columns get a placeholder, nullable ones null out) while **retaining
+  financial records** for accounting/tax, then archives the row. Both
+  company-scoped with secure-404; no new tables.
 - **Roles & permissions (RBAC)** (#448). Each user (#444) now carries a
   `userRole` (owner/admin/manager/member/viewer; migration
   `20260625000000`, defaults to `member`). A pure `rbac.js` defines the

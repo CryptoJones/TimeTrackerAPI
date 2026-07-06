@@ -1667,6 +1667,28 @@ const spec = {
                 responses: { 200: { description: 'Found — {userId, userRole, permissions[]}' }, 404: { description: 'Not found' } },
             },
         },
+        '/v1/gdpr/customer/{id}/export': {
+            get: {
+                summary: "Export all data held about a customer — GDPR portability (#461)",
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: {
+                    200: { description: 'Portable JSON: customer + invoices, jobs, expenses, time entries, payments, retainers, recurring invoices + counts' },
+                    404: { description: 'Not found / cross-tenant' },
+                },
+            },
+        },
+        '/v1/gdpr/customer/{id}/erase': {
+            post: {
+                summary: "Erase a customer's personal data — GDPR right-to-erasure (#461)",
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: {
+                    200: { description: 'Personal data scrubbed (financial records retained); row archived' },
+                    404: { description: 'Not found / cross-tenant' },
+                },
+            },
+        },
         '/v1/rateschedule': {
             post: {
                 summary: 'Create an effective-dated rate (#414)',
