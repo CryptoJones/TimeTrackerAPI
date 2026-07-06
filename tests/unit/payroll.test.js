@@ -49,6 +49,28 @@ describe('payroll (#456)', () => {
         expect(norate.totalHours).toBe(0.75);
     });
 
+    test('labor cost is rate × exact minutes, not rate × the 2-dp display hours (regression)', () => {
+        // 50 min @ $100/hr: display hours round to 0.83, but the cost must be
+        // 100 × 50/60 = 83.3333 → 83.33 — NOT 0.83 × 100 = 83.00. Computing
+        // cost from the pre-rounded hours understated it by $0.33 here, and
+        // those errors accumulated in the grand total.
+        const workers = [
+            { workerId: 1, workerFName: 'A', workerCostRate: 100 },
+            { workerId: 2, workerFName: 'B', workerCostRate: 200 },
+        ];
+        const entries = [
+            { teWorkerId: 1, teMinutes: 50, teBillable: true }, // 100 × 50/60 = 83.33
+            { teWorkerId: 2, teMinutes: 25, teBillable: true }, // 200 × 25/60 = 83.33
+        ];
+        const { rows, totals } = buildPayroll(entries, workers);
+        const a = rows.find((r) => r.workerId === 1);
+        const b = rows.find((r) => r.workerId === 2);
+        expect(a.totalHours).toBe(0.83); // display hours stay 2-dp
+        expect(a.costTotal).toBe(83.33); // cost derived from exact minutes
+        expect(b.costTotal).toBe(83.33);
+        expect(totals.costTotal).toBe(166.66);
+    });
+
     test('totals sum hours and known costs; rows sorted by workerId', () => {
         const { rows, totals } = buildPayroll(ENTRIES, WORKERS);
         expect(rows.map((r) => r.workerId)).toEqual([1, 2, 3]);

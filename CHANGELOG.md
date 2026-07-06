@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Payroll labor cost is computed from exact minutes, not pre-rounded
+  hours** (#456). `payroll.js` multiplied each worker's *display* hours
+  (already snapped to 2 decimals) by the cost rate, injecting up to
+  `0.005 × rate` of error per worker — e.g. 50 min @ $100/hr produced
+  `$83.00` instead of the correct `$83.33` — and accumulating it in the
+  grand `costTotal`. Cost now derives from `rate × minutes/60`, rounded
+  once, matching the billing-side calc in `rate.js`. Surfaced by an
+  adversarial correctness review of the money path; a regression test with
+  non-exact-hour minutes now pins it.
 - **`PORT=0` is honored instead of being silently coerced to 3000**
   (#124). `server.js` resolved its listen port via
   `parseInt(process.env.PORT, 10) || 3000`, which short-circuited on
