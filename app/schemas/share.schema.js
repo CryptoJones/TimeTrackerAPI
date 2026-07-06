@@ -22,4 +22,11 @@ const shareViewQuery = z.object({
     message: 'Unexpected query parameter. Allowed: token.',
 });
 
-module.exports = { intIdParam, shareCreateBody, shareViewQuery };
+/** POST /v1/share/revoke body (#4) — the token to revoke. */
+const shareRevokeBody = z.object({
+    token: z.string().min(1).max(4096),
+}).strict({
+    message: 'Unexpected field in body. Whitelist: token.',
+});
+
+module.exports = { intIdParam, shareCreateBody, shareViewQuery, shareRevokeBody };

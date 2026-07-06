@@ -82,6 +82,7 @@ db.ApprovalChain = require('../models/approvalchain.model.js')(sequelize, Sequel
 db.Invitation = require('../models/invitation.model.js')(sequelize, Sequelize);
 db.CustomFieldDef = require('../models/customfielddef.model.js')(sequelize, Sequelize);
 db.BillableRule = require('../models/billablerule.model.js')(sequelize, Sequelize);
+db.RevokedShareLink = require('../models/revokedsharelink.model.js')(sequelize, Sequelize);
 
 // ----------------------------------------------------------------------
 // Associations — centralized so the relationship graph is visible

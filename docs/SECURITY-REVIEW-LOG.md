@@ -149,10 +149,15 @@ deliberately **not** implemented autonomously.
    `gdpr.streamRelationArray`) so peak memory is O(batch), not O(total rows) —
    no truncation, so GDPR completeness is preserved. A mid-stream DB error
    truncates the (already-started) response, which the client detects.
-4. **Per-link share revocation.** Share links are stateless JWTs, so an
-   individual link can't be revoked before its `exp` (≤90 days); the only
-   levers are archiving the invoice or rotating `SHARE_SECRET`. Add a
-   `jti` + denylist if individual revocation is required.
+4. **Per-link share revocation — RESOLVED (#590).** Share links are stateless
+   JWTs, so an individual link previously couldn't be revoked before its `exp`
+   (≤90 days) short of archiving the invoice or rotating `SHARE_SECRET` (which
+   kills *every* link). Each minted link now carries a random `jti`; a new
+   tenant-scoped `POST /v1/share/revoke` (present the token → verify invoice
+   ownership → deny-list the jti in the `RevokedShareLink` table), and the
+   public view rejects a deny-listed jti with the same 401 as an invalid token
+   (no revocation-status leak). Revoke is idempotent; legacy pre-`jti` tokens
+   aren't individually revocable (400) — rotate the secret for those.
 5. **Master actions in the tenant audit trail** (informational). A master
    key's mutations set `alogCompId = null`, so they don't appear in the
    affected company's audit view — a completeness gap, not a leak.

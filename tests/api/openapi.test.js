@@ -59,6 +59,7 @@ describe('OpenAPI spec', () => {
         expect(paths).toContain('/v1/timeentry');
         expect(paths).toContain('/v1/timeentry/{id}');
         expect(paths).toContain('/v1/timeentry/bycompany/{id}');
+        expect(paths).toContain('/v1/share/revoke');
     });
 
     test('spec declares the authKey security scheme', async () => {

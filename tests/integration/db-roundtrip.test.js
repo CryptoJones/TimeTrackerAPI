@@ -320,6 +320,36 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         }
     });
 
+    test('RevokedShareLink round-trips + enforces a unique jti (share revocation)', async () => {
+        if (!connected) return;
+        const jti = `${SENTINEL}-jti`;
+        const company = await db.Company.create({ compName: `${SENTINEL}-rsl`, compArch: false });
+        try {
+            const [, created] = await db.RevokedShareLink.findOrCreate({
+                where: { rslJti: jti },
+                defaults: { rslJti: jti, rslCompId: company.compId, rslExpiresAt: new Date(Date.now() + 60000) },
+            });
+            expect(created).toBe(true);
+            // The view's revocation check finds it.
+            expect(await db.RevokedShareLink.findOne({ where: { rslJti: jti } })).not.toBeNull();
+            // Revoking again is idempotent — no duplicate.
+            const [, created2] = await db.RevokedShareLink.findOrCreate({
+                where: { rslJti: jti },
+                defaults: { rslJti: jti, rslCompId: company.compId, rslExpiresAt: new Date(Date.now() + 60000) },
+            });
+            expect(created2).toBe(false);
+            // The unique index rejects a raw duplicate insert.
+            let dup = false;
+            try {
+                await db.RevokedShareLink.create({ rslJti: jti, rslCompId: company.compId, rslExpiresAt: new Date(Date.now() + 60000) });
+            } catch (e) { dup = true; }
+            expect(dup).toBe(true);
+        } finally {
+            await db.RevokedShareLink.destroy({ where: { rslJti: jti } });
+            await company.destroy({ force: true });
+        }
+    });
+
     test('IdempotencyKey pending-claim protocol works against the real schema', async () => {
         if (!connected) return;
         const scope = `${SENTINEL}-ik-scope`;
