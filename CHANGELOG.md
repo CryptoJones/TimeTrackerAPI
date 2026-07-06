@@ -109,6 +109,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sentinel), and `attachAuth` maps them to **503 Service Unavailable**.
 
 ### Security
+- **JWT `verify` requires the `exp` claim (fail-closed)** (#445). `verify`
+  checked expiry only when `exp` was present, so a token minted without one
+  (or with a non-numeric `exp`) never expired — despite the module
+  documenting that verify "enforces the exp claim". It now rejects any
+  token lacking a finite numeric `exp`. No app token is affected (`sign`
+  always sets `exp`); this only fails closed against a hand-crafted or
+  future exp-less token. Defense-in-depth from an adversarial crypto/auth
+  review that otherwise found the JWT/scrypt/token-hashing primitives sound
+  (alg-none rejected, algorithm-confusion immune, constant-time compares,
+  CSPRNG tokens hashed at rest).
 - **Close a closed-period lock bypass via a timezone offset** (#441).
   `time-lock.js` derived an entry's calendar day from the literal
   `YYYY-MM-DD` prefix of a `teStartedAt` **string** (wall-clock) but from

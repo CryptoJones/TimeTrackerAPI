@@ -42,7 +42,13 @@ function verify(token, secret) {
     } catch (_) {
         return null;
     }
-    if (body && body.exp && Math.floor(Date.now() / 1000) > body.exp) return null;
+    // Enforce the exp claim. A token must carry a finite numeric exp and
+    // must not be past it. Rejecting a token that lacks exp is fail-closed:
+    // sign() always sets one, so an exp-less token was NOT minted here (it
+    // would otherwise never expire). This matches the module's documented
+    // contract that verify "enforces the exp claim".
+    if (!body || !Number.isFinite(body.exp)) return null;
+    if (Math.floor(Date.now() / 1000) > body.exp) return null;
     return body;
 }
 

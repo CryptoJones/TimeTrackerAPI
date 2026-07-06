@@ -2,6 +2,7 @@
 // Copyright 2026 Aaron K. Clark
 
 import { describe, test, expect } from 'vitest';
+import crypto from 'node:crypto';
 import { sign, verify } from '../../app/services/jwt.js';
 
 const SECRET = 'unit-test-secret';
@@ -38,5 +39,19 @@ describe('jwt (#445)', () => {
         expect(verify('not.a.jwt', SECRET)).toBeNull();
         expect(verify('', SECRET)).toBeNull();
         expect(verify(null, SECRET)).toBeNull();
+    });
+
+    test('verify rejects a validly-signed token that lacks an exp claim (fail-closed)', () => {
+        // Mint a token with a CORRECT HMAC signature but no exp — it would
+        // otherwise never expire. verify must reject it, not accept it.
+        const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+        const data = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub: 1, iat: 1 })}`; // no exp
+        const sig = crypto.createHmac('sha256', SECRET).update(data).digest('base64url');
+        expect(verify(`${data}.${sig}`, SECRET)).toBeNull();
+
+        // A non-numeric exp is likewise rejected.
+        const data2 = `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub: 1, exp: 'soon' })}`;
+        const sig2 = crypto.createHmac('sha256', SECRET).update(data2).digest('base64url');
+        expect(verify(`${data2}.${sig2}`, SECRET)).toBeNull();
     });
 });
