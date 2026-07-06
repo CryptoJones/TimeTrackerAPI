@@ -59,10 +59,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resolved on every `/v1` request, instead of each controller issuing a
   second identical DB lookup — a **pure optimization** (identical result,
   minus the round-trip; falls back to a live lookup when the context is
-  absent, e.g. direct calls in unit tests). `billablerulecontroller` is
-  converted as the reference implementation; rolling the pattern out to the
-  remaining controllers (~35, hundreds of call sites) is a mechanical
-  follow-up best done in reviewable batches.
+  absent, e.g. direct calls in unit tests). The controllers are converted
+  to the pattern **in reviewable batches** (billablerule → reportschedule,
+  customfielddef, approvalchain, invitation → …); the remaining
+  hundreds-of-call-sites rollout continues incrementally.
 - **Consolidate the customer→company lookup** (#378). `customercontroller`
   dropped its hand-rolled raw-SQL `GetCustomerCompanyId` and now aliases
   the shared `auth.getCompanyIdByCustomerId` (same semantics — empty/zero
