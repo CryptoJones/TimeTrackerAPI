@@ -7,8 +7,10 @@ const auth = require('../middleware/auth.js');
 const { sendMail, currentTransport } = require('../services/mailer.js');
 const notifier = require('../services/notifier.js');
 
-const IsMaster = auth.isMaster;
-const GetCompanyId = auth.getCompanyId;
+// #374: reuse attachAuth's resolved context (req.isMaster / req.companyId)
+// instead of a second DB lookup; falls back to a live lookup if absent.
+const MasterFromReq = auth.masterFromReq;
+const CompanyIdFromReq = auth.companyIdFromReq;
 
 /**
  * POST /v1/notification/test — send a test email to verify the mail
@@ -24,7 +26,7 @@ exports.test = async (req, res) => {
 
     let isMaster;
     try {
-        isMaster = await IsMaster(authKey);
+        isMaster = await MasterFromReq(req, authKey);
     } catch (error) {
         log.error({ err: error }, 'notification: IsMaster failed');
         return res.status(500).json({ message: "Error!" });
@@ -65,13 +67,13 @@ exports.dispatch = async (req, res) => {
 
     let isMaster;
     try {
-        isMaster = await IsMaster(authKey);
+        isMaster = await MasterFromReq(req, authKey);
     } catch (error) {
         log.error({ err: error }, 'notification dispatch: IsMaster failed');
         return res.status(500).json({ message: "Error!" });
     }
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
         }

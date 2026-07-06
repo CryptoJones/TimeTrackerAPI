@@ -8,8 +8,10 @@ const auth = require('../middleware/auth.js');
 const { buildLinkHeader } = require('../middleware/pagination.js');
 const AuditLog = db.AuditLog;
 
-const IsMaster = auth.isMaster;
-const GetCompanyId = auth.getCompanyId;
+// #374: reuse attachAuth's resolved context (req.isMaster / req.companyId)
+// instead of a second DB lookup; falls back to a live lookup if absent.
+const MasterFromReq = auth.masterFromReq;
+const CompanyIdFromReq = auth.companyIdFromReq;
 
 /**
  * GET /v1/auditlog/bycompany/:id — the audit trail for a company (#460).
@@ -29,9 +31,9 @@ exports.listByCompany = async (req, res) => {
         return res.status(400).json({ message: "Invalid company id." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1 || companyId !== targetCompanyId) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
         }

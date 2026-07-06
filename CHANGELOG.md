@@ -59,10 +59,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resolved on every `/v1` request, instead of each controller issuing a
   second identical DB lookup — a **pure optimization** (identical result,
   minus the round-trip; falls back to a live lookup when the context is
-  absent, e.g. direct calls in unit tests). The controllers are converted
-  to the pattern **in reviewable batches** (billablerule → reportschedule,
-  customfielddef, approvalchain, invitation → …); the remaining
-  hundreds-of-call-sites rollout continues incrementally.
+  absent, e.g. direct calls in unit tests). Rolled out across **every
+  controller** (~38, hundreds of call sites) in reviewable batches — each
+  behavior-preserving and validated by the full auth-scoping suite. The
+  per-entity resolvers (`getCompanyIdBy{CustomerId,JobId,PovId,PohId}`)
+  stay live, since attachAuth doesn't cache them.
 - **Consolidate the customer→company lookup** (#378). `customercontroller`
   dropped its hand-rolled raw-SQL `GetCustomerCompanyId` and now aliases
   the shared `auth.getCompanyIdByCustomerId` (same semantics — empty/zero

@@ -20,6 +20,13 @@ const TimeEntry = db.TimeEntry;
 // preserve the existing call sites in the controller body.
 const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
+// #374: prefer attachAuth's resolved context in the handlers below; the
+// raw IsMaster / GetCompanyId above are retained only for the _internals
+// test seam. (Every call site is inside an exported handler with req in
+// scope; the req-less helpers — createOneEntry etc. — take companyId as a
+// param and never call these.)
+const MasterFromReq = auth.masterFromReq;
+const CompanyIdFromReq = auth.companyIdFromReq;
 
 const ALLOWED_FIELDS_CREATE = [
     'teCustId', 'teWorkerId', 'teJobId', 'teBillTypeId', 'teDescription',
@@ -219,7 +226,7 @@ exports.create = async (req, res) => {
         return res.status(403).json({ message: "Authorization key not sent." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     let companyId;
     if (isMaster) {
         companyId = Number(req.body && req.body.teCompId);
@@ -227,7 +234,7 @@ exports.create = async (req, res) => {
             return res.status(400).json({ message: "Master-key requests must specify teCompId." });
         }
     } else {
-        companyId = await GetCompanyId(authKey);
+        companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
         }
@@ -264,7 +271,7 @@ exports.bulk = async (req, res) => {
         return res.status(403).json({ message: "Authorization key not sent." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     let companyId;
     if (isMaster) {
         companyId = Number(req.body && req.body.teCompId);
@@ -272,7 +279,7 @@ exports.bulk = async (req, res) => {
             return res.status(400).json({ message: "Master-key requests must specify teCompId." });
         }
     } else {
-        companyId = await GetCompanyId(authKey);
+        companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
         }
@@ -335,7 +342,7 @@ exports.start = async (req, res) => {
         return res.status(403).json({ message: "Authorization key not sent." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     let companyId;
     if (isMaster) {
         companyId = Number(req.body && req.body.teCompId);
@@ -343,7 +350,7 @@ exports.start = async (req, res) => {
             return res.status(400).json({ message: "Master-key requests must specify teCompId." });
         }
     } else {
-        companyId = await GetCompanyId(authKey);
+        companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
         }
@@ -432,9 +439,9 @@ exports.stop = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1 || entry.teCompId !== companyId) {
             return res.status(404).json({ message: "Not found." });
         }
@@ -477,9 +484,9 @@ exports.approval = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1 || entry.teCompId !== companyId) {
             return res.status(404).json({ message: "Not found." });
         }
@@ -525,9 +532,9 @@ exports.copy = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1 || src.teCompId !== companyId) {
             return res.status(404).json({ message: "Not found." });
         }
@@ -589,7 +596,7 @@ exports.approvalReminders = async (req, res) => {
     }
 
     const body = req.body || {};
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     let companyId;
     if (isMaster) {
         companyId = Number(body.companyId);
@@ -597,7 +604,7 @@ exports.approvalReminders = async (req, res) => {
             return res.status(400).json({ message: "Master-key requests must specify companyId." });
         }
     } else {
-        companyId = await GetCompanyId(authKey);
+        companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
         }
@@ -688,9 +695,9 @@ exports.getById = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         // Cross-tenant access is reported as 404, not 403 — otherwise
         // a scoped caller can enumerate which TimeEntry ids are
         // populated across the whole tenant table by status code.
@@ -731,9 +738,9 @@ exports.listByCompany = async (req, res) => {
         return res.status(400).json({ message: "Invalid company id." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1 || companyId !== targetCompanyId) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
         }
@@ -835,9 +842,9 @@ exports.listByWorker = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         if (companyId === -1 || worker.workerCompId !== companyId) {
             return res.status(404).json({ message: "Not found." });
         }
@@ -921,9 +928,9 @@ exports.update = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         // Secure-404 on PATCH for the same reason as GET.
         if (companyId === -1 || entry.teCompId !== companyId) {
             return res.status(404).json({ message: "Not found." });
@@ -1020,9 +1027,9 @@ exports.remove = async (req, res) => {
         return res.status(404).json({ message: "Not found." });
     }
 
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (!isMaster) {
-        const companyId = await GetCompanyId(authKey);
+        const companyId = await CompanyIdFromReq(req, authKey);
         // Secure-404 on DELETE for the same reason as GET / PATCH.
         if (companyId === -1 || entry.teCompId !== companyId) {
             return res.status(404).json({ message: "Not found." });
@@ -1075,7 +1082,7 @@ exports.exportCsv = async (req, res) => {
 
     let isMasterKey;
     try {
-        isMasterKey = await IsMaster(authKey);
+        isMasterKey = await MasterFromReq(req, authKey);
     } catch (error) {
         log.error({ err: error }, 'IsMaster failed');
         return res.status(500).json({ message: "Error!" });
@@ -1093,7 +1100,7 @@ exports.exportCsv = async (req, res) => {
     } else {
         let authKeyCompanyId;
         try {
-            authKeyCompanyId = await GetCompanyId(authKey);
+            authKeyCompanyId = await CompanyIdFromReq(req, authKey);
         } catch (error) {
             log.error({ err: error }, 'GetCompanyId failed');
             return res.status(500).json({ message: "Error!" });

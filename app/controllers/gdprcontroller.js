@@ -7,8 +7,10 @@ const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
 const { anonymizedValues } = require('../services/gdpr.js');
 
-const IsMaster = auth.isMaster;
-const GetCompanyId = auth.getCompanyId;
+// #374: reuse attachAuth's resolved context (req.isMaster / req.companyId)
+// instead of a second DB lookup; falls back to a live lookup if absent.
+const MasterFromReq = auth.masterFromReq;
+const CompanyIdFromReq = auth.companyIdFromReq;
 
 /** Load a customer and enforce the secure-404 company scope. */
 async function findScopedCustomer(req, res) {
@@ -24,9 +26,9 @@ async function findScopedCustomer(req, res) {
         res.status(404).json({ message: "Not found." });
         return null;
     }
-    const isMaster = await IsMaster(req.get('authKey'));
+    const isMaster = await MasterFromReq(req, req.get('authKey'));
     if (!isMaster) {
-        const companyId = await GetCompanyId(req.get('authKey'));
+        const companyId = await CompanyIdFromReq(req, req.get('authKey'));
         if (companyId === -1 || customer.custCompId !== companyId) {
             res.status(404).json({ message: "Not found." });
             return null;

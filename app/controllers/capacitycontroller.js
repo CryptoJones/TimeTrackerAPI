@@ -7,8 +7,10 @@ const log = require('../config/logger.js');
 const auth = require('../middleware/auth.js');
 const { buildCapacity, weeksBetween } = require('../services/capacity.js');
 
-const IsMaster = auth.isMaster;
-const GetCompanyId = auth.getCompanyId;
+// #374: reuse attachAuth's resolved context (req.isMaster / req.companyId)
+// instead of a second DB lookup; falls back to a live lookup if absent.
+const MasterFromReq = auth.masterFromReq;
+const CompanyIdFromReq = auth.companyIdFromReq;
 
 /** Resolve the target company (or null after responding). Master keys pass ?companyId. */
 async function resolveCompany(req, res) {
@@ -17,7 +19,7 @@ async function resolveCompany(req, res) {
         res.status(403).json({ message: "Authorization key not sent." });
         return null;
     }
-    const isMaster = await IsMaster(authKey);
+    const isMaster = await MasterFromReq(req, authKey);
     if (isMaster) {
         const companyId = Number(req.query.companyId);
         if (!Number.isInteger(companyId) || companyId <= 0) {
@@ -26,7 +28,7 @@ async function resolveCompany(req, res) {
         }
         return companyId;
     }
-    const companyId = await GetCompanyId(authKey);
+    const companyId = await CompanyIdFromReq(req, authKey);
     if (companyId === -1) {
         res.status(403).json({ message: "Invalid Authorization Key." });
         return null;
