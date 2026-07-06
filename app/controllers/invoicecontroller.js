@@ -33,6 +33,7 @@ function addDaysISO(isoDate, days) {
 const IsMaster = auth.isMaster;
 const GetCompanyId = auth.getCompanyId;
 const GetCompanyIdByCustomerId = auth.getCompanyIdByCustomerId;
+const GetCompanyIdByJobId = auth.getCompanyIdByJobId;
 
 const ALLOWED_FIELDS_CREATE = ['invCustId', 'invDate', 'invDueDate', 'invPaid', 'invNotes', 'invCurrency'];
 const ALLOWED_FIELDS_UPDATE = ['invDate', 'invDueDate', 'invPaid', 'invWriteOff', 'invNotes'];
@@ -730,6 +731,154 @@ exports.paymentReminders = async (req, res) => {
         totalOutstanding: digest.totalOutstanding,
         reminded,
         to: body.to,
+    });
+};
+
+/**
+ * POST /v1/invoice/from-phase — milestone billing (#428): generate an
+ * invoice for a phase's fixed budget amount, as a single line on the
+ * phase's job. Scoped through the phase's company (secure-404); 409 if
+ * the phase was already billed. Mirrors the roll-up's tax/currency/
+ * numbering, but the one line is the phase budget rather than time.
+ */
+exports.fromPhase = async (req, res) => {
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+
+    const body = req.body || {};
+    const phaseId = Number(body.phaseId);
+    if (!Number.isInteger(phaseId) || phaseId <= 0) {
+        return res.status(400).json({ message: "phaseId is required." });
+    }
+
+    let phase;
+    try {
+        phase = await db.Phase.findByPk(phaseId);
+    } catch (error) {
+        log.error({ err: error }, 'from-phase: Phase.findByPk failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (!phase || phase.phaseArch) {
+        return res.status(404).json({ message: "Not found." });
+    }
+
+    let phaseCompanyId;
+    try {
+        phaseCompanyId = await GetCompanyIdByJobId(phase.phaseJobId);
+    } catch (error) {
+        log.error({ err: error }, 'from-phase: company resolve failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (phaseCompanyId === -1) {
+        return res.status(404).json({ message: "Not found." });
+    }
+    const isMaster = await IsMaster(authKey);
+    if (!isMaster) {
+        const authCompanyId = await GetCompanyId(authKey);
+        if (authCompanyId === -1 || authCompanyId !== phaseCompanyId) {
+            return res.status(404).json({ message: "Not found." });
+        }
+    }
+
+    if (phase.phaseBudgetAmount == null) {
+        return res.status(400).json({ message: "Phase has no budget amount to bill." });
+    }
+    if (phase.phaseBilledInvId != null) {
+        return res.status(409).json({ message: "Phase has already been billed." });
+    }
+
+    let job;
+    try {
+        job = await db.Job.findByPk(phase.phaseJobId, { attributes: ['jobId', 'jobCustId'] });
+    } catch (error) {
+        log.error({ err: error }, 'from-phase: Job.findByPk failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (!job || job.jobCustId == null) {
+        return res.status(400).json({ message: "Phase's job has no customer." });
+    }
+    const custId = job.jobCustId;
+
+    const subtotal = money.round(phase.phaseBudgetAmount);
+
+    // Tax rate: explicit override → company default → 0 (mirrors rollup).
+    let companyDefaultRate = 0;
+    if (body.taxRate == null) {
+        try {
+            const c = await db.Company.findByPk(phaseCompanyId, { attributes: ['compTaxRate'] });
+            companyDefaultRate = c ? c.compTaxRate : 0;
+        } catch (error) {
+            log.error({ err: error }, 'from-phase: company tax-rate lookup failed');
+            return res.status(500).json({ message: "Error!" });
+        }
+    }
+    const taxRate = invoiceTax.resolveRate({ override: body.taxRate, companyDefault: companyDefaultRate });
+
+    let invoiceCurrency = body.currency;
+    if (!invoiceCurrency) {
+        try {
+            const c = await db.Company.findByPk(phaseCompanyId, { attributes: ['compCurrency'] });
+            invoiceCurrency = c && c.compCurrency ? c.compCurrency : 'USD';
+        } catch (error) {
+            log.error({ err: error }, 'from-phase: company currency lookup failed');
+            return res.status(500).json({ message: "Error!" });
+        }
+    }
+
+    let discount = Number(body.discount);
+    if (!Number.isFinite(discount) || discount < 0) discount = 0;
+    if (money.subtract(subtotal, discount) < 0) discount = subtotal;
+    discount = money.round(discount);
+    const taxableBase = money.subtract(subtotal, discount);
+    const tax = invoiceTax.computeTax(taxableBase, taxRate);
+    const total = money.add(taxableBase, tax);
+
+    const invDate = body.invDate || todayISO();
+    const invDueDate = body.invDueDate || addDaysISO(invDate, 30);
+
+    let result;
+    try {
+        result = await db.sequelize.transaction(async (t) => {
+            const invNumber = await invoiceNumber.allocateNumber(db, phaseCompanyId, t);
+            const invoice = await db.Invoice.create({
+                invCustId: custId,
+                invNumber,
+                invDate,
+                invDueDate,
+                invPaid: false,
+                invArch: false,
+                invSubtotal: subtotal,
+                invDiscount: discount,
+                invTax: tax,
+                invTotal: total,
+                invTaxRate: taxRate,
+                invNotes: body.notes || `Milestone: ${phase.phaseName}`,
+                invCurrency: invoiceCurrency,
+            }, { transaction: t });
+            const ij = await db.InvoiceJob.create({
+                injbInvId: invoice.invId,
+                injbJobId: phase.phaseJobId,
+                injbAmount: subtotal,
+                injbArch: false,
+            }, { transaction: t });
+            await phase.update({ phaseBilledInvId: invoice.invId }, { transaction: t });
+            return { invoice, injbId: ij.injbId };
+        });
+    } catch (error) {
+        log.error({ err: error }, 'from-phase: invoice generation transaction failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+
+    return res.status(201).json({
+        message: "Invoice generated from phase (milestone).",
+        invoice: result.invoice,
+        phase: { phaseId: phase.phaseId, phaseName: phase.phaseName },
+        subtotal,
+        discount,
+        tax,
+        total,
     });
 };
 
