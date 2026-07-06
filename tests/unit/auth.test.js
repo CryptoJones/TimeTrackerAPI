@@ -34,6 +34,7 @@ beforeEach(async () => {
         Invoice: { findByPk: vi.fn() },
         BillingType: { findByPk: vi.fn() },
         Role: { findByPk: vi.fn() },
+        User: { findByPk: vi.fn() },
     };
     auth._setDbForTesting(stub);
 });
@@ -287,6 +288,57 @@ describe('auth.getCompanyIdByRoleId / roleFkBelongsTo (Worker rate-source guard)
         expect(await auth.roleFkBelongsTo(1, 7)).toBe(false);
         expect(await auth.roleFkBelongsTo(null, 7)).toBe(true);
     });
+});
+
+describe('auth.attachUser middleware (RBAC actor from a Bearer JWT)', () => {
+    const jwt = require('../../app/services/jwt.js');
+    const SECRET = 'test-jwt-secret';
+
+    function run(headers, cb) {
+        const req = { get: (h) => headers[h.toLowerCase()] || null };
+        return auth.attachUser(req, {}, () => cb(req));
+    }
+
+    test('resolves a valid token to req.user = { userId, userCompId, userRole }', async () => {
+        process.env.JWT_SECRET = SECRET;
+        stub.User.findByPk.mockResolvedValueOnce({ userId: 5, userCompId: 3, userRole: 'admin', userArch: false });
+        const token = jwt.sign({ sub: 5, userCompId: 3 }, SECRET, 3600);
+        await run({ authorization: `Bearer ${token}` }, (req) => {
+            expect(req.user).toEqual({ userId: 5, userCompId: 3, userRole: 'admin' });
+        });
+    });
+
+    test('no Bearer header → req.user null, no DB lookup', async () => {
+        process.env.JWT_SECRET = SECRET;
+        await run({}, (req) => {
+            expect(req.user).toBeNull();
+            expect(stub.User.findByPk).not.toHaveBeenCalled();
+        });
+    });
+
+    test('JWT_SECRET unset → req.user null (sign-in not configured)', async () => {
+        delete process.env.JWT_SECRET;
+        const token = jwt.sign({ sub: 5 }, SECRET, 3600);
+        await run({ authorization: `Bearer ${token}` }, (req) => expect(req.user).toBeNull());
+    });
+
+    test('invalid / wrong-secret token → req.user null', async () => {
+        process.env.JWT_SECRET = SECRET;
+        const bad = jwt.sign({ sub: 5 }, 'a-different-secret', 3600);
+        await run({ authorization: `Bearer ${bad}` }, (req) => expect(req.user).toBeNull());
+    });
+
+    test('archived / missing user → req.user null', async () => {
+        process.env.JWT_SECRET = SECRET;
+        stub.User.findByPk.mockResolvedValueOnce({ userId: 5, userCompId: 3, userRole: 'admin', userArch: true });
+        const token = jwt.sign({ sub: 5, userCompId: 3 }, SECRET, 3600);
+        await run({ authorization: `Bearer ${token}` }, (req) => expect(req.user).toBeNull());
+        stub.User.findByPk.mockResolvedValueOnce(null);
+        const t2 = jwt.sign({ sub: 9 }, SECRET, 3600);
+        await run({ authorization: `Bearer ${t2}` }, (req) => expect(req.user).toBeNull());
+    });
+
+    afterEach(() => { delete process.env.JWT_SECRET; });
 });
 
 describe('auth.requireAuthKey middleware', () => {

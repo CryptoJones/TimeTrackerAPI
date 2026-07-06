@@ -29,6 +29,7 @@
 
 const crypto = require('crypto');
 const log = require('../config/logger.js');
+const jwt = require('../services/jwt.js');
 
 /**
  * Late-bound + injectable DB accessor. Returns the db.config module
@@ -486,6 +487,38 @@ async function attachAuth(req, res, next) {
 }
 
 /**
+ * Express middleware: best-effort attach the signed-in USER (RBAC actor) from
+ * a Bearer JWT — the second, optional auth path (#445/#448), parallel to the
+ * API-key `attachAuth`. NEVER rejects: it only populates
+ *   req.user = { userId, userCompId, userRole } | null
+ * so a handler can enforce RBAC (canAssignRole etc.) when a signed-in user is
+ * acting, while an API key remains the tenant's full-authority credential. A
+ * request without a Bearer token (the common case) skips the DB lookup.
+ */
+async function attachUser(req, res, next) {
+    req.user = null;
+    try {
+        const authz = req.get('authorization') || '';
+        const m = /^Bearer\s+(.+)$/i.exec(authz);
+        const secret = process.env.JWT_SECRET || '';
+        if (!m || !secret) return next();
+        const payload = jwt.verify(m[1], secret);
+        if (!payload || !payload.sub) return next();
+        const u = await getDb().User.findByPk(payload.sub, {
+            attributes: ['userId', 'userCompId', 'userRole', 'userArch'],
+        });
+        if (u && !u.userArch) {
+            req.user = { userId: u.userId, userCompId: u.userCompId, userRole: u.userRole };
+        }
+    } catch (error) {
+        // A JWT/DB hiccup must not break the API-key path — log and fall
+        // through with req.user = null (the actor is simply "not a user").
+        log.error({ err: error }, 'attachUser: JWT actor resolve failed');
+    }
+    return next();
+}
+
+/**
  * Express middleware: 403s requests that aren't authenticated.
  * Assumes attachAuth has already run upstream.
  *
@@ -533,6 +566,7 @@ module.exports = {
     roleFkBelongsTo,
     requireAuthKey,
     attachAuth,
+    attachUser,
     requireAuth,
     resolveAuth,
     hashKey,

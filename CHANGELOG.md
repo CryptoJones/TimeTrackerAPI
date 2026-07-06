@@ -200,6 +200,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sentinel), and `attachAuth` maps them to **503 Service Unavailable**.
 
 ### Security
+- **RBAC enforcement for signed-in users (#448).** `rbac.canAssignRole` was
+  defined but had no call sites. A new `attachUser` middleware resolves the
+  Bearer-JWT sign-in path into `req.user = { userId, userCompId, userRole }`
+  (the actor, parallel to the API-key context), and the role-write endpoints
+  — `POST /v1/user`, `PATCH /v1/user/:id/role`, `POST /v1/invitation` — now
+  enforce RBAC when a signed-in user is acting: no privilege escalation
+  (`canAssignRole` — requires `user:manage-roles`), can't change a user who
+  **out-ranks** you (`canChangeRole`), and scoped to your own company
+  (secure-404). The **API-key path is unchanged** — a company/master key
+  remains the tenant's full-authority credential, so a signed-in *user* is
+  the constrained actor.
 - **CustomerPayment bulk allocates only to same-customer invoices.** The
   single-create path checks that `cpayInvId` references an invoice for the
   **same customer** (`checkInvoiceAllocation`), but the **bulk** path skipped

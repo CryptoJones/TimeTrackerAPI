@@ -116,13 +116,18 @@ plausible-but-unproven finding as not-a-finding.
 These are real gaps whose remedy is a product/architecture choice; each was
 deliberately **not** implemented autonomously.
 
-1. **RBAC enforcement.** `rbac.canAssignRole` (the no-privilege-escalation
-   guard) is defined and unit-tested but has **no call sites** — the
-   role-write endpoints apply no cap. Wiring it needs an *enforced actor
-   role* source, which the API-key/company-scoped auth model doesn't yet
-   provide (the code's plan is "later, JWT-guarded routes"). Decide where
-   the actor role comes from, then gate `usercontroller.setRole` /
-   `user.create` / `invitationcontroller.create`.
+1. **RBAC enforcement — WIRED (#583).** The actor role now comes from the
+   **Bearer-JWT sign-in path**: a new `attachUser` middleware resolves the
+   signed-in user into `req.user = { userId, userCompId, userRole }`, and
+   `usercontroller.setRole` / `user.create` / `invitationcontroller.create`
+   enforce RBAC for a JWT actor — `canAssignRole` (no privilege escalation +
+   `user:manage-roles`) plus `canChangeRole` (can't modify a user who
+   out-ranks you), scoped to the actor's own company (secure-404). The
+   **API-key path is unchanged** — a company/master key remains the tenant's
+   full-authority credential (that's the deliberate model; a signed-in user
+   is the constrained actor). Follow-up (optional): extend JWT-actor auth to
+   the user read/update/remove endpoints for full self-service, and gate the
+   approval action the same way (open item 8).
 2. **Idempotency concurrent double-execution.** The cache row is written
    *after* the handler, so two simultaneous same-key requests both execute
    the side effect (a double-charge risk); sequential retries are correctly

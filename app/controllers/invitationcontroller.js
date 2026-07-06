@@ -10,6 +10,7 @@ const { hashPassword } = require('../services/password.js');
 const { generateToken } = require('../services/password-reset.js');
 const { sendMail } = require('../services/mailer.js');
 const { isInviteValid, INVITE_TTL_SEC } = require('../services/invitation.js');
+const rbac = require('../services/rbac.js');
 const Invitation = db.Invitation;
 
 // #374: reuse attachAuth's resolved context (req.isMaster / req.companyId)
@@ -27,44 +28,8 @@ function safeView(i) {
     };
 }
 
-/** POST /v1/invitation — invite an email to join a company with a role. */
-exports.create = async (req, res) => {
-    const authKey = req.get('authKey');
-    if (!authKey) {
-        return res.status(403).json({ message: "Authorization key not sent." });
-    }
-
-    let isMaster;
-    try {
-        isMaster = await MasterFromReq(req, authKey);
-    } catch (error) {
-        log.error({ err: error }, 'IsMaster failed');
-        return res.status(500).json({ message: "Error!" });
-    }
-
-    const body = req.body || {};
-    let companyId;
-    if (!isMaster) {
-        try {
-            companyId = await CompanyIdFromReq(req, authKey);
-        } catch (error) {
-            log.error({ err: error }, 'GetCompanyId failed');
-            return res.status(500).json({ message: "Error!" });
-        }
-        if (companyId === -1) {
-            return res.status(403).json({ message: "Invalid Authorization Key." });
-        }
-        if (body.invtCompId !== undefined && Number(body.invtCompId) !== companyId) {
-            return res.status(403).json({ message: "Cannot invite to a company you do not belong to." });
-        }
-    } else {
-        companyId = Number(body.invtCompId);
-        if (!Number.isInteger(companyId) || companyId <= 0) {
-            return res.status(400).json({ message: "Master-key requests must specify invtCompId." });
-        }
-    }
-
-    // Reject if an active user already holds that email in the company.
+/** Shared tail: reject a duplicate active user, mint the invite, email the token. */
+async function insertInvitation(res, companyId, body) {
     try {
         const existing = await db.User.findOne({ where: { userCompId: companyId, userEmail: body.invtEmail } });
         if (existing) {
@@ -105,6 +70,60 @@ exports.create = async (req, res) => {
     }
 
     return res.status(201).json({ message: "Invitation sent.", invitation: safeView(created) });
+}
+
+/** POST /v1/invitation — invite an email to join a company with a role. */
+exports.create = async (req, res) => {
+    const body = req.body || {};
+
+    // Signed-in USER (Bearer JWT): RBAC-enforced; invites into its OWN
+    // company and only with a role it may assign (no privilege escalation).
+    if (req.user) {
+        if (!rbac.isRole(body.invtRole) || !rbac.canAssignRole(req.user.userRole, body.invtRole)) {
+            return res.status(403).json({ message: "Insufficient role to invite with that role." });
+        }
+        if (body.invtCompId !== undefined && Number(body.invtCompId) !== req.user.userCompId) {
+            return res.status(403).json({ message: "Cannot invite to another company." });
+        }
+        return insertInvitation(res, req.user.userCompId, body);
+    }
+
+    // API-key path (the tenant's full-authority credential) — unchanged.
+    const authKey = req.get('authKey');
+    if (!authKey) {
+        return res.status(403).json({ message: "Authorization key not sent." });
+    }
+
+    let isMaster;
+    try {
+        isMaster = await MasterFromReq(req, authKey);
+    } catch (error) {
+        log.error({ err: error }, 'IsMaster failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+
+    let companyId;
+    if (!isMaster) {
+        try {
+            companyId = await CompanyIdFromReq(req, authKey);
+        } catch (error) {
+            log.error({ err: error }, 'GetCompanyId failed');
+            return res.status(500).json({ message: "Error!" });
+        }
+        if (companyId === -1) {
+            return res.status(403).json({ message: "Invalid Authorization Key." });
+        }
+        if (body.invtCompId !== undefined && Number(body.invtCompId) !== companyId) {
+            return res.status(403).json({ message: "Cannot invite to a company you do not belong to." });
+        }
+    } else {
+        companyId = Number(body.invtCompId);
+        if (!Number.isInteger(companyId) || companyId <= 0) {
+            return res.status(400).json({ message: "Master-key requests must specify invtCompId." });
+        }
+    }
+
+    return insertInvitation(res, companyId, body);
 };
 
 /**
