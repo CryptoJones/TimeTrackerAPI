@@ -192,6 +192,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sentinel), and `attachAuth` maps them to **503 Service Unavailable**.
 
 ### Security
+- **CustomerPayment bulk allocates only to same-customer invoices.** The
+  single-create path checks that `cpayInvId` references an invoice for the
+  **same customer** (`checkInvoiceAllocation`), but the **bulk** path skipped
+  it — so a batch could book a payment against **another customer's / tenant's
+  invoice**, corrupting that invoice's computed balance and AR aging. The bulk
+  helper gained a `perEntryCheck` hook and CustomerPayment bulk now runs the
+  same same-customer allocation check per entry (a company-level FK check
+  would be too weak — the rule is *same customer*, not just same company).
+  Found by the systematic FK audit.
 - **Tenant-check the Worker rate-source FKs (`workerDefaultBillType`,
   `workerRoleId`).** Both were **unchecked** on create / update / bulk, so a
   company-scoped caller could point a worker at **another tenant's

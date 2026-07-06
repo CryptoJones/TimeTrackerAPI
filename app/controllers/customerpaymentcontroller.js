@@ -276,6 +276,10 @@ exports.bulkCreate = makeBulkCreateIndirect({
     archField: 'cpayArch',
     bodyKey: 'customerPayments',
     createdKey: 'customerPayments',
+    // Same same-customer allocation rule the single create enforces — the
+    // bulk parent scope only checks cpayCustId's company, so without this a
+    // batch could allocate a payment to another customer's/tenant's invoice.
+    perEntryCheck: (p) => checkInvoiceAllocation(p.cpayInvId, p.cpayCustId),
 });
 
 exports._internals = { IsMaster, GetCompanyId, GetCompanyIdByCustomerId };

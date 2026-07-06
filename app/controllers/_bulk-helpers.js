@@ -193,9 +193,14 @@ function makeBulkCreateIndirect({
     archField,
     bodyKey,
     createdKey,
-    // Optional: an inventory-item FK carried on each entry that must
-    // belong to the caller's company. { field, belongsTo(value, compId) }.
+    // Optional secondary FK(s) each entry carries that must belong to the
+    // caller's company: { field, belongsTo(value, compId), label } or an array.
     secondaryFk,
+    // Optional per-entry integrity check run for EVERY entry (master too),
+    // mirroring a single-create validation the parent/secondary scope can't
+    // express (e.g. "cpayInvId must be an invoice for the SAME customer").
+    // async (payload) => null | { status, message }.
+    perEntryCheck,
 }) {
     return async function bulkCreate(req, res) {
         const authKey = req.get('authKey');
@@ -273,6 +278,21 @@ function makeBulkCreateIndirect({
                             message: `${bodyKey}[${i}]: invalid ${sfk.label || 'reference'}.`,
                         });
                     }
+                }
+            }
+
+            if (perEntryCheck) {
+                let entryErr;
+                try {
+                    entryErr = await perEntryCheck(p);
+                } catch (error) {
+                    log.error({ err: error }, `${modelKey}: per-entry check failed`);
+                    return res.status(500).json({ message: "Error!" });
+                }
+                if (entryErr) {
+                    return res.status(entryErr.status || 400).json({
+                        message: `${bodyKey}[${i}]: ${entryErr.message}`,
+                    });
                 }
             }
 
