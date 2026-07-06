@@ -1345,6 +1345,19 @@ const spec = {
                 },
             },
         },
+        '/v1/invoice/from-phase': {
+            post: {
+                summary: "Milestone billing — invoice a phase's budget (#428)",
+                security: [{ authKey: [] }],
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { phaseId: { type: 'integer' }, invDate: { type: 'string', format: 'date' }, invDueDate: { type: 'string', format: 'date' }, taxRate: { type: 'number' }, discount: { type: 'number' }, currency: { type: 'string' }, notes: { type: 'string' } }, required: ['phaseId'] } } } },
+                responses: {
+                    201: { description: 'Invoice generated from the phase' },
+                    400: { description: 'Phase has no budget / validation error' },
+                    404: { description: 'Phase not found / cross-tenant' },
+                    409: { description: 'Phase already billed' },
+                },
+            },
+        },
         '/v1/invoice/rollup': {
             post: {
                 summary: "Generate an invoice from a customer's billable time",

@@ -42,6 +42,12 @@ module.exports = (sequelize, Sequelize) => {
                 return v == null ? null : Number(v);
             },
         },
+        phaseBilledInvId: {
+            field: 'phaseBilledInvId',
+            // The invoice this phase was milestone-billed on (#428); null
+            // until billed. Guards against double-billing.
+            type: Sequelize.INTEGER,
+        },
         phaseArch: {
             field: 'phaseArch',
             type: Sequelize.BOOLEAN,

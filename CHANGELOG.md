@@ -38,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Milestone billing** (#428). `POST /v1/invoice/from-phase` generates
+  an invoice for a project phase's fixed budget (`phaseBudgetAmount`) as a
+  single line on the phase's job — reusing the roll-up's numbering, tax,
+  currency, and discount handling, but billing a fixed fee rather than
+  time. A new `Phase.phaseBilledInvId` (migration `20260619000000`) records
+  the invoice and **409s a double-bill**. Phase→company scoped
+  (secure-404). Arbitrary jobless fixed-fee lines are a follow-up (invoice
+  lines currently require a job).
 - **Payment reminders / dunning** (#10). `POST
   /v1/invoice/payment-reminders` finds invoices that are overdue (past
   their due date, or invoice date when none, shifted by `olderThanDays`)

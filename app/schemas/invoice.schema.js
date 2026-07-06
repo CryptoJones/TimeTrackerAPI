@@ -130,9 +130,23 @@ const paymentRemindersBody = z.object({
     message: 'Unexpected field in body. Whitelist: to, olderThanDays, companyId.',
 });
 
+/** POST /v1/invoice/from-phase body — milestone billing a phase (#428). */
+const fromPhaseBody = z.object({
+    phaseId: z.coerce.number().int().positive(),
+    invDate: isoDate.optional(),
+    invDueDate: isoDate.optional(),
+    taxRate: z.coerce.number().min(0).max(1).optional(),
+    discount: z.coerce.number().min(0).optional(),
+    notes: z.string().max(5000).optional(),
+    currency: z.string().regex(/^[A-Z]{3}$/, { message: 'Must be a 3-letter uppercase ISO 4217 code.' }).optional(),
+}).strict({
+    message: 'Unexpected field in body. Whitelist: phaseId, invDate, invDueDate, taxRate, discount, notes, currency.',
+}).refine(refineDueDateAfterIssue, DUE_BEFORE_ISSUE);
+
 module.exports = {
     intIdParam,
     paymentRemindersBody,
+    fromPhaseBody,
     createInvoiceBody,
     updateInvoiceBody,
     listByCustomerQuery,

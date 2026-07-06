@@ -260,7 +260,7 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
     test('Phase table exists with a job include (#408)', async () => {
         if (!connected) return;
         const rows = await db.Phase.findAll({
-            attributes: ['phaseId', 'phaseJobId', 'phaseName', 'phaseStartDate', 'phaseEndDate', 'phaseBudgetAmount'],
+            attributes: ['phaseId', 'phaseJobId', 'phaseName', 'phaseStartDate', 'phaseEndDate', 'phaseBudgetAmount', 'phaseBilledInvId'],
             limit: 1,
         });
         expect(Array.isArray(rows)).toBe(true);

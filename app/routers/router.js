@@ -430,6 +430,12 @@ router.post(
     v.body(invoiceSchemas.paymentRemindersBody),
     invoice.paymentReminders,
 );
+// Milestone billing (#428): generate an invoice for a phase's budget.
+router.post(
+    '/v1/invoice/from-phase',
+    v.body(invoiceSchemas.fromPhaseBody),
+    invoice.fromPhase,
+);
 router.get(
     '/v1/invoice/aging',
     v.query(invoiceSchemas.agingQuery),
