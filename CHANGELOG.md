@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Audit log** (#460). An append-only `AuditLog` trail (migration
+  `20260607000000`) — a `/v1` middleware records every **successful
+  mutation** (POST/PATCH/PUT/DELETE) after the response is sent,
+  fire-and-forget so it never blocks or breaks a request: actor
+  (`master` or `company:<id>`), method, path, parsed entity, and status.
+  `GET /v1/auditlog/bycompany/{id}` reads a company's trail (scoped),
+  newest first, with `method` / `entity` filters + pagination.
 - **Worker target hours & alerts** (#400). `Worker.workerTargetMinsPerWeek`
   (migration `20260606000000`, settable on worker create/PATCH) sets a
   weekly capacity target. New `GET /v1/report/targets?from=&to=` scales

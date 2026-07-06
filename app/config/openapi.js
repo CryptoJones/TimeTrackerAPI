@@ -1329,6 +1329,23 @@ const spec = {
             patch: { summary: 'Partial update of an invoice', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/Invoice' } } } }, responses: { 200: { description: 'Updated' }, 400: { description: 'No updatable fields supplied' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
             delete: { summary: 'Soft-delete an invoice', security: [{ authKey: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' }, 403: { description: 'Auth failure' } } },
         },
+        '/v1/auditlog/bycompany/{id}': {
+            get: {
+                summary: "A company's audit trail (successful mutations)",
+                security: [{ authKey: [] }],
+                parameters: [
+                    { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+                    { name: 'method', in: 'query', schema: { type: 'string', enum: ['POST', 'PATCH', 'PUT', 'DELETE'] } },
+                    { name: 'entity', in: 'query', schema: { type: 'string' } },
+                    { name: 'limit', in: 'query', schema: { type: 'integer' } },
+                    { name: 'offset', in: 'query', schema: { type: 'integer' } },
+                ],
+                responses: {
+                    200: { description: 'Found — {entries[] (actor, method, path, entity, status, createdAt)}, newest first' },
+                    403: { description: 'Auth failure / cross-tenant' },
+                },
+            },
+        },
         '/v1/expense': {
             post: {
                 summary: 'Create an expense',
