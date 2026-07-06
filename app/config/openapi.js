@@ -435,7 +435,7 @@ const spec = {
     openapi: '3.0.3',
     info: {
         title: 'TimeTrackerAPI',
-        version: pkg.version || '1.0.0',
+        version: pkg.version || '1.1.0',
         description:
             'Open-source Node.js + PostgreSQL TimeTrackerAPI. 16 ' +
             'company-scoped entities (Customer, TimeEntry, Worker, ' +
