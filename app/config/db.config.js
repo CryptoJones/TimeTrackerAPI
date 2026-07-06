@@ -81,6 +81,7 @@ db.ReportSchedule = require('../models/reportschedule.model.js')(sequelize, Sequ
 db.ApprovalChain = require('../models/approvalchain.model.js')(sequelize, Sequelize);
 db.Invitation = require('../models/invitation.model.js')(sequelize, Sequelize);
 db.CustomFieldDef = require('../models/customfielddef.model.js')(sequelize, Sequelize);
+db.BillableRule = require('../models/billablerule.model.js')(sequelize, Sequelize);
 
 // ----------------------------------------------------------------------
 // Associations — centralized so the relationship graph is visible
@@ -258,5 +259,9 @@ db.Invitation.belongsTo(db.Company, { foreignKey: 'invtCompId', as: 'company' })
 // CustomFieldDef → Company (cfdCompId): custom-field definitions (#409).
 db.Company.hasMany(db.CustomFieldDef,   { foreignKey: 'cfdCompId', as: 'customFieldDefs' });
 db.CustomFieldDef.belongsTo(db.Company, { foreignKey: 'cfdCompId', as: 'company' });
+
+// BillableRule → Company (bruCompId): billable-classification rules (#415).
+db.Company.hasMany(db.BillableRule,   { foreignKey: 'bruCompId', as: 'billableRules' });
+db.BillableRule.belongsTo(db.Company, { foreignKey: 'bruCompId', as: 'company' });
 
 module.exports = db;

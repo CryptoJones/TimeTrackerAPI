@@ -1694,6 +1694,50 @@ const spec = {
                 },
             },
         },
+        '/v1/billablerule': {
+            post: {
+                summary: 'Define a billable-classification rule (#415)',
+                security: [{ authKey: [] }],
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { bruName: { type: 'string' }, bruPriority: { type: 'integer' }, bruMatchJobId: { type: 'integer', nullable: true }, bruMatchTaskId: { type: 'integer', nullable: true }, bruMatchCategory: { type: 'string', nullable: true }, bruBillable: { type: 'boolean' }, bruCompId: { type: 'integer' } }, required: ['bruName', 'bruBillable'] } } } },
+                responses: { 201: { description: 'Created' }, 400: { description: 'Validation error; master keys must specify bruCompId' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/billablerule/evaluate': {
+            post: {
+                summary: 'Classify a { jobId, taskId, category } context (#415)',
+                security: [{ authKey: [] }],
+                requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { jobId: { type: 'integer' }, taskId: { type: 'integer' }, category: { type: 'string' }, companyId: { type: 'integer' } } } } } },
+                responses: { 200: { description: '{ billable, matchedRuleId } — billable null if no rule matches' }, 400: { description: 'Master keys must specify companyId' }, 403: { description: 'Auth failure' } },
+            },
+        },
+        '/v1/billablerule/bycompany/{id}': {
+            get: {
+                summary: "List a company's billable rules (priority order)",
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found (paginated)' }, 403: { description: 'Cross-tenant' } },
+            },
+        },
+        '/v1/billablerule/{id}': {
+            get: {
+                summary: 'Fetch a billable rule',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Found' }, 404: { description: 'Not found' } },
+            },
+            patch: {
+                summary: 'Update a billable rule',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Updated' }, 400: { description: 'Validation error' }, 404: { description: 'Not found' } },
+            },
+            delete: {
+                summary: 'Archive a billable rule',
+                security: [{ authKey: [] }],
+                parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+                responses: { 200: { description: 'Archived' }, 404: { description: 'Not found' } },
+            },
+        },
         '/v1/customfield': {
             post: {
                 summary: 'Declare a typed custom field for an entity (#409)',

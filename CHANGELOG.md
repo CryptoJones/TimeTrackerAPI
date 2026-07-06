@@ -38,6 +38,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the `minor-and-patch` Dependabot group.
 
 ### Added
+- **Billable-classification rules** (#415). A new company-scoped
+  `BillableRule` entity, migration `20260630000000`, mapping a match on a
+  time entry's **job / task / category** to a default billable /
+  non-billable classification. Rules evaluate **first-match by priority**
+  (like the rate resolver); non-null criteria are required, null criteria
+  are wildcards (an all-null rule is a catch-all). Full REST on
+  `/v1/billablerule` (create, `bycompany` list, get/patch/delete) plus
+  `POST /v1/billablerule/evaluate` → `{ billable, matchedRuleId }`. Pure
+  `billable-rules.js` engine.
 - **Custom fields** (#409). A new company-scoped `CustomFieldDef` entity,
   migration `20260629000000`, declaring **typed** custom fields
   (text/number/date/boolean) for a target entity (`customer` / `job` /
