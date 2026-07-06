@@ -9,6 +9,7 @@ const { buildLinkHeader } = require('../middleware/pagination.js');
 const { escapeCsvCell } = require('./_csv-escape.js');
 const rate = require('../services/rate.js');
 const { applyAction } = require('../services/approval.js');
+const { lockReason } = require('../services/time-lock.js');
 const TimeEntry = db.TimeEntry;
 
 // Auth helpers used to live inline here — they now share a single
@@ -32,6 +33,14 @@ function computeMinutes(startedAt, endedAt) {
     const end = new Date(endedAt).getTime();
     if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return null;
     return Math.round((end - start) / 60000);
+}
+
+/** The company's locked-period cutoff (#441), or null. */
+async function companyLockDate(companyId) {
+    if (!Number.isInteger(companyId) || companyId <= 0) return null;
+    if (!db.Company || typeof db.Company.findByPk !== 'function') return null;
+    const company = await db.Company.findByPk(companyId, { attributes: ['compTimeLockDate'] });
+    return company ? company.compTimeLockDate : null;
 }
 
 /**
@@ -187,6 +196,19 @@ exports.create = async (req, res) => {
     }
     if (linkError) {
         return res.status(linkError.status).json({ message: linkError.message });
+    }
+
+    // Locked-period guard (#441): can't create time in a closed period.
+    let createLock;
+    try {
+        const lockDate = await companyLockDate(companyId);
+        createLock = lockReason({ approvalStatus: 'open', startedAt: payload.teStartedAt, lockDate });
+    } catch (error) {
+        log.error({ err: error }, 'create: lock check failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (createLock) {
+        return res.status(409).json({ message: createLock });
     }
 
     try {
@@ -664,6 +686,23 @@ exports.update = async (req, res) => {
         }
     }
 
+    // Locked-period / approved guard (#441): a frozen entry can't be
+    // edited, nor moved into a closed period.
+    let updateLock;
+    try {
+        const lockDate = await companyLockDate(entry.teCompId);
+        updateLock = lockReason({ approvalStatus: entry.teApprovalStatus, startedAt: entry.teStartedAt, lockDate })
+            || (req.body && req.body.teStartedAt
+                ? lockReason({ approvalStatus: 'open', startedAt: req.body.teStartedAt, lockDate })
+                : null);
+    } catch (error) {
+        log.error({ err: error }, 'update: lock check failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (updateLock) {
+        return res.status(409).json({ message: updateLock });
+    }
+
     const body = req.body || {};
     const updates = {};
     for (const f of ALLOWED_FIELDS_UPDATE) {
@@ -744,6 +783,19 @@ exports.remove = async (req, res) => {
         if (companyId === -1 || entry.teCompId !== companyId) {
             return res.status(404).json({ message: "Not found." });
         }
+    }
+
+    // Locked-period / approved guard (#441): frozen entries can't be deleted.
+    let removeLock;
+    try {
+        const lockDate = await companyLockDate(entry.teCompId);
+        removeLock = lockReason({ approvalStatus: entry.teApprovalStatus, startedAt: entry.teStartedAt, lockDate });
+    } catch (error) {
+        log.error({ err: error }, 'remove: lock check failed');
+        return res.status(500).json({ message: "Error!" });
+    }
+    if (removeLock) {
+        return res.status(409).json({ message: removeLock });
     }
 
     try {
