@@ -121,7 +121,12 @@ router.use('/v1', attachAuth);
 // for clients that happen to pick the same Idempotency-Key value).
 router.use('/v1', (req, res, next) => {
     if (req.method !== 'POST') return next();
-    return idempotency(req, res, next);
+    // idempotency is async; route any unexpected rejection to the error
+    // handler (→ 500) rather than letting it become an unhandled rejection
+    // that could crash the process (there is no process-level
+    // unhandledRejection net). The known deep-body case is already handled
+    // inside as a 400; this is defense-in-depth for every other path.
+    return Promise.resolve(idempotency(req, res, next)).catch(next);
 });
 
 // Audit trail (#460): record successful mutations after the response is

@@ -66,16 +66,41 @@ function sha256(s) {
  * (e.g., `{a:1,b:2}` vs `{b:2,a:1}`) hash to the same value. Without
  * this, a client that reorders its JSON fields on retry would trip
  * the body-mismatch 409.
+ *
+ * Bounded by MAX_CANONICAL_DEPTH (default 64). Without the bound, a
+ * deeply-nested body (`{"a":{"a":...5000 levels...}}`) overflows
+ * Node's call stack with a RangeError at depth ~5000, which Express's
+ * async error path surfaces as a 500. The 100KB express.json limit
+ * allows up to ~20000 nesting levels (5 chars per level), so the
+ * pre-bound version was reliably DoS-able through `POST /v1/* +
+ * Idempotency-Key: x`. 64 levels is well above any legitimate
+ * planning-API body's nesting; we throw a tagged Error that the
+ * middleware catches and returns as a 400.
  */
-function canonicalJson(value) {
+const MAX_CANONICAL_DEPTH = 64;
+
+class CanonicalJsonDepthError extends Error {
+    constructor() {
+        super(`Body exceeds maximum nesting depth (${MAX_CANONICAL_DEPTH}) for Idempotency-Key processing.`);
+        this.name = 'CanonicalJsonDepthError';
+        this.code = 'body_too_deep';
+    }
+}
+
+function canonicalJson(value, depth = 0) {
+    if (depth > MAX_CANONICAL_DEPTH) {
+        throw new CanonicalJsonDepthError();
+    }
     if (value === null || typeof value !== 'object') {
         return JSON.stringify(value);
     }
     if (Array.isArray(value)) {
-        return '[' + value.map(canonicalJson).join(',') + ']';
+        return '[' + value.map((v) => canonicalJson(v, depth + 1)).join(',') + ']';
     }
     const keys = Object.keys(value).sort();
-    return '{' + keys.map(k => JSON.stringify(k) + ':' + canonicalJson(value[k])).join(',') + '}';
+    return '{' + keys.map((k) =>
+        JSON.stringify(k) + ':' + canonicalJson(value[k], depth + 1),
+    ).join(',') + '}';
 }
 
 function hashBody(body) {
@@ -135,7 +160,28 @@ async function idempotency(req, res, next) {
     }
 
     const scope = buildScope(req);
-    const bodyHash = hashBody(req.body);
+    let bodyHash;
+    try {
+        bodyHash = hashBody(req.body);
+    } catch (error) {
+        if (error instanceof CanonicalJsonDepthError) {
+            // Don't propagate as 500 via the global error path; emit a
+            // crisp 400 the client can act on. Skips both the cache
+            // lookup AND the handler — pre-bound, this branch would
+            // have stack-overflowed at depth ~5000, surfacing as 500.
+            //
+            // Message is hardcoded (rather than `error.message`) so we
+            // match the controller-error-shape policy — middleware
+            // bodies must never echo a caught error's .message field
+            // (regression pin in tests/unit/controller-error-shape.test.js).
+            // The depth limit IS the message text, so a constant works.
+            return res.status(400).json({
+                message: `Body exceeds maximum nesting depth (${MAX_CANONICAL_DEPTH}) for Idempotency-Key processing.`,
+                code: 'body_too_deep',
+            });
+        }
+        throw error;
+    }
 
     // Best-effort prune. Fire-and-forget so the request path never
     // waits on DELETE; errors are swallowed via the .catch(). Cheap
@@ -227,6 +273,8 @@ module.exports = {
     buildScope,
     KEY_PATTERN,
     TTL_MS,
+    MAX_CANONICAL_DEPTH,
+    CanonicalJsonDepthError,
     // Test-only seam: pass a stub `{ sequelize: { query: ... }, Sequelize:
     // { QueryTypes: { SELECT } } }` to drive the cache lookup + write
     // paths from HTTP tests. Pass null (or no arg) to restore the
