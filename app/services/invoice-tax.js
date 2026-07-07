@@ -37,4 +37,32 @@ function resolveRate({ override, companyDefault }) {
     return 0;
 }
 
-module.exports = { normalizeRate, computeTax, resolveRate };
+/**
+ * Compose an invoice's discount / tax / total from a subtotal, a raw discount
+ * request, and a resolved tax rate. The ORDER OF OPERATIONS is the invariant
+ * this pins (it's what makes the numbers right, and is easy to get wrong):
+ *
+ *   1. discount is clamped to [0, subtotal]  (a bad/negative one → 0; one
+ *      larger than the subtotal → the subtotal, so total never goes negative);
+ *   2. tax is computed on the POST-discount taxable base — NOT the raw
+ *      subtotal — so a discount reduces the tax too;
+ *   3. total = taxableBase + tax.
+ *
+ * Write-off is deliberately NOT part of the total: it settles the outstanding
+ * balance like a payment (see invoice-status.js), it doesn't reduce the bill.
+ *
+ * PURE. @returns { discount, taxableBase, tax, total } — all cent-rounded.
+ */
+function composeTotals(subtotal, rawDiscount, taxRate) {
+    const sub = subtotal == null ? 0 : subtotal;
+    let discount = Number(rawDiscount);
+    if (!Number.isFinite(discount) || discount < 0) discount = 0;
+    if (money.subtract(sub, discount) < 0) discount = sub;
+    discount = money.round(discount);
+    const taxableBase = money.subtract(sub, discount);
+    const tax = computeTax(taxableBase, taxRate);
+    const total = money.add(taxableBase, tax);
+    return { discount, taxableBase, tax, total };
+}
+
+module.exports = { normalizeRate, computeTax, resolveRate, composeTotals };
