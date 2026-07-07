@@ -296,13 +296,17 @@ async function idempotency(req, res, next) {
                 SET "ikResponseStatus" = :status,
                     "ikResponseBody" = :body::jsonb,
                     "ikExpiresAt" = :expiresAt
-              WHERE "ikScope" = :scope AND "ikKey" = :key`,
+              WHERE "ikScope" = :scope AND "ikKey" = :key
+                AND "ikResponseStatus" IS NULL`,
             {
                 replacements: {
                     scope,
                     key: rawKey,
                     status,
-                    body: JSON.stringify(body),
+                    // A bound `undefined` replacement throws in Sequelize, which
+                    // would leave the row stuck pending; cache JSON `null` so a
+                    // no-body 2xx still completes (and replays as null).
+                    body: body === undefined ? 'null' : JSON.stringify(body),
                     expiresAt: new Date(Date.now() + TTL_MS),
                 },
             },
@@ -331,9 +335,17 @@ async function idempotency(req, res, next) {
         return originalJson(body);
     };
     // If the response finishes WITHOUT going through res.json (a non-JSON
-    // send, a dropped connection, or an error that bypasses res.json),
-    // release the pending claim so the key isn't stuck until PENDING_TTL.
-    res.on('finish', () => { if (!settled) releaseClaim(); });
+    // send, or an error that bypasses res.json), decide by status: a 2xx/4xx
+    // still SUCCEEDED, so COMPLETE with a null body — that prevents a retry
+    // from re-executing the side effect (we just can't replay the exact body).
+    // Only a 5xx releases the claim so a genuine retry re-runs. (An aborted
+    // connection never fires `finish`; that pending row clears at PENDING_TTL.)
+    res.on('finish', () => {
+        if (settled) return;
+        const status = res.statusCode || 0;
+        if (status >= 200 && status < 500) completeClaim(status, null);
+        else releaseClaim();
+    });
 
     return next();
 }

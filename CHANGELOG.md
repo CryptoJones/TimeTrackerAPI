@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Idempotency claim hardening (#588 follow-up).** An adversarial review of
+  the pre-handler claim surfaced three low-severity / latent missing-guard
+  cases, now closed: (1) `completeClaim` gains an `ikResponseStatus IS NULL`
+  ownership guard so a handler that overran `PENDING_TTL` can no longer
+  overwrite a row another request already re-claimed and completed; (2) a
+  successful **non-JSON** 2xx response now *completes* the claim (null body)
+  instead of releasing it, so a future non-`res.json` POST can't be
+  re-executed by a retry; (3) `res.json(undefined)` on a 2xx caches JSON
+  `null` instead of throwing on the bound `:body` replacement and wedging the
+  key as pending. The atomic-claim state machine itself was verified correct
+  against real Sequelize.
+
 ### Added
 - **Opt-in approval billing gate (#595).** A new company flag
   `compRequireApproval` (default `false`) makes the invoice rollup bill **only

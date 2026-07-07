@@ -14,7 +14,7 @@
 // Full first-write-then-replay coverage requires a real DB and lives
 // in the integration suite (gated behind P5-M).
 
-import { describe, test, expect, vi, beforeAll } from 'vitest';
+import { describe, test, expect, vi, beforeAll, afterEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 
@@ -320,5 +320,87 @@ describe('Idempotency middleware: bounded canonicalJson (DoS defense)', () => {
         // Don't assert on body.code — the controller emits whatever
         // it emits; we only care the depth check stayed silent.
         expect(res.body && res.body.code).not.toBe('body_too_deep');
+    });
+});
+
+// Hardening from the adversarial review of #588. Drives the middleware over a
+// tiny app so the non-JSON / undefined-body / 5xx exit paths are reachable
+// (the real routers all reply via res.json). The stub's UPDATE honors the new
+// `ikResponseStatus IS NULL` ownership guard, and DELETE the release guard.
+describe('Idempotency claim guards (#588 hardening)', () => {
+    const idem = require('../../app/middleware/idempotency.js');
+    function claimStub() {
+        const store = new Map();
+        const seenSql = [];
+        const kf = (r) => `${r.scope}::${r.key}`;
+        return {
+            store, seenSql,
+            sequelize: {
+                query: vi.fn(async (sql, opts) => {
+                    seenSql.push(sql);
+                    const r = (opts && opts.replacements) || {};
+                    if (/^INSERT/.test(sql)) {
+                        const k = kf(r); const cur = store.get(k); const now = Date.now();
+                        const pend = r.pendingExpiry && r.pendingExpiry.getTime ? r.pendingExpiry.getTime() : now + 300000;
+                        if (!cur || cur.expiresAt < now) { store.set(k, { requestHash: r.requestHash, status: null, body: null, expiresAt: pend }); return [[{ ikId: 1 }]]; }
+                        return [[]];
+                    }
+                    if (/^SELECT/.test(sql)) { const cur = store.get(kf(r)); return cur && cur.expiresAt >= Date.now() ? [cur] : []; }
+                    if (/^UPDATE/.test(sql)) {
+                        const cur = store.get(kf(r));
+                        // Ownership guard: only complete a row we still hold as pending.
+                        if (cur && cur.status == null) { cur.status = r.status; cur.body = JSON.parse(r.body); cur.expiresAt = Date.now() + 86400000; }
+                        return [[], {}];
+                    }
+                    if (/^DELETE/.test(sql)) {
+                        if (/ikResponseStatus" IS NULL/.test(sql)) { const cur = store.get(kf(r)); if (cur && cur.status == null) store.delete(kf(r)); }
+                        return [[], {}];
+                    }
+                    return [[], {}];
+                }),
+            },
+            Sequelize: { QueryTypes: { SELECT: 'SELECT' } },
+        };
+    }
+    function miniApp(handler) {
+        const a = express();
+        a.use(express.json());
+        a.post('/x', idem.idempotency, handler);
+        return a;
+    }
+    afterEach(() => idem._setDbForTesting(null));
+
+    test('the completeClaim UPDATE carries the ownership guard (ikResponseStatus IS NULL)', async () => {
+        const stub = claimStub(); idem._setDbForTesting(stub);
+        await request(miniApp((req, res) => res.status(201).json({ ok: 1 })))
+            .post('/x').set('authKey', 'k').set('Idempotency-Key', 'k-guard').send({ a: 1 });
+        const upd = stub.seenSql.find((s) => /^UPDATE/.test(s));
+        expect(upd).toMatch(/"ikResponseStatus" IS NULL/);
+    });
+
+    test('res.json(undefined) on a 2xx completes the claim as null (not stuck pending)', async () => {
+        const stub = claimStub(); idem._setDbForTesting(stub);
+        const res = await request(miniApp((req, res2) => res2.status(200).json(undefined)))
+            .post('/x').set('authKey', 'k').set('Idempotency-Key', 'k-undef').send({ a: 1 });
+        expect(res.status).toBe(200);
+        const row = [...stub.store.values()][0];
+        expect(row.status).toBe(200);
+        expect(row.body).toBeNull(); // cached as JSON null, not stuck at null-status
+    });
+
+    test('a non-JSON 2xx (res.end) completes the claim so a retry cannot re-execute', async () => {
+        const stub = claimStub(); idem._setDbForTesting(stub);
+        await request(miniApp((req, res) => res.status(200).end('OK')))
+            .post('/x').set('authKey', 'k').set('Idempotency-Key', 'k-nonjson').send({ a: 1 });
+        const row = [...stub.store.values()][0];
+        expect(row).toBeTruthy();     // NOT released
+        expect(row.status).toBe(200); // completed by the finish handler
+    });
+
+    test('a 5xx with no JSON releases the claim so a retry re-runs', async () => {
+        const stub = claimStub(); idem._setDbForTesting(stub);
+        await request(miniApp((req, res) => res.status(500).end('boom')))
+            .post('/x').set('authKey', 'k').set('Idempotency-Key', 'k-5xx').send({ a: 1 });
+        expect(stub.store.size).toBe(0); // released
     });
 });
