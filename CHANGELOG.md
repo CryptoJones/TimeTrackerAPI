@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   path is unchanged.
 
 ### Fixed
+- **`polPrice` is now exact-decimal money (#587 follow-up).** The
+  purchase-order-line unit price (a money value; negative lines are inline
+  credits) was left as `DOUBLE` when its sibling money columns (`cpayAmount`,
+  `injbAmount`) were converted — a **convention-guard audit** surfaced it.
+  Converted to `NUMERIC(14,2)` with a Number getter and a magnitude bound on
+  the schema. A new model guard (`money-column-types.test.js`) fails if any
+  column uses float storage except the two allowlisted fractional quantities
+  (`invitQty`, `polQty`), so this can't recur.
 - **Idempotency claim hardening (#588 follow-up).** An adversarial review of
   the pre-handler claim surfaced three low-severity / latent missing-guard
   cases, now closed: (1) `completeClaim` gains an `ikResponseStatus IS NULL`

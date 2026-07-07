@@ -352,6 +352,20 @@ describe.skipIf(!HAS_DB)('integration: real PG round-trip', () => {
         }
     });
 
+    test('PurchaseOrderLines.polPrice is NUMERIC(14,2) — money is exact-decimal', async () => {
+        if (!connected) return;
+        const rows = await db.sequelize.query(
+            `SELECT data_type, numeric_precision, numeric_scale
+               FROM information_schema.columns
+              WHERE table_schema = 'dbo' AND table_name = 'PurchaseOrderLines' AND column_name = 'polPrice'`,
+            { type: db.Sequelize.QueryTypes.SELECT },
+        );
+        expect(rows.length).toBe(1);
+        expect(rows[0].data_type).toBe('numeric');
+        expect(Number(rows[0].numeric_precision)).toBe(14);
+        expect(Number(rows[0].numeric_scale)).toBe(2);
+    });
+
     test('Company.compRequireApproval column exists, boolean default false (billing gate #7)', async () => {
         if (!connected) return;
         const rows = await db.sequelize.query(

@@ -232,8 +232,10 @@ behavior, with the rationale recorded). Nothing in this list remains open.
     NO resolvable tier is reported in `skipped.unresolvedRate` at rollup, never
     silently dropped. (The
     `DOUBLE`-vs-`NUMERIC` storage inconsistency — `btHourlyRate`, `cpayAmount`,
-    `injbAmount` — was **resolved in #587**: all three are now `NUMERIC(14,2)`
-    with a Number getter, so every money column is exact-decimal at rest.
+    `injbAmount` — was **resolved in #587** (and the missed sibling `polPrice`
+    in the #602 follow-up, found by a convention-guard audit): all money
+    columns are now `NUMERIC(14,2)` with a Number getter — exact-decimal at
+    rest, enforced by `money-column-types.test.js`.
     Remaining minor: `$0` is only settable at the BillingType tier — a
     validation-symmetry choice.)
 12. **Team utilization can exceed 100% — DECIDED (keep, by design).** Team
