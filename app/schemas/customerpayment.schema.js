@@ -16,7 +16,8 @@ const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
 // error (recording a "$0 payment" against a customer ledger has no
 // business meaning); Infinity/-Infinity is data-quality error from
 // pathological clients — `z.number()` rejects NaN but allows the
-// infinities by default, and a DOUBLE column will happily store them.
+// infinities by default, and they overflow money.toCents() (and the
+// NUMERIC(14,2) column errors on them) downstream.
 // Negative values pass — some operators model refunds that way.
 // Bound the magnitude (negatives allowed — a reversal/credit): an unbounded
 // but finite value (e.g. 1e308) survives `.finite()` and later overflows

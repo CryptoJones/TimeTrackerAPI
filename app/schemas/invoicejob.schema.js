@@ -10,8 +10,8 @@ const intIdParam = z.object({
 
 // `injbAmount` is the per-line monetary value on an invoice. zod's
 // `.number()` rejects NaN by default but allows Infinity / -Infinity
-// through, and the column is a Sequelize DOUBLE — `inf` lands in the
-// database fine and contaminates any consumer doing arithmetic
+// through, and although the column is now NUMERIC(14,2), an `inf`
+// still overflows money.toCents() and contaminates any consumer doing arithmetic
 // (invoice totals, aging buckets, CSV exports). Pin to finite real
 // numbers at the boundary. Zero and negative values still pass (a
 // $0 reference line and a credit/discount line are both real
