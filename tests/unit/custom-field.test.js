@@ -42,4 +42,25 @@ describe('custom-field (#409)', () => {
     test('optional empty fields are skipped', () => {
         expect(validateAgainstDefs(DEFS, { region: 'X' })).toEqual({ values: { region: 'X' } });
     });
+
+    test('boolean coercion accepts every truthy/falsy spelling', () => {
+        expect(coerceValue('boolean', true)).toEqual({ value: true });   // an actual boolean
+        expect(coerceValue('boolean', false)).toEqual({ value: false });
+        expect(coerceValue('boolean', 1)).toEqual({ value: true });
+        expect(coerceValue('boolean', '1')).toEqual({ value: true });
+        expect(coerceValue('boolean', 'false')).toEqual({ value: false });
+        expect(coerceValue('boolean', '0')).toEqual({ value: false });
+    });
+
+    test('a well-formatted but impossible date is rejected', () => {
+        // Passes the YYYY-MM-DD regex but is not a real calendar date → NaN.
+        expect(coerceValue('date', '2026-13-01').error).toBe('must be a YYYY-MM-DD date');
+    });
+
+    test('validateAgainstDefs tolerates a non-array defs / non-object values', () => {
+        // Non-array defs → treated as no defs → any supplied value is unknown.
+        expect(validateAgainstDefs(null, { region: 'X' }).errors).toMatchObject({ region: 'unknown custom field' });
+        // Non-object values → treated as {} → a required field is still flagged.
+        expect(validateAgainstDefs(DEFS, null).errors).toMatchObject({ region: 'is required' });
+    });
 });
