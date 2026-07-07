@@ -61,4 +61,36 @@ describe('capacity (#459)', () => {
         expect(rows[0].remainingHours).toBe(40);
         expect(rows[0].utilizationPct).toBe(0);
     });
+
+    test('weeksBetween returns 0 for a reversed or invalid range', () => {
+        expect(weeksBetween('2026-01-08', '2026-01-01')).toBe(0); // to < from
+        expect(weeksBetween('not-a-date', '2026-01-08')).toBe(0); // unparseable
+        expect(weeksBetween('2026-01-01', '2026-01-01')).toBe(0.14); // 1 inclusive day / 7
+    });
+
+    test('an untargeted worker: null target/remaining/utilization, but logged time still counts', () => {
+        const { rows } = buildCapacity(
+            [{ teWorkerId: 2, teMinutes: 300 }], [WORKERS[1]], { weeks: 1 },
+        );
+        expect(rows[0].targetHours).toBeNull();
+        expect(rows[0].remainingHours).toBeNull();
+        expect(rows[0].utilizationPct).toBeNull(); // pct(x, null) → null
+        expect(rows[0].loggedHours).toBe(5);
+    });
+
+    test('a null teWorkerId entry is ignored', () => {
+        const { totals } = buildCapacity(
+            [{ teWorkerId: null, teMinutes: 600 }], [WORKERS[0]], { weeks: 1 },
+        );
+        expect(totals.loggedHours).toBe(0); // the orphan entry contributed nothing
+    });
+
+    test('team totals: an untargeted worker inflates utilization (item 12 semantic, may exceed 100%)', () => {
+        // Targeted capacity = worker1 (40h) + worker3 (20h) = 60h @ 1 week.
+        // Logged = 50 + 10 + 5 = 65h, where worker2's 5h has NO matching target.
+        const { totals } = buildCapacity(ENTRIES, WORKERS, { weeks: 1 });
+        expect(totals.targetHours).toBe(60);           // only targeted workers
+        expect(totals.loggedHours).toBe(65);           // ALL logged, incl. untargeted
+        expect(totals.utilizationPct).toBe(108.3);     // 65/60 — exceeds 100% by design
+    });
 });
