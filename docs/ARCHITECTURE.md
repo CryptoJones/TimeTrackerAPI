@@ -16,9 +16,10 @@ decision also carries a one-paragraph rationale in
 
 A stateless **Node + Express** JSON API over **Sequelize 6 / PostgreSQL**,
 serving a multi-tenant consultant **time-tracking → billing → payments**
-domain. No server-side sessions: every request authenticates with an API
-key header. The process is horizontally scalable — all state lives in
-Postgres. It ships with an ops layer (OpenAPI/Swagger, `Idempotency-Key`,
+domain. No server-side sessions: a request authenticates with an API-key
+header (the tenant's full-authority credential) or, for a `User` account,
+a Bearer JWT from sign-in (the constrained RBAC actor). The process is
+horizontally scalable — all state lives in Postgres. It ships with an ops layer (OpenAPI/Swagger, `Idempotency-Key`,
 RFC-5988 pagination, rate limiting, structured logging, Prometheus
 `/metrics`, health probe, Docker/Caddy-TLS).
 
@@ -58,13 +59,21 @@ pino-http (request log) → helmet (headers) → cors → express.json (body)
 Inside `app/routers/router.js`, the `/v1` surface adds:
 
 ```
-router.use('/v1', attachAuth)   // resolves + caches auth context on req
+router.use('/v1', attachAuth)   // resolves + caches the API-key context on req
+router.use('/v1', attachUser)   // resolves a Bearer JWT into req.user (the RBAC actor)
+router.use('/v1', idempotency)  // pre-handler claim on keyed POSTs (see Cross-cutting)
 router.use('/v1', auditLog)     // stamps the audit trail
 ```
 
 - **`attachAuth`** resolves the caller once and sets `req.isMaster` /
   `req.companyId` on the request. A genuine DB outage here answers **503**,
   not a misleading 403 (a bad key still collapses to the `-1` sentinel).
+- **`attachUser`** runs in parallel: it verifies a `Bearer` JWT (HS256,
+  `jwt.js`) and, if valid, loads the `User` and sets `req.user =
+  { userId, userCompId, userRole }` — the **RBAC actor**. It is
+  **best-effort and never rejects**; a route that wants a signed-in user
+  simply checks `req.user`. Role/company come from the **DB row**, never the
+  token payload.
 - **`validate`** (per route) runs the resource's zod schema against
   `body` / `params` / `query` and rejects unknown fields (400) *before*
   the controller sees them.
@@ -81,7 +90,24 @@ Two key tiers, both SHA-256-hashed at rest:
 - **Master key** (`ApiMaster`) — cross-tenant; may target any company by
   passing an explicit `*CompId` in the body.
 - **Company key** (`ApiKey`) — scoped to one company; the server derives
-  the company id and refuses to act outside it.
+  the company id and refuses to act outside it. Keys have a lifecycle
+  (`/v1/apikey` create / `:id/rotate` / `:id` revoke; rotation shows the new
+  secret exactly once).
+
+**Two authorization models, deliberately.** An **API key** is the tenant's
+full-authority credential. A **signed-in user** (a `User` account that signs
+in via `POST /v1/login` and carries a Bearer JWT, resolved by `attachUser`
+into `req.user`) is the *constrained* actor: `app/services/rbac.js` defines
+the ladder `owner > admin > manager > member > viewer` plus a permission set
+per role, and the user-management, invitation, approval, and approval-chain
+surfaces enforce it for a JWT actor — no privilege escalation
+(`canAssignRole` requires `roleRank(actor) <= roleRank(target)` and the
+`user:manage-roles` permission), `time:approve` at manager+, separation-of-
+duties on approval (a user can't approve time logged by the `Worker` linked
+to them via `workerUserId`), and multi-level approval chains that must clear
+each level in order. Every such guard reads `if (req.user && <insufficient>)`,
+so an API-key request (`req.user` null) keeps full authority while a JWT
+request is always the constrained actor.
 
 `app/middleware/auth.js` is the one authority. It exposes a family of
 resolvers — pick the one that matches how the entity reaches a company:
@@ -125,6 +151,11 @@ The database evolves in **one direction only**:
 - **Money is `DECIMAL(14,2)`** with a Number getter on the model, and all
   arithmetic goes through [`app/services/money.js`](../app/services/money.js)
   (integer-cent math) so rounding is exact and consistent.
+- **Billing rate** resolves by a documented precedence (per-entry → task →
+  job → client → role → worker default) in
+  [`app/services/rate.js`](../app/services/rate.js); an entry **snapshots**
+  its resolved rate at creation (`teRateSnapshot`) so editing a rate source
+  later can't retroactively re-price a not-yet-invoiced backlog.
 - **Soft-delete**: models with an `*Arch` flag carry
   `defaultScope: { where: { *Arch: false } }`; archived rows are invisible
   to reads unless a call `.unscoped()`s deliberately.
@@ -148,9 +179,13 @@ in step, and mirror both into `app/config/openapi.js`.
 
 ## Cross-cutting concerns
 
-- **Idempotency** — `Idempotency-Key` on unsafe methods; the middleware
-  canonicalises the JSON body (with bounded recursion) and replays the
-  stored response on a repeat.
+- **Idempotency** — `Idempotency-Key` on keyed POSTs. The middleware makes a
+  **pre-handler atomic claim** (`INSERT … ON CONFLICT DO UPDATE … WHERE
+  expired RETURNING`) so two concurrent same-key requests can never both run
+  the side effect: exactly one wins, the other gets `409 in_progress` and
+  replays the winner's cached response once it completes. The claim is
+  released on a 5xx so a genuine retry re-runs; the body is canonicalised
+  (bounded recursion) so field-order-only differences still match.
 - **Pagination** — `?limit`/`?offset` with an RFC-5988 `Link` header
   (`buildLinkHeader`), capped page sizes.
 - **Rate limiting** — keyed per API key on the `/v1` surface.
@@ -159,6 +194,18 @@ in step, and mirror both into `app/config/openapi.js`.
 - **Audit** — `middleware/audit.js` records who changed what (DCAA-grade
   entity id + field diffs on the `AuditLog`).
 - **Observability** — Prometheus `/metrics`, `/healthz` liveness probe.
+- **Process safety** — `config/process-safety.js` logs an escaped
+  `unhandledRejection` (and continues) and logs-then-`exit(1)`s on an
+  `uncaughtException` for a clean supervised restart; `server.js` also
+  drains gracefully on `SIGTERM`/`SIGINT`.
+- **Shareable links** — a signed, expiring HS256 link to a read-only invoice
+  view (no API key). Each link carries a `jti`, so `POST /v1/share/revoke`
+  can deny-list a leaked link before it expires (`RevokedShareLink`).
+- **SSRF guard** — outbound webhook/notification targets are checked against
+  `services/ssrf-guard.js` (blocks private / loopback / link-local, including
+  IPv4-mapped IPv6) before any request is made.
+- **GDPR** — a customer's data export **streams** in keyset-paginated batches
+  (bounded memory) and right-to-erasure scrubs PII while retaining financials.
 
 ## Testing strategy
 
