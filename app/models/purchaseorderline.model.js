@@ -23,7 +23,19 @@ module.exports = (sequelize, Sequelize) => {
         polpoh:       { field: 'polpoh',      type: Sequelize.INTEGER, allowNull: false },
         polItemDesc:  { field: 'polItemDesc', type: Sequelize.TEXT, allowNull: false },
         polQty:       { field: 'polQty',      type: Sequelize.DOUBLE, allowNull: false },
-        polPrice:     { field: 'polPrice',    type: Sequelize.DOUBLE, allowNull: false },
+        polPrice: {
+            field: 'polPrice',
+            // Per-unit money value (negative = inline credit). NUMERIC(14,2)
+            // with a Number getter, matching every other money column —
+            // exact-decimal at rest. polQty (below) stays DOUBLE: it's a
+            // fractional quantity, not money.
+            type: Sequelize.DECIMAL(14, 2),
+            allowNull: false,
+            get() {
+                const v = this.getDataValue('polPrice');
+                return v == null ? null : Number(v);
+            },
+        },
         polInvtId:    { field: 'polInvtId',   type: Sequelize.INTEGER, allowNull: false },
         polArch:      { field: 'polArch',     type: Sequelize.BOOLEAN, defaultValue: false },
     }, {

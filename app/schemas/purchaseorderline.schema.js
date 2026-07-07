@@ -25,7 +25,8 @@ const polQtyField = z.coerce.number().finite({
 });
 const polPriceField = z.coerce.number().finite({
     message: 'polPrice must be a finite number.',
-});
+}).min(-999999999.99, { message: 'polPrice is out of range.' })
+    .max(999999999.99, { message: 'polPrice is out of range.' });
 
 const createBody = z.object({
     polpoh: z.coerce.number().int().positive(),
