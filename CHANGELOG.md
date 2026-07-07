@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   path is unchanged.
 
 ### Fixed
+- **Retainer amounts reject out-of-range values (400, not 500).** `retAmount`
+  and the drawdown `amount` shared a `.finite().positive()` validator with no
+  upper bound, so an absurd value (e.g. `1e12`) overflowed `NUMERIC(14,2)` → a
+  500 instead of a clean 400 — a money-bound the earlier `.max()` sweep applied
+  to `expAmount`/`phaseBudgetAmount` but missed here. Now capped at
+  `999,999,999.99` like every other money field. The drawdown arithmetic
+  itself (positive-amount required, overdraw → 409, exact-cent) was verified
+  sound.
 - **`polPrice` is now exact-decimal money (#587 follow-up).** The
   purchase-order-line unit price (a money value; negative lines are inline
   credits) was left as `DOUBLE` when its sibling money columns (`cpayAmount`,

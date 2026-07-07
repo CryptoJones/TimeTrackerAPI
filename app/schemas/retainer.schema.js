@@ -8,7 +8,12 @@ const intIdParam = z.object({
     id: z.coerce.number().int().positive(),
 });
 
-const positiveAmount = z.coerce.number().finite().positive();
+// Bounded like every other money field (max 999,999,999.99) so an absurd
+// amount returns a clean 400 instead of overflowing NUMERIC(14,2) → 500, and
+// never overflows money.toCents. Covers both retAmount (create) and the
+// drawdown amount.
+const positiveAmount = z.coerce.number().finite().positive()
+    .max(999999999.99, { message: 'amount is out of range (max 999,999,999.99).' });
 
 /** POST /v1/retainer body. retCustId + retAmount required. */
 const createRetainerBody = z.object({
