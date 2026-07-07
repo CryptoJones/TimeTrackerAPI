@@ -180,9 +180,8 @@ exports.accept = async (req, res) => {
 
 /** GET /v1/invitation/bycompany/:id — list a company's invitations (no token hash). */
 exports.listByCompany = async (req, res) => {
-    const authKey = req.get('authKey');
-    if (!authKey) {
-        return res.status(403).json({ message: "Authorization key not sent." });
+    if (!req.user && !req.get('authKey')) {
+        return res.status(403).json({ message: "Authorization required." });
     }
 
     const targetCompanyId = Number(req.params.id);
@@ -190,11 +189,18 @@ exports.listByCompany = async (req, res) => {
         return res.status(400).json({ message: "Invalid company id." });
     }
 
-    const isMaster = await MasterFromReq(req, authKey);
-    if (!isMaster) {
-        const companyId = await CompanyIdFromReq(req, authKey);
-        if (companyId === -1 || companyId !== targetCompanyId) {
+    if (req.user) {
+        // Signed-in user: needs read permission + can only list its OWN company.
+        if (!rbac.canReadUsers(req.user.userRole) || targetCompanyId !== req.user.userCompId) {
             return res.status(403).json({ message: "Invalid Authorization Key." });
+        }
+    } else {
+        const isMaster = await MasterFromReq(req, req.get('authKey'));
+        if (!isMaster) {
+            const companyId = await CompanyIdFromReq(req, req.get('authKey'));
+            if (companyId === -1 || companyId !== targetCompanyId) {
+                return res.status(403).json({ message: "Invalid Authorization Key." });
+            }
         }
     }
 
@@ -222,8 +228,8 @@ exports.listByCompany = async (req, res) => {
 
 /** DELETE /v1/invitation/:id — revoke (soft-delete). Company-scoped, secure-404. */
 exports.remove = async (req, res) => {
-    if (!req.get('authKey')) {
-        return res.status(403).json({ message: "Authorization key not sent." });
+    if (!req.user && !req.get('authKey')) {
+        return res.status(403).json({ message: "Authorization required." });
     }
 
     let invite;
@@ -236,11 +242,21 @@ exports.remove = async (req, res) => {
     if (!invite || invite.invtArch) {
         return res.status(404).json({ message: "Not found." });
     }
-    const isMaster = await MasterFromReq(req, req.get('authKey'));
-    if (!isMaster) {
-        const companyId = await CompanyIdFromReq(req, req.get('authKey'));
-        if (companyId === -1 || invite.invtCompId !== companyId) {
+    if (req.user) {
+        // Signed-in user: own company (secure-404) + manage-users permission.
+        if (invite.invtCompId !== req.user.userCompId) {
             return res.status(404).json({ message: "Not found." });
+        }
+        if (!rbac.canManageUsers(req.user.userRole)) {
+            return res.status(403).json({ message: "Insufficient role to revoke invitations." });
+        }
+    } else {
+        const isMaster = await MasterFromReq(req, req.get('authKey'));
+        if (!isMaster) {
+            const companyId = await CompanyIdFromReq(req, req.get('authKey'));
+            if (companyId === -1 || invite.invtCompId !== companyId) {
+                return res.status(404).json({ message: "Not found." });
+            }
         }
     }
 

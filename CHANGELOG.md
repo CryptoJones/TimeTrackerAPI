@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **JWT-actor RBAC on the invitation read/remove endpoints (#598).**
+  `GET /v1/invitation/bycompany/:id` (needs `user:read`) and
+  `DELETE /v1/invitation/:id` (needs `user:write`) now accept a signed-in user
+  as well as an API key, scoped to the actor's own company (403 / secure-404) —
+  matching the fully JWT-aware user-management surface. Closes the
+  over-restrictive gap the post-arc adversarial review flagged. The API-key
+  path is unchanged.
+
 ### Fixed
 - **Idempotency claim hardening (#588 follow-up).** An adversarial review of
   the pre-handler claim surfaced three low-severity / latent missing-guard
