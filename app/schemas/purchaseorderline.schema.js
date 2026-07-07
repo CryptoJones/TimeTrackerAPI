@@ -8,8 +8,8 @@ const intIdParam = z.object({
     id: z.coerce.number().int().positive(),
 });
 
-// PO-line quantity + per-unit price. Both are stored as Sequelize
-// DOUBLE columns. zod's `.number()` rejects NaN by default but lets
+// PO-line quantity + per-unit price. `polQty` is a DOUBLE quantity;
+// `polPrice` is a NUMERIC(14,2) money column. zod's `.number()` rejects NaN but lets
 // `Infinity` / `-Infinity` slip through — and the coerce path turns
 // the string `"Infinity"` into the float. An `inf` in either column
 // would silently corrupt every downstream calculation (PO totals,

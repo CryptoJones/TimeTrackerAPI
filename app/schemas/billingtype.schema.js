@@ -8,12 +8,12 @@ const intIdParam = z.object({
     id: z.coerce.number().int().positive(),
 });
 
-// `btHourlyRate` is a Sequelize DOUBLE column for the hourly rate
-// charged against a BillingType. `.nonnegative()` blocks negatives
+// `btHourlyRate` is the hourly rate charged against a BillingType (a
+// NUMERIC(14,2) money column). `.nonnegative()` blocks negatives
 // (a -$50/hr rate is operator error) but DOES NOT block `Infinity`
 // — `Infinity >= 0` is true. The coerce path also turns the string
 // `"Infinity"` into the float, so JSON without an Infinity literal
-// can still land `inf` in the column and contaminate downstream
+// can still reach money.multiply as `inf` and contaminate downstream
 // invoice/time-entry totals.
 //
 // Chain `.finite()` ahead of `.nonnegative()` to reject the
