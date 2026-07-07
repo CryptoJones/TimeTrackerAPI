@@ -422,14 +422,8 @@ exports.rollup = async (req, res) => {
             return res.status(500).json({ message: "Error!" });
         }
     }
-    // Discount applies to the subtotal before tax; clamp to [0, subtotal].
-    let discount = Number(req.body.discount);
-    if (!Number.isFinite(discount) || discount < 0) discount = 0;
-    if (money.subtract(subtotal, discount) < 0) discount = subtotal;
-    discount = money.round(discount);
-    const taxableBase = money.subtract(subtotal, discount);
-    const tax = invoiceTax.computeTax(taxableBase, taxRate);
-    const total = money.add(taxableBase, tax);
+    // Discount → tax-on-discounted-base → total (see invoiceTax.composeTotals).
+    const { discount, tax, total } = invoiceTax.composeTotals(subtotal, req.body.discount, taxRate);
 
     let result;
     try {
@@ -846,13 +840,8 @@ exports.fromPhase = async (req, res) => {
         }
     }
 
-    let discount = Number(body.discount);
-    if (!Number.isFinite(discount) || discount < 0) discount = 0;
-    if (money.subtract(subtotal, discount) < 0) discount = subtotal;
-    discount = money.round(discount);
-    const taxableBase = money.subtract(subtotal, discount);
-    const tax = invoiceTax.computeTax(taxableBase, taxRate);
-    const total = money.add(taxableBase, tax);
+    // Discount → tax-on-discounted-base → total (see invoiceTax.composeTotals).
+    const { discount, tax, total } = invoiceTax.composeTotals(subtotal, body.discount, taxRate);
 
     const invDate = body.invDate || todayISO();
     const invDueDate = body.invDueDate || addDaysISO(invDate, 30);
