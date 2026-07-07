@@ -143,7 +143,11 @@ behavior, with the rationale recorded). Nothing in this list remains open.
    same key+body gets `409 idempotency_in_progress` while the holder is live,
    replays once it completes, or `409 idempotency_key_reused` on a body
    mismatch. Nullable `ikResponseStatus`/`ikResponseBody` migration backs the
-   pending state.
+   pending state. A later adversarial review verified the atomic-claim machine
+   correct against real Sequelize and hardened three low/latent missing-guard
+   cases (#597): an `ikResponseStatus IS NULL` ownership guard on complete, a
+   non-JSON 2xx completing rather than releasing, and an `undefined` body
+   caching as JSON null.
 3. **Streamed GDPR export — RESOLVED (#589).** `exportCustomer` previously
    issued seven un-`limit`ed parallel `findAll`s and buffered the lot — an
    OOM/DoS vector for a very large customer. It now **streams** the same JSON
