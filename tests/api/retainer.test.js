@@ -35,11 +35,17 @@ describe('Retainer auth + schema contract', () => {
     test('POST /v1/retainer 400 on a non-positive retAmount (schema)', async () => {
         expect((await request(app).post('/v1/retainer').set('authKey', 'k').send({ retCustId: 1, retAmount: 0 })).status).toBe(400);
     });
+    test('POST /v1/retainer 400 on an out-of-range retAmount (would overflow NUMERIC(14,2))', async () => {
+        expect((await request(app).post('/v1/retainer').set('authKey', 'k').send({ retCustId: 1, retAmount: 1e12 })).status).toBe(400);
+    });
     test('POST /v1/retainer/:id/drawdown 403 without authKey (valid body)', async () => {
         expect((await request(app).post('/v1/retainer/1/drawdown').send({ amount: 100 })).status).toBe(403);
     });
     test('POST /v1/retainer/:id/drawdown 400 on a non-positive amount (schema)', async () => {
         expect((await request(app).post('/v1/retainer/1/drawdown').set('authKey', 'k').send({ amount: -5 })).status).toBe(400);
+    });
+    test('POST /v1/retainer/:id/drawdown 400 on an out-of-range amount (schema)', async () => {
+        expect((await request(app).post('/v1/retainer/1/drawdown').set('authKey', 'k').send({ amount: 1e12 })).status).toBe(400);
     });
     test('GET /v1/retainer/:id 403 without authKey', async () => {
         expect((await request(app).get('/v1/retainer/1')).status).toBe(403);
