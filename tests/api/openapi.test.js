@@ -21,14 +21,29 @@ vi.mock('../../app/config/db.config.js', () => ({
 }));
 
 let app;
+let router;
 
 beforeAll(async () => {
-    const router = (await import('../../app/routers/router.js')).default
+    router = (await import('../../app/routers/router.js')).default
         || require('../../app/routers/router.js');
     app = express();
     app.use(express.json());
     app.use('/', router);
 });
+
+// Walk the mounted Express router → the set of "METHOD /path" pairs it serves,
+// with :params normalized to the OpenAPI {param} form.
+function routerPairs() {
+    const norm = (p) => p.replace(/:([A-Za-z0-9_]+)/g, '{$1}');
+    const set = new Set();
+    for (const layer of (router.stack || [])) {
+        if (!layer.route || !layer.route.path) continue;
+        const paths = Array.isArray(layer.route.path) ? layer.route.path : [layer.route.path];
+        const methods = Object.keys(layer.route.methods).filter((m) => layer.route.methods[m]);
+        for (const p of paths) for (const m of methods) set.add(`${m.toUpperCase()} ${norm(p)}`);
+    }
+    return set;
+}
 
 describe('OpenAPI spec', () => {
     test('GET /openapi.json returns the spec', async () => {
@@ -491,5 +506,40 @@ describe('OpenAPI spec', () => {
         expect(res.status).toBe(200);
         expect(res.headers['content-type']).toMatch(/text\/html/);
         expect(res.text).toContain('Swagger');
+    });
+});
+
+// Drift guard: the "mirror every route into openapi.js" convention is now
+// enforced, not just spot-checked. Every /v1 route the router actually serves
+// must have a matching path+method in the published spec.
+describe('OpenAPI route↔spec parity', () => {
+    async function specPairs() {
+        const res = await request(app).get('/openapi.json');
+        const set = new Set();
+        for (const [p, ops] of Object.entries(res.body.paths || {})) {
+            for (const m of Object.keys(ops)) {
+                if (['get', 'post', 'put', 'patch', 'delete'].includes(m)) set.add(`${m.toUpperCase()} ${p}`);
+            }
+        }
+        return set;
+    }
+
+    test('every /v1 route+method the router serves is documented in the spec', async () => {
+        const spec = await specPairs();
+        const undocumented = [...routerPairs()]
+            .filter((r) => r.includes('/v1/') && !spec.has(r))
+            .sort();
+        // If this fails, a /v1 route was added without an openapi.js entry —
+        // add the path+method to app/config/openapi.js.
+        expect(undocumented).toEqual([]);
+    });
+
+    test('the spec documents no /v1 path+method the router does not serve', async () => {
+        const routes = routerPairs();
+        const spec = await specPairs();
+        const phantom = [...spec]
+            .filter((r) => r.includes('/v1/') && !routes.has(r))
+            .sort();
+        expect(phantom).toEqual([]);
     });
 });
