@@ -32,10 +32,15 @@ This is a companion to the "Security notes" section of the
   existence enumeration across tenants.
 - **User accounts + JWT sign-in** (a second, optional auth path): password
   login issues a short-lived HS256 JWT; `GET /v1/me` resolves the caller.
-- **Role-based access control (RBAC).** Each user carries a role
-  (`owner > admin > manager > member > viewer`) with a cumulative
-  permission matrix and a no-privilege-escalation rule
-  (`app/services/rbac.js`).
+- **Role-based access control (RBAC).** A signed-in user (the JWT actor,
+  resolved by `attachUser`) carries a role
+  (`owner > admin > manager > member > viewer`) with a cumulative permission
+  matrix and a no-privilege-escalation rule (`app/services/rbac.js`),
+  **enforced** across the user-management, invitation, and approval surfaces —
+  including **separation-of-duties** (a user cannot approve time logged by the
+  worker linked to them) and **multi-level approval chains** that must clear
+  each configured level in order. An API key stays the tenant's full-authority
+  credential; a signed-in user is the constrained actor.
 - **Credential lifecycle.** Password reset (hashed, expiring one-time
   tokens), API-key rotation/lifecycle, and teammate invitations (hashed,
   expiring tokens that provision a user at a chosen role).
@@ -47,12 +52,17 @@ This is a companion to the "Security notes" section of the
   `safeView`); a strict controller-shape test forbids echoing raw errors.
 - **Password hashing** uses `scrypt` with a per-password random salt
   (`app/services/password.js`); verification is constant-time.
-- **GDPR data-subject rights.** Per-customer **data export** (portable
-  JSON) and **erasure** (PII scrubbed, financial records retained,
-  row archived) — `app/controllers/gdprcontroller.js`.
+- **GDPR data-subject rights.** Per-customer **data export** (portable JSON,
+  **streamed** in bounded keyset-paginated batches so a very large customer
+  can't exhaust process memory) and **erasure** (PII scrubbed, financial
+  records retained, row archived) — `app/controllers/gdprcontroller.js`.
+- **Revocable share links.** Client-facing invoice links are signed, expiring
+  HS256 tokens carrying a `jti`, so an individual leaked link can be
+  **revoked** before it expires (`RevokedShareLink`) without rotating the
+  shared secret and invalidating every link.
 - **Exact money.** All monetary math goes through an exact-decimal money
-  service (no float drift) — supports processing-integrity claims on
-  billing.
+  service (no float drift; every money column is `NUMERIC(14,2)`) — supports
+  processing-integrity claims on billing.
 
 ### 1.3 Auditing & logging
 
@@ -77,7 +87,16 @@ This is a companion to the "Security notes" section of the
 ### 1.5 Operational & supply-chain security
 
 - **Rate limiting** on the `/v1` surface to blunt API-key brute forcing.
-- **Idempotency keys** for safe retries of mutating requests.
+- **Idempotency with a concurrency guarantee.** `Idempotency-Key` retries are
+  safe, and a **pre-handler atomic claim** ensures two *concurrent* same-key
+  requests can never both run the side effect (no double-charge) — exactly one
+  wins and the other replays the cached response.
+- **Process safety net.** A global handler logs escaped async rejections (and
+  continues) and logs-then-exits on an uncaught exception for a clean
+  supervised restart; the server drains in-flight requests on `SIGTERM`/`SIGINT`.
+- **SSRF defense** — outbound webhook/notification URLs are validated against
+  a guard that blocks private / loopback / link-local targets (including
+  IPv4-mapped IPv6) before any request is made.
 - **Dependency-free cryptography** — auth, JWT, webhook signing, and
   token hashing use Node's built-in `crypto`, minimizing the third-party
   attack surface. **Snyk** scans the manifest in CI on every change.
